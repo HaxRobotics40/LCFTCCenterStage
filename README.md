@@ -64,7 +64,7 @@ The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc
 ### Breaking Changes
 * Removes Vuforia
 * Fields in `AprilTagDetection` and `AprilTagPose(ftc/raw)` objects are now `final`
-* VisionPortal builder method `setCameraMonitorViewId()` has been renamed to `setLiveViewContainerId()` and `enableCameraMonitoring()` has been renamed to `enableLiveView()`
+* VisionPortal builder method setCameraMonitorViewId()` has been renamed to `setLiveViewContainerId()` and `enableCameraMonitoring()` has been renamed to `enableLiveView()`
 
 ### Enhancements
 * Adds support for the DFRobot HuskyLens Vision Sensor.
