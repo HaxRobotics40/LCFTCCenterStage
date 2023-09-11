@@ -47,10 +47,6 @@ public class AutonomousMode extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        boolean movingForwards = true;
-        MotionProfile activeProfile = generateProfile(true);
-        double profileStart = clock.seconds();
-
         while (!isStopRequested()) {
             telemetry.update();
         }
