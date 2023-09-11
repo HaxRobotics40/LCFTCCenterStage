@@ -25,11 +25,11 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 public class AutonomousMode extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
+
     AprilTagProcessor aprilTagProcessor;
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
-    SampleMecanumDrive drive;
-    // TODO: Update this.
 
+    SampleMecanumDrive drive;
 
     @Override
     public void runOpMode() throws InterruptedException {
