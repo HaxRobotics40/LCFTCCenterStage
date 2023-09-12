@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
+import android.annotation.SuppressLint;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -38,77 +40,64 @@ public class AutonomousMode extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        vPortalBuilder = new VisionPortal.Builder();
-        vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
-
-        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
-        aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
-        aprilTagProcessor = aprilTagProcessorBuilder.build();
-
-        vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
-        vPortalBuilder.addProcessor(aprilTagProcessor);
-        vPortal = vPortalBuilder.build();
+        aprilTagProcessor = initAprilTag();
+        vPortal = initVisionPortal(aprilTagProcessor);
 
         drive = new SampleMecanumDrive(hardwareMap);
 
-        // the team piece has to be entirely red or blue except for letters, and letters cant be greater than 0.5 in
-        // shades of red? shiny/dull red? or make distinct red/blue colored outlinen that's very recognizable
-        // may need to code own processor, like in FF (see: VisionProcessor -> VisionProccesorInternal, similar structure)
-        // tags different for each side
-
         waitForStart();
 
-        if(opModeIsActive()) {
-            while(opModeIsActive()) {
-
-
-                List<AprilTagDetection> allDets = aprilTagProcessor.getDetections();
-                for (AprilTagDetection det : allDets) {
-
-                    // targetTag isolated
-                    if (det.id % 3 == targetTag || det.id % 3 == targetTag-3) {
-                        detX = det.ftcPose.x;
-                        detY = det.ftcPose.y;
-
-                        // assumign using sample mecanum drive, RR
-                        //assuming robot made a perfect 90 deg turn and is just to the right or left of tag
-                        while(detX !=0) {
-                            if (detX > 0) {
-                                drive.setMotorPowers(detX/10,-detX/10,detX/10,-detX/10);
-                            } else {
-                                drive.setMotorPowers(-detX/10,detX/10,-detX/10,detX/10);
-                            }
-                            this.sleep(20);
-                        }
-
-
-                        while(detY != targetY) {
-                            if (detX > targetY) {
-                                drive.setMotorPowers(0.1,0.1,0.1,0.1); // do something about this later
-                            } else {
-                                drive.setMotorPowers(-0.1,-0.1,-0.1,-0.1);
-                            }
-                            this.sleep(20);
-
-                        }
-
-                        // lol this isn't gonna work
-                        break;
-                    }
-                }
-
-
-
-
+        if (opModeIsActive()) {
+            while (opModeIsActive()) {
+//                May be blocking!!!
+                List<AprilTagDetection> aprilTagDetectionsList = aprilTagProcessor.getDetections();
             }
+
+
         }
-
-
-
     }
 
+    private AprilTagProcessor initAprilTag() {
+        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
+        aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
 
-    public void initRobot() {
-        
+        return aprilTagProcessorBuilder.build();
+    }
+
+    private VisionPortal initVisionPortal(AprilTagProcessor atp) {
+        vPortalBuilder = new VisionPortal.Builder();
+        vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
+        vPortalBuilder.addProcessor(atp);
+
+        return vPortalBuilder.build();
+    }
+
+    private void endTickTelemetry() {
+        aprilTagTelemetry();
+    }
+
+    @SuppressLint("DefaultLocale")
+    private void aprilTagTelemetry() {
+            List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
+            telemetry.addData("# AprilTags Detected", currentDetections.size());
+
+            // Step through the list of detections and display info for each one.
+            for (AprilTagDetection detection : currentDetections) {
+                if (detection.metadata != null) {
+                    telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                    telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+                } else {
+                    telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                    telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                }
+            }   // end for() loop
+
+            // Add "key" information to telemetry
+            telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+            telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+            telemetry.addLine("RBE = Range, Bearing & Elevation");
+
     }
 }
