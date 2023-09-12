@@ -40,10 +40,13 @@ public class AutonomousMode extends LinearOpMode {
         aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
         aprilTagProcessor = aprilTagProcessorBuilder.build();
 
+        vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
         vPortalBuilder.addProcessor(aprilTagProcessor);
         vPortal = vPortalBuilder.build();
 
         drive = new SampleMecanumDrive(hardwareMap);
+
+
 
     }
 
