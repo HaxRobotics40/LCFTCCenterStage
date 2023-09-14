@@ -37,7 +37,7 @@ public class AutonomousMode extends LinearOpMode {
     AprilTagProcessor aprilTagProcessor;
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
 
-    SampleMecanumDrive drive;
+//    SampleMecanumDrive drive;
     IMU imu;
 
     @Override
@@ -47,18 +47,34 @@ public class AutonomousMode extends LinearOpMode {
 
         setupIMU();
 
-        drive = new SampleMecanumDrive(hardwareMap);
+//        drive = new SampleMecanumDrive(hardwareMap);
+
+        Thread telemetryThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
+                    outputTelemetry();
+                    try {
+                        Thread.sleep(50); // Introducing a small delay to prevent excessive updates
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        });
 
         waitForStart();
+
+        telemetryThread.start(); // Starting telemetry thread
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
 //                May be blocking!!!
                 List<AprilTagDetection> aprilTagDetectionsList = aprilTagProcessor.getDetections();
             }
-
-
         }
+
+        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
 
     private AprilTagProcessor initAprilTag() {
@@ -84,7 +100,7 @@ public class AutonomousMode extends LinearOpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
 
-    private void endTickTelemetry() {
+    private void outputTelemetry() {
         aprilTagTelemetry();
         IMUTelemetry();
     }
@@ -96,22 +112,11 @@ public class AutonomousMode extends LinearOpMode {
 
             // Step through the list of detections and display info for each one.
             for (AprilTagDetection detection : currentDetections) {
-                if (detection.metadata != null) {
-                    telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                    telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-                } else {
-                    telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                    telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-                }
+                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
             }   // end for() loop
-
-            // Add "key" information to telemetry
-            telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-            telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-            telemetry.addLine("RBE = Range, Bearing & Elevation");
-
     }
 
     private void IMUTelemetry() {
