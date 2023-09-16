@@ -38,6 +38,7 @@ public class AutonomousMode extends LinearOpMode {
         setupIMU();
 
 //        drive = new SampleMecanumDrive(hardwareMap);
+        // TODO: Fix Drive Constants physical measurements!!!
 
         Thread telemetryThread = new Thread(new Runnable() {
             @Override
