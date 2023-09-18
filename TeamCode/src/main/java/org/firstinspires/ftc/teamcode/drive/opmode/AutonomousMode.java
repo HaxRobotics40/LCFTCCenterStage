@@ -1,16 +1,21 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.robotcore.hardware.SwitchableLight;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -29,9 +34,13 @@ public class AutonomousMode extends LinearOpMode {
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
 
     SampleMecanumDrive drive;
+//    TODO: Use dead wheels
+//    TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
 
-    NormalizedColorSensor colorSensor;
+//    NormalizedColorSensor colorSensor;
+
+    DistanceSensor sensorDistance;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -40,8 +49,12 @@ public class AutonomousMode extends LinearOpMode {
 
         setupIMU();
 
-//        drive = new SampleMecanumDrive(hardwareMap);
+//        setupColorSensor();
+        setupDistanceSensor();
+
+        drive = new SampleMecanumDrive(hardwareMap);
         // TODO: Fix Drive Constants physical measurements!!!
+//        TODO: Move Reverse to here.
 
         Thread telemetryThread = new Thread(new Runnable() {
             @Override
@@ -97,6 +110,22 @@ public class AutonomousMode extends LinearOpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
 
+//    private void setupColorSensor() {
+//        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
+//
+//        if (colorSensor instanceof SwitchableLight) {
+//            ((SwitchableLight)colorSensor).enableLight(true);
+//        }
+//
+//        colorSensor.setGain(15);
+//        // TODO: FInd Color Sensor docs on best gain
+//    }
+
+    private void setupDistanceSensor() {
+        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
+    }
+
+
     private void outputTelemetry() {
         // TODO: Also output to .log file.
         telemetry.addLine("---------April Tag Data----------");
@@ -106,7 +135,23 @@ public class AutonomousMode extends LinearOpMode {
         telemetry.addLine("---------Pose Data----------");
 //        TODO: Add beysian estimate. Kalman filter.
         poseTelemetry();
+//        telemetry.addLine("---------Color Data----------");
+//        colorSensorTelemetry();
+        telemetry.addLine("---------Distance Sensor----------");
+        distanceSensorTelemetry();
     }
+
+    private void distanceSensorTelemetry() {
+        telemetry.addData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));
+    }
+
+//    private void colorSensorTelemetry() {
+//        NormalizedRGBA colors = colorSensor.getNormalizedColors();
+//        telemetry.addLine()
+//                .addData("Red", "%.3f", colors.red)
+//                .addData("Green", "%.3f", colors.green)
+//                .addData("Blue", "%.3f", colors.blue);
+//    }
 
     private void poseTelemetry() {
 //        telemetry.addLine(String.format("Estimated Pose: %s", drive.getPoseEstimate().toString()));
