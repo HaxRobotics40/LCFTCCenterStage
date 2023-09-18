@@ -31,7 +31,7 @@ public class MeepMeepTestingGeorge {
                                 .build()
                 );
         Image img = null;
-        try { img = ImageIO.read(new File("C:/Users/georm/Downloads")); }
+        try { img = ImageIO.read(new File("C:\\Users\\georm\\Downloads\\Juice-CENTERSTAGE-Dark.png")); }
         catch (IOException e) {}
         meepMeep.setBackground(img)
                 .setDarkMode(true)
