@@ -2,13 +2,16 @@ package com.example.meepmeeptesting;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.noahbres.meepmeep.MeepMeep;
-import java.io.*;
-import java.awt.*;
-import javax.imageio.ImageIO;
 import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
-public class MeepMeepTesting {
+import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+public class MeepMeepTesting_Kai {
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
 
@@ -28,7 +31,7 @@ public class MeepMeepTesting {
                                 .build()
                 );
         Image img = null;
-        try { img = ImageIO.read(new File("C:/Users/georm/Downloads")); }
+        try { img = ImageIO.read(new File("/Users/kaimasujima/Desktop/Juice-CENTERSTAGE-Dark.png")); }
         catch (IOException e) {}
         meepMeep.setBackground(img)
                 .setDarkMode(true)
