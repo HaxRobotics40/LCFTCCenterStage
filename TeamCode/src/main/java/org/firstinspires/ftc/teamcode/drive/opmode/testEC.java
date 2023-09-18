@@ -6,7 +6,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -14,24 +13,32 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import com.acmerobotics.roadrunner.geometry.*;
+import org.firstinspires.ftc.teamcode.trajectorysequence.*;
+
 import java.util.*;
 
+//rr and strucutre layouts for post tuning stuff
 
 @Autonomous
-public class AutonomousMode extends LinearOpMode {
+public class testEC extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
 
     AprilTagProcessor aprilTagProcessor;
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
+    TrajectorySequence trajSeq;
 
     SampleMecanumDrive drive;
     IMU imu;
-
-    NormalizedColorSensor colorSensor;
+    int targetTag;
+    double detX;
+    boolean positionYes = false;
+    double detY;
+    Pose2d startPose = new Pose2d(60,45,Math.toRadians(180));
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -39,41 +46,52 @@ public class AutonomousMode extends LinearOpMode {
         vPortal = initVisionPortal(aprilTagProcessor);
 
         setupIMU();
+        trajSeqSetup();
 
-//        drive = new SampleMecanumDrive(hardwareMap);
-        // TODO: Fix Drive Constants physical measurements!!!
-
-        Thread telemetryThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
-                    outputTelemetry();
-                    try {
-                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            }
-        });
+        drive = new SampleMecanumDrive(hardwareMap); //try followTrajectoryAsync later?
+        targetTag = (int) Math.ceil(3*Math.random());
+        telemetry.addData("Randomized Tag Choice: ", targetTag);
 
         waitForStart();
-
-        telemetryThread.start(); // Starting telemetry thread
-
         if (opModeIsActive()) {
-            while (opModeIsActive()) {
-//               opModeLoop();
-            }
+
+            drive.followTrajectorySequence(trajSeq);
+            Thread telemetryThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
+                        endTickTelemetry();
+                        try {
+                            Thread.sleep(10); // Introducing a small delay to prevent excessive updates
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                }
+            });
+
         }
 
-        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
 
-    private void opModeLoop() {
+    private void trajSeqSetup() {
+
+        trajSeq = drive.trajectorySequenceBuilder(startPose)
+                .addTemporalMarker(() -> {
+                    // outline searches
+
+                })
+                .lineToLinearHeading(new Pose2d(45,45, Math.toRadians(90)))
+                .addDisplacementMarker(() -> {
+                    while(!positionYes) {
+                        aprilTagTelemetry();
+                        telemetry.update();
+                    }
+                })
+                .build();
+
 
     }
-
     private AprilTagProcessor initAprilTag() {
         aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
         aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
@@ -97,19 +115,9 @@ public class AutonomousMode extends LinearOpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
 
-    private void outputTelemetry() {
-        // TODO: Also output to .log file.
-        telemetry.addLine("---------April Tag Data----------");
+    private void endTickTelemetry() {
         aprilTagTelemetry();
-        telemetry.addLine("---------IMU Data----------");
         IMUTelemetry();
-        telemetry.addLine("---------Pose Data----------");
-//        TODO: Add beysian estimate. Kalman filter.
-        poseTelemetry();
-    }
-
-    private void poseTelemetry() {
-//        telemetry.addLine(String.format("Estimated Pose: %s", drive.getPoseEstimate().toString()));
     }
 
     @SuppressLint("DefaultLocale")
@@ -119,17 +127,52 @@ public class AutonomousMode extends LinearOpMode {
 
             // Step through the list of detections and display info for each one.
             for (AprilTagDetection detection : currentDetections) {
-                if (detection.metadata != null) {
-                    telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                    telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-                } else {
-                    telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                    telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+
+
+                List<AprilTagDetection> allDets = aprilTagProcessor.getDetections();
+                for (AprilTagDetection det : allDets) {
+
+                    // targetTag isolated
+                    if (det.id % 3 == targetTag || det.id % 3 == targetTag-3) {
+
+                        telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                        telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                        telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                        telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+                        detX = det.ftcPose.x;
+                        detY = det.ftcPose.y;
+
+                        if(detX !=0) {
+                            if (detX > 0) {
+                                drive.setMotorPowers(detX/10,-detX/10,detX/10,-detX/10);
+                            } else {
+                                drive.setMotorPowers(-detX/10,detX/10,-detX/10,detX/10);
+                            }
+
+                        }
+                        if(detY != 12) {
+                            if (detX > 12) {
+                                drive.setMotorPowers(0.1,0.1,0.1,0.1); // do something about this later
+                            } else {
+                                drive.setMotorPowers(-0.1,-0.1,-0.1,-0.1);
+                            }
+                        }
+
+                        if(detX ==0 && detY ==12) {
+                            positionYes = true;
+                        }
+
+
+                    }
                 }
-            }   // end for() loop
+
+            }
+
+
     }
+
+
+
 
     private void IMUTelemetry() {
 //        TODO: create IMU Class.
