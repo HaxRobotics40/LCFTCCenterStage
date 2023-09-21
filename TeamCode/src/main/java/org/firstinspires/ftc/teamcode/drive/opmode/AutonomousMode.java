@@ -40,6 +40,8 @@ public class AutonomousMode extends LinearOpMode {
 
   NormalizedColorSensor colorSensor;
 
+  float gain;
+
     DistanceSensor sensorDistance;
 
     @Override
@@ -61,6 +63,7 @@ public class AutonomousMode extends LinearOpMode {
             public void run() {
                 while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
                     outputTelemetry();
+
                     try {
                         Thread.sleep(10); // Introducing a small delay to prevent excessive updates
                     } catch (InterruptedException e) {
@@ -76,7 +79,7 @@ public class AutonomousMode extends LinearOpMode {
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
-//               opModeLoop();
+              opModeLoop();
             }
         }
 
@@ -84,6 +87,14 @@ public class AutonomousMode extends LinearOpMode {
     }
 
     private void opModeLoop() {
+        gain+=1;
+        colorSensor.setGain(gain);
+        try {
+            // Sleep for one second
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -112,12 +123,12 @@ public class AutonomousMode extends LinearOpMode {
 
     private void setupColorSensor() {
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
-
         if (colorSensor instanceof SwitchableLight) {
             ((SwitchableLight)colorSensor).enableLight(true);
         }
 
-        colorSensor.setGain(15);
+        colorSensor.setGain(0);
+        gain=0;
         // TODO: FInd Color Sensor docs on best gain
     }
 
@@ -151,6 +162,8 @@ public class AutonomousMode extends LinearOpMode {
                 .addData("Red", "%.3f", colors.red)
                 .addData("Green", "%.3f", colors.green)
                 .addData("Blue", "%.3f", colors.blue);
+        telemetry.addLine(String.valueOf(gain));
+
     }
 
     private void poseTelemetry() {
