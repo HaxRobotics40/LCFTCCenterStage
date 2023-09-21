@@ -87,14 +87,14 @@ public class AutonomousMode extends LinearOpMode {
     }
 
     private void opModeLoop() {
-        gain+=1;
-        colorSensor.setGain(gain);
-        try {
-            // Sleep for one second
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        gain+=1;
+//       colorSensor.setGain(gain);
+//        try {
+//            // Sleep for one second
+//            Thread.sleep(2000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
     }
 
@@ -127,8 +127,9 @@ public class AutonomousMode extends LinearOpMode {
             ((SwitchableLight)colorSensor).enableLight(true);
         }
 
-        colorSensor.setGain(0);
-        gain=0;
+        colorSensor.setGa
+    in(100);
+        // gain=0;
         // TODO: FInd Color Sensor docs on best gain
     }
 
