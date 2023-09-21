@@ -38,7 +38,7 @@ public class AutonomousMode extends LinearOpMode {
 //    TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
 
-//    NormalizedColorSensor colorSensor;
+  NormalizedColorSensor colorSensor;
 
     DistanceSensor sensorDistance;
 
@@ -49,7 +49,7 @@ public class AutonomousMode extends LinearOpMode {
 
         setupIMU();
 
-//        setupColorSensor();
+        setupColorSensor();
         setupDistanceSensor();
 
         drive = new SampleMecanumDrive(hardwareMap);
@@ -110,16 +110,16 @@ public class AutonomousMode extends LinearOpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
 
-//    private void setupColorSensor() {
-//        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
-//
-//        if (colorSensor instanceof SwitchableLight) {
-//            ((SwitchableLight)colorSensor).enableLight(true);
-//        }
-//
-//        colorSensor.setGain(15);
-//        // TODO: FInd Color Sensor docs on best gain
-//    }
+    private void setupColorSensor() {
+        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
+
+        if (colorSensor instanceof SwitchableLight) {
+            ((SwitchableLight)colorSensor).enableLight(true);
+        }
+
+        colorSensor.setGain(15);
+        // TODO: FInd Color Sensor docs on best gain
+    }
 
     private void setupDistanceSensor() {
         sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
@@ -135,8 +135,8 @@ public class AutonomousMode extends LinearOpMode {
         telemetry.addLine("---------Pose Data----------");
 //        TODO: Add beysian estimate. Kalman filter.
         poseTelemetry();
-//        telemetry.addLine("---------Color Data----------");
-//        colorSensorTelemetry();
+       telemetry.addLine("---------Color Data----------");
+       colorSensorTelemetry();
         telemetry.addLine("---------Distance Sensor----------");
         distanceSensorTelemetry();
     }
@@ -145,13 +145,13 @@ public class AutonomousMode extends LinearOpMode {
         telemetry.addData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));
     }
 
-//    private void colorSensorTelemetry() {
-//        NormalizedRGBA colors = colorSensor.getNormalizedColors();
-//        telemetry.addLine()
-//                .addData("Red", "%.3f", colors.red)
-//                .addData("Green", "%.3f", colors.green)
-//                .addData("Blue", "%.3f", colors.blue);
-//    }
+    private void colorSensorTelemetry() {
+        NormalizedRGBA colors = colorSensor.getNormalizedColors();
+        telemetry.addLine()
+                .addData("Red", "%.3f", colors.red)
+                .addData("Green", "%.3f", colors.green)
+                .addData("Blue", "%.3f", colors.blue);
+    }
 
     private void poseTelemetry() {
 //        telemetry.addLine(String.format("Estimated Pose: %s", drive.getPoseEstimate().toString()));
