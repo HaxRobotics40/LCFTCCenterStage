@@ -135,7 +135,7 @@ public class AutonomousMode extends LinearOpMode {
         telemetry.addLine("---------Pose Data----------");
 //        TODO: Add beysian estimate. Kalman filter.
         poseTelemetry();
-       telemetry.addLine("---------Color Data----------");
+              telemetry.addLine("---------Color Data----------");
        colorSensorTelemetry();
         telemetry.addLine("---------Distance Sensor----------");
         distanceSensorTelemetry();
