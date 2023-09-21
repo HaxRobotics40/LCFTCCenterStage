@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.drive.opmode;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;
+import android.os.Environment;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -22,33 +23,39 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 
 @Autonomous
 public class AutonomousMode extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
-
     AprilTagProcessor aprilTagProcessor;
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
-
     SampleMecanumDrive drive;
 //    TODO: Use dead wheels
 //    TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
-
 //    NormalizedColorSensor colorSensor;
-
     DistanceSensor sensorDistance;
+    Logger logger;
 
     @Override
     public void runOpMode() throws InterruptedException {
         aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal(aprilTagProcessor);
-
+        initLogging();
         setupIMU();
-
 //        setupColorSensor();
         setupDistanceSensor();
 
@@ -85,6 +92,32 @@ public class AutonomousMode extends LinearOpMode {
 
     private void opModeLoop() {
 
+    }
+
+    private void initLogging() {
+        Logger logger = Logger.getLogger("MyLogger");
+        // Set up FileHandler
+        FileHandler fileHandler = null;
+        try {
+            fileHandler = new FileHandler("log.log");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Specify the log format
+        SimpleFormatter formatter = new SimpleFormatter();
+        fileHandler.setFormatter(formatter);
+
+        ConsoleHandler consoleHandler = new ConsoleHandler();
+        SimpleFormatter consoleFormatter = new SimpleFormatter();
+        consoleHandler.setFormatter(consoleFormatter);
+
+        // Add both handlers to the logger
+        logger.addHandler(fileHandler);
+        logger.addHandler(consoleHandler);
+
+        // Set the logger level (optional, default is Level.INFO)
+        logger.setLevel(Level.INFO);
     }
 
     private AprilTagProcessor initAprilTag() {
@@ -189,5 +222,9 @@ public class AutonomousMode extends LinearOpMode {
         telemetry.addData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
         telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
         telemetry.update();
+    }
+    private void TeleLogging(String s) {
+        telemetry.addLine(s);
+        logger.info(s);
     }
 }
