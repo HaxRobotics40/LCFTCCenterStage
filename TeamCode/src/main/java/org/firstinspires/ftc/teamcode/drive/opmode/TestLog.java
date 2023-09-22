@@ -76,7 +76,7 @@ public class TestLog extends LinearOpMode {
         // Set up FileHandler
         FileHandler fileHandler = null;
         try {
-            fileHandler = new FileHandler(String.format("%s/FIRST/data/mylog.txt", Environment.getExternalStorageDirectory().getAbsolutePath()));
+            fileHandler = new FileHandler("/sdcard/FIRST/data/mylog.txt");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
