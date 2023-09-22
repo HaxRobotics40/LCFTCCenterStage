@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
 import android.annotation.SuppressLint;
+import android.os.Environment;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -35,7 +36,6 @@ public class TestLog extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         initLogging();
-
         //drive = new SampleMecanumDrive(hardwareMap);
         // TODO: Fix Drive Constants physical measurements!!!
 //        TODO: Move Reverse to here.
@@ -76,7 +76,7 @@ public class TestLog extends LinearOpMode {
         // Set up FileHandler
         FileHandler fileHandler = null;
         try {
-            fileHandler = new FileHandler("log.log");
+            fileHandler = new FileHandler(String.format("%s/FIRST/data/mylog.txt", Environment.getExternalStorageDirectory().getAbsolutePath()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -100,7 +100,7 @@ public class TestLog extends LinearOpMode {
 
 
     private void outputTelemetry() {
-
+        teleLogging("hello world");
     }
 
     private void teleLogging(String s) {
