@@ -127,8 +127,7 @@ public class AutonomousMode extends LinearOpMode {
             ((SwitchableLight)colorSensor).enableLight(true);
         }
 
-        colorSensor.setGa
-    in(100);
+        colorSensor.setGain(100);
         // gain=0;
         // TODO: FInd Color Sensor docs on best gain
     }
