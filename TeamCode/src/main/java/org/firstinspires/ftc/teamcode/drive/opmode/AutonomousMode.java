@@ -99,7 +99,7 @@ public class AutonomousMode extends LinearOpMode {
         // Set up FileHandler
         FileHandler fileHandler = null;
         try {
-            fileHandler = new FileHandler("log.log");
+            fileHandler = new FileHandler("log.txt");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
