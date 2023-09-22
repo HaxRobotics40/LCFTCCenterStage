@@ -161,16 +161,16 @@ public class AutonomousMode extends LinearOpMode {
 
     private void outputTelemetry() {
         // TODO: Also output to .log file.
-        telemetry.addLine("---------April Tag Data----------");
+        teleLogging("---------April Tag Data----------");
         aprilTagTelemetry();
-        telemetry.addLine("---------IMU Data----------");
+        teleLogging("---------IMU Data----------");
         IMUTelemetry();
-        telemetry.addLine("---------Pose Data----------");
+        teleLogging("---------Pose Data----------");
 //        TODO: Add beysian estimate. Kalman filter.
         poseTelemetry();
-//        telemetry.addLine("---------Color Data----------");
+//        teleLogging("---------Color Data----------");
 //        colorSensorTelemetry();
-        telemetry.addLine("---------Distance Sensor----------");
+        teleLogging("---------Distance Sensor----------");
         distanceSensorTelemetry();
     }
 
@@ -180,14 +180,14 @@ public class AutonomousMode extends LinearOpMode {
 
 //    private void colorSensorTelemetry() {
 //        NormalizedRGBA colors = colorSensor.getNormalizedColors();
-//        telemetry.addLine()
+//        teleLogging()
 //                .addData("Red", "%.3f", colors.red)
 //                .addData("Green", "%.3f", colors.green)
 //                .addData("Blue", "%.3f", colors.blue);
 //    }
 
     private void poseTelemetry() {
-//        telemetry.addLine(String.format("Estimated Pose: %s", drive.getPoseEstimate().toString()));
+//        teleLogging(String.format("Estimated Pose: %s", drive.getPoseEstimate().toString()));
     }
 
     @SuppressLint("DefaultLocale")
@@ -198,13 +198,13 @@ public class AutonomousMode extends LinearOpMode {
             // Step through the list of detections and display info for each one.
             for (AprilTagDetection detection : currentDetections) {
                 if (detection.metadata != null) {
-                    telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                    telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+                    teleLogging(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                    teleLogging(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                    teleLogging(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                    teleLogging(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
                 } else {
-                    telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                    telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                    teleLogging(String.format("\n==== (ID %d) Unknown", detection.id));
+                    teleLogging(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
                 }
             }   // end for() loop
     }
@@ -223,7 +223,7 @@ public class AutonomousMode extends LinearOpMode {
         telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
         telemetry.update();
     }
-    private void TeleLogging(String s) {
+    private void teleLogging(String s) {
         telemetry.addLine(s);
         logger.info(s);
     }
