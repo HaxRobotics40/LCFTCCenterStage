@@ -30,13 +30,6 @@ public class MeepMeepTestingGeorge {
                                 .turn(Math.toRadians(90))
                                 .build()
                 );
-        Image img = null;
-        try { img = ImageIO.read(new File("C:\\Users\\georm\\Downloads\\Juice-CENTERSTAGE-Dark.png")); }
-        catch (IOException e) {}
-        meepMeep.setBackground(img)
-                .setDarkMode(true)
-                .setBackgroundAlpha(0.95f)
-                .addEntity(myBot)
-                .start();
+        meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_OFFICIAL);
     }
 }
