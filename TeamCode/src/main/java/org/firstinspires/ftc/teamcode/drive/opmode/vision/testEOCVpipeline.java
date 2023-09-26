@@ -87,6 +87,38 @@ public class testEOCVpipeline extends OpenCvPipeline {
         maskR2.release();
         colorOnly.release();
 
+        int width = mask.cols(); // Get the width of the mask
+        int sectorWidth = width / 3; // Divide it by 3 to get each sector's width
+
+// Define Regions of Interest (ROI) for each sector
+        Rect leftSector = new Rect(0, 0, sectorWidth, mask.rows());
+        Rect middleSector = new Rect(sectorWidth, 0, sectorWidth, mask.rows());
+        Rect rightSector = new Rect(2 * sectorWidth, 0, sectorWidth, mask.rows());
+
+// Count number of 1s in each sector
+        int leftCount = Core.countNonZero(new Mat(mask, leftSector));
+        int middleCount = Core.countNonZero(new Mat(mask, middleSector));
+        int rightCount = Core.countNonZero(new Mat(mask, rightSector));
+
+// Determine which sector has the most number of 1s
+        int maxCount = Math.max(leftCount, Math.max(middleCount, rightCount));
+        String sectorWithMostOnes;
+
+        if(maxCount == leftCount) {
+            sectorWithMostOnes = "Left Sector";
+        } else if(maxCount == middleCount) {
+            sectorWithMostOnes = "Middle Sector";
+        } else {
+            sectorWithMostOnes = "Right Sector";
+        }
+
+        telemetry.addLine(sectorWithMostOnes);
+
+
+
+
+
+
 
         // Imgproc.Canny(mask, edges, 100, 300);
 //        Photo.fastNlMeansDenoising(mask, edges, 1, 7, 21); // fix h, keeps crashing
