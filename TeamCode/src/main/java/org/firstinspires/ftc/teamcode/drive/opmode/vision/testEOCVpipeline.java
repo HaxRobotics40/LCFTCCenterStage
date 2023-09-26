@@ -60,9 +60,21 @@ public class testEOCVpipeline extends OpenCvPipeline {
         int amountColor;
         int type = colorOnly.type();
 
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5,5));
+
         Core.inRange(secondary, lower_RB[0], upper_RB[0], maskR);
         Core.inRange(secondary, lower_RB[1], upper_RB[1], maskB);
         Core.inRange(secondary, lower_RB[2], upper_RB[2], maskR2);
+
+        // Perform opening (erosion followed by dilation) to remove noise on mask
+        Imgproc.morphologyEx(maskR, maskR, Imgproc.MORPH_OPEN, kernel);
+        Imgproc.morphologyEx(maskB, maskB, Imgproc.MORPH_OPEN, kernel);
+        Imgproc.morphologyEx(maskR2, maskR2, Imgproc.MORPH_OPEN, kernel);
+
+        // Perform closing (dilation followed by erosion) to fill small holes if required
+        Imgproc.morphologyEx(maskR, maskR, Imgproc.MORPH_CLOSE, kernel);
+        Imgproc.morphologyEx(maskB, maskB, Imgproc.MORPH_CLOSE, kernel);
+        Imgproc.morphologyEx(maskR2, maskR2, Imgproc.MORPH_CLOSE, kernel);
 
         Core.bitwise_and(input, input, colorOnly, maskR = maskR);
         Core.bitwise_and(input, input, colorOnly, maskB = maskB);
@@ -77,12 +89,9 @@ public class testEOCVpipeline extends OpenCvPipeline {
 
 
         // Imgproc.Canny(mask, edges, 100, 300);
-        Photo.fastNlMeansDenoising(mask, edges, 1, 7, 21); // fix h, keeps crashing
+//        Photo.fastNlMeansDenoising(mask, edges, 1, 7, 21); // fix h, keeps crashing
 
-        // edges = mask.clone();
-
-        // Imgproc.cvtColor(mask, edges, Imgproc.COLOR_RGB2GRAY);
-
+         edges = mask.clone();
 
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         Mat hierarchy = new Mat();
