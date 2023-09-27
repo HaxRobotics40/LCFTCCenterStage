@@ -1,36 +1,34 @@
 package org.firstinspires.ftc.teamcode.drive.opmode.vision;
 
+import org.firstinspires.ftc.vision.VisionProcessor;
+import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.opencv.core.*;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.photo.Photo;
 import org.openftc.easyopencv.OpenCvPipeline;
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import android.graphics.Canvas;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class testEOCVpipeline extends OpenCvPipeline {
-    // TODO: make this a vision processor later, it's the exact same thing (see: LJ4FTC)
+public class testEOCVpipeline implements VisionProcessor {
     Mat secondary = new Mat();
-    int location;
-    final int width = 900; // TODO: add as constructor parameter when done testing
+    String location = "0";
+    private int width;
     int color;
 
 
-    Telemetry telemetry; //TODO: get rid of all instances of Telemtry as an object
-    public testEOCVpipeline(Telemetry telemetry) {
-        this.telemetry = telemetry;
+    public void init(int width, int height, CameraCalibration cameraCalibration) {
+
     }
-
-
-    public Mat processFrame(Mat input) {
+    public Mat processFrame(Mat input, long e) {
 
         Imgproc.cvtColor(input, secondary, Imgproc.COLOR_RGB2HSV);
 
         if (secondary.empty()) {
-            location = -1;
+            location = "-1";
             return secondary;
         }
 
@@ -102,17 +100,15 @@ public class testEOCVpipeline extends OpenCvPipeline {
 
 // Determine which sector has the most number of 1s
         int maxCount = Math.max(leftCount, Math.max(middleCount, rightCount));
-        String sectorWithMostOnes;
+//        String sectorWithMostOnes;
 
         if(maxCount == leftCount) {
-            sectorWithMostOnes = "Left Sector";
+            location = "Left";
         } else if(maxCount == middleCount) {
-            sectorWithMostOnes = "Middle Sector";
+            location = "Middle";
         } else {
-            sectorWithMostOnes = "Right Sector";
+            location = "Right Sector";
         }
-
-        telemetry.addLine(sectorWithMostOnes);
 
 
 
@@ -149,16 +145,12 @@ public class testEOCVpipeline extends OpenCvPipeline {
 
         double midline = 0.5 * width;
 
-        // figure out how to see where the largest boxes are
-
-        // comment this out when implementing on the bot
-        telemetry.addData("Location", location);
-        telemetry.update();
-
         return edges;
     }
 
-    public int pieceLocation() {
+    public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight,float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {}
+
+    public String pieceLocation() {
         return location;
     }
 }

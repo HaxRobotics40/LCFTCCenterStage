@@ -18,11 +18,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.drive.opmode.vision.testEOCVpipeline;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import java.util.*;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
 
 
 @Autonomous
@@ -32,6 +36,7 @@ public class AutonomousMode extends LinearOpMode {
 
     AprilTagProcessor aprilTagProcessor;
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
+    testEOCVpipeline detector;
 
     SampleMecanumDrive drive;
 //    TODO: Use dead wheels
@@ -41,11 +46,13 @@ public class AutonomousMode extends LinearOpMode {
 //    NormalizedColorSensor colorSensor;
 
     DistanceSensor sensorDistance;
+    int status;
+    String itemSector;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        aprilTagProcessor = initAprilTag();
-        vPortal = initVisionPortal(aprilTagProcessor);
+//        aprilTagProcessor = initAprilTag();
+        vPortal = initVisionPortal();
 
         setupIMU();
 
@@ -76,28 +83,46 @@ public class AutonomousMode extends LinearOpMode {
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
-//               opModeLoop();
+               opModeLoop();
             }
         }
 
         telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
+    private void getItemSector() {
+        // L is 0, M is 1, R is 2
+        vPortalBuilder.addProcessor(detector);
+//        status = 1;
+        boolean stop = false;
+        while (!stop) {
+            if (detector.pieceLocation() == null) {
+                continue;
+            } else {
+                itemSector = detector.pieceLocation(); //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
+                stop = true;
+            }
+        }
+    }
 
     private void opModeLoop() {
+        switch(status) {
+            case 0: getItemSector();
+            break;
+            case 1: telemetry.addData("sector:", itemSector);
 
+        }
     }
 
-    private AprilTagProcessor initAprilTag() {
-        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
-        aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
-
-        return aprilTagProcessorBuilder.build();
-    }
-
-    private VisionPortal initVisionPortal(AprilTagProcessor atp) {
+//    private AprilTagProcessor initAprilTag() {
+//        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
+//        aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
+//
+//        return aprilTagProcessorBuilder.build();
+//    }
+//
+    private VisionPortal initVisionPortal() {
         vPortalBuilder = new VisionPortal.Builder();
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
-        vPortalBuilder.addProcessor(atp);
 
         return vPortalBuilder.build();
     }
@@ -128,8 +153,9 @@ public class AutonomousMode extends LinearOpMode {
 
     private void outputTelemetry() {
         // TODO: Also output to .log file.
-        telemetry.addLine("---------April Tag Data----------");
-        aprilTagTelemetry();
+//        telemetry.addLine("---------April Tag Data----------");
+//        aprilTagTelemetry();
+        telemetry.addLine(itemSector);
         telemetry.addLine("---------IMU Data----------");
         IMUTelemetry();
         telemetry.addLine("---------Pose Data----------");
@@ -158,23 +184,23 @@ public class AutonomousMode extends LinearOpMode {
     }
 
     @SuppressLint("DefaultLocale")
-    private void aprilTagTelemetry() {
-            List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
-            telemetry.addData("# AprilTags Detected", currentDetections.size());
-
-            // Step through the list of detections and display info for each one.
-            for (AprilTagDetection detection : currentDetections) {
-                if (detection.metadata != null) {
-                    telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                    telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-                } else {
-                    telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                    telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-                }
-            }   // end for() loop
-    }
+//    private void aprilTagTelemetry() {
+//            List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
+//            telemetry.addData("# AprilTags Detected", currentDetections.size());
+//
+//            // Step through the list of detections and display info for each one.
+//            for (AprilTagDetection detection : currentDetections) {
+//                if (detection.metadata != null) {
+//                    telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+//                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+//                    telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+//                    telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+//                } else {
+//                    telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+//                    telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+//                }
+//            }   // end for() loop
+//    }
 
     private void IMUTelemetry() {
 //        TODO: create IMU Class.
