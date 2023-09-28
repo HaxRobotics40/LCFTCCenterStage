@@ -9,6 +9,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
+import java.util.List;
+
 @Autonomous(name="Robot: Auto Drive To Red Line", group="Robot")
 public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
 
@@ -34,12 +36,15 @@ public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
         while (opModeInInit()) {
             telemetry.addData("Status", "Ready to drive to red line.");
             getRedValue();
+            telemetry.addLine(drive.getWheelVelocities().toString());
         }
 
         drive.setMotorPowers(APPROACH_SPEED,APPROACH_SPEED,APPROACH_SPEED,APPROACH_SPEED);
 
+
+
         while (opModeIsActive() && (getRedValue() < RED_THRESHOLD)) {
-            sleep(5);
+            telemetry.addLine(drive.getWheelVelocities().toString());
         }
         telemetry.addLine("Rec");
         drive.setMotorPowers(0,0,0,0);
