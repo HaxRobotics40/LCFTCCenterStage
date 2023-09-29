@@ -38,9 +38,9 @@ public class AutonomousMode extends LinearOpMode {
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
     testEOCVpipeline detector;
 
-    SampleMecanumDrive drive;
 //    TODO: Use dead wheels
-//    TODO: Update Constants to be 100% accurate (ex. wheel radius)
+        SampleMecanumDrive drive;
+        //TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
 
 //    NormalizedColorSensor colorSensor;
@@ -54,10 +54,10 @@ public class AutonomousMode extends LinearOpMode {
 //        aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
 
-        setupIMU();
+//        setupIMU();
 
 //        setupColorSensor();
-        setupDistanceSensor();
+//        setupDistanceSensor();
 
         drive = new SampleMecanumDrive(hardwareMap);
         // TODO: Fix Drive Constants physical measurements!!!
@@ -89,7 +89,7 @@ public class AutonomousMode extends LinearOpMode {
 
         telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
-    private void getItemSector() {
+    private void runPieceDetector() {
         // L is 0, M is 1, R is 2
         vPortalBuilder.addProcessor(detector);
 //        status = 1;
@@ -106,9 +106,8 @@ public class AutonomousMode extends LinearOpMode {
 
     private void opModeLoop() {
         switch(status) {
-            case 0: getItemSector();
+            case 0: runPieceDetector();
             break;
-            case 1: telemetry.addData("sector:", itemSector);
 
         }
     }
