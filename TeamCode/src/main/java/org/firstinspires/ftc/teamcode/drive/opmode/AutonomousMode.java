@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.drive.opmode;
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -19,6 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.opmode.vision.testEOCVpipeline;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -44,11 +47,12 @@ public class AutonomousMode extends LinearOpMode {
     IMU imu;
 
 //    NormalizedColorSensor colorSensor;
+    TrajectorySequence trajSeq;
 
     DistanceSensor sensorDistance;
     int status;
-    String itemSector;
-
+    int itemSector;
+    Pose2d startPose = new Pose2d(60,45,Math.toRadians(180));
     @Override
     public void runOpMode() throws InterruptedException {
 //        aprilTagProcessor = initAprilTag();
@@ -89,28 +93,6 @@ public class AutonomousMode extends LinearOpMode {
 
         telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
-    private void runPieceDetector() {
-        // L is 0, M is 1, R is 2
-        vPortalBuilder.addProcessor(detector);
-//        status = 1;
-        boolean stop = false;
-        while (!stop) {
-            if (detector.pieceLocation() == null) {
-                continue;
-            } else {
-                itemSector = detector.pieceLocation(); //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
-                stop = true;
-            }
-        }
-    }
-
-    private void opModeLoop() {
-        switch(status) {
-            case 0: runPieceDetector();
-            break;
-
-        }
-    }
 
 //    private AprilTagProcessor initAprilTag() {
 //        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
@@ -124,6 +106,14 @@ public class AutonomousMode extends LinearOpMode {
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
 
         return vPortalBuilder.build();
+    }
+    private void trajSeqSetup() {
+
+        trajSeq = drive.trajectorySequenceBuilder(startPose)
+                .lineTo(new Vector2d(45,45))
+                .build();
+
+
     }
 
     private void setupIMU() {
@@ -148,13 +138,41 @@ public class AutonomousMode extends LinearOpMode {
     private void setupDistanceSensor() {
         sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
     }
+    private void opModeLoop() {
+        switch(status) {
+            case 0: runPieceDetector();
+                break;
+            case 1: driveToLine();
+
+        }
+    }
+
+    private void runPieceDetector() {
+        // L is 0, M is 1, R is 2
+        vPortalBuilder.addProcessor(detector);
+//        status = 1;
+        boolean stop = false;
+        while (!stop) {
+            if (detector.pieceLocation() == 0) {
+                continue;
+            } else {
+                itemSector = detector.pieceLocation(); //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
+                stop = true;
+            }
+        }
+    }
+
+    private void driveToLine() {
+
+
+    }
 
 
     private void outputTelemetry() {
         // TODO: Also output to .log file.
 //        telemetry.addLine("---------April Tag Data----------");
 //        aprilTagTelemetry();
-        telemetry.addLine(itemSector);
+        telemetry.addLine(Integer.toString(itemSector));
         telemetry.addLine("---------IMU Data----------");
         IMUTelemetry();
         telemetry.addLine("---------Pose Data----------");
@@ -215,4 +233,5 @@ public class AutonomousMode extends LinearOpMode {
         telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
         telemetry.update();
     }
+
 }

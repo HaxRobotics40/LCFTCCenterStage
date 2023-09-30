@@ -27,6 +27,11 @@ public class MeepMeepTesting {
                                 .turn(Math.toRadians(90))
                                 .build()
                 );
-        meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_OFFICIAL);
+        meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_OFFICIAL)
+                .setDarkMode(true)
+                // Background opacity from 0-1
+                .setBackgroundAlpha(0.95f)
+                .addEntity(myBot)
+                .start();
     }
 }

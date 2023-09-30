@@ -15,9 +15,8 @@ import java.util.List;
 
 public class testEOCVpipeline implements VisionProcessor {
     Mat secondary = new Mat();
-    String location = "0";
+    private obtainedLocation location= obtainedLocation.START;
     private int width;
-    int color;
 
 
     public void init(int width, int height, CameraCalibration cameraCalibration) {
@@ -28,7 +27,6 @@ public class testEOCVpipeline implements VisionProcessor {
         Imgproc.cvtColor(input, secondary, Imgproc.COLOR_RGB2HSV);
 
         if (secondary.empty()) {
-            location = "-1";
             return secondary;
         }
 
@@ -103,11 +101,11 @@ public class testEOCVpipeline implements VisionProcessor {
 //        String sectorWithMostOnes;
 
         if(maxCount == leftCount) {
-            location = "Left";
+            location = obtainedLocation.LEFT;
         } else if(maxCount == middleCount) {
-            location = "Middle";
+            location = obtainedLocation.MIDDLE;
         } else {
-            location = "Right Sector";
+            location = obtainedLocation.RIGHT;
         }
 
 
@@ -147,10 +145,19 @@ public class testEOCVpipeline implements VisionProcessor {
 
         return edges;
     }
-
+    public enum obtainedLocation {
+        ERROR(-1),
+        START(0),
+        LEFT(1),
+        MIDDLE(2),
+        RIGHT(3);
+        int val;
+        obtainedLocation(int i) {int val = i;}
+        private int val() {return val;}
+    }
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight,float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {}
 
-    public String pieceLocation() {
-        return location;
+    public int pieceLocation() {
+        return location.val();
     }
 }
