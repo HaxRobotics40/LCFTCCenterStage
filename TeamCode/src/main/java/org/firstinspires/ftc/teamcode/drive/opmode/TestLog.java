@@ -38,7 +38,8 @@ public class TestLog extends LinearOpMode {
 //        initLogging();
         //drive = new SampleMecanumDrive(hardwareMap);
         // TODO: Fix Drive Constants physical measurements!!!
-//        TODO: Move Reverse to here.
+//        TODO: Move Rever
+//         se to here.
 
 //        Thread telemetryThread = new Thread(new Runnable() {
 //            @Override
@@ -60,6 +61,7 @@ public class TestLog extends LinearOpMode {
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
+                telemetry.setAutoClear(false);
                telemetry.addLine(String.valueOf(Math.random()*1000));
             }
         }
