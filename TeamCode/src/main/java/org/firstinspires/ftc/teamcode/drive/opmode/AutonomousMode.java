@@ -47,6 +47,7 @@ public class AutonomousMode extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 //        aprilTagProcessor = initAprilTag();
 //        vPortal = initVisionPortal(aprilTagProcessor);
+//        telemetry.setAutoClear(false);
 
         setupIMU();
 
@@ -88,12 +89,12 @@ public class AutonomousMode extends LinearOpMode {
 
     }
 
-    private AprilTagProcessor initAprilTag() {
-        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
-        aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
-
-        return aprilTagProcessorBuilder.build();
-    }
+//    private AprilTagProcessor initAprilTag() {
+//        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
+//        aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
+//
+//        return aprilTagProcessorBuilder.build();
+//    }
 
 //    private VisionPortal initVisionPortal(AprilTagProcessor atp) {
 //        vPortalBuilder = new VisionPortal.Builder();
@@ -123,59 +124,59 @@ public class AutonomousMode extends LinearOpMode {
 //    }
 
     private void setupDistanceSensor() {
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
+//        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
     }
 
 
     private void outputTelemetry() {
         // TODO: Also output to .log file.
-        telemetryLine("---------April Tag Data----------");
-        aprilTagTelemetry();
-        telemetryLine("---------IMU Data----------");
+        addLine("---------April Tag Data----------");
+//        aprilTagTelemetry();
+        addLine("---------IMU Data----------");
         IMUTelemetry();
-        telemetryLine("---------Pose Data----------");
+        addLine("---------Pose Data----------");
 //        TODO: Add beysian estimate. Kalman filter.
         poseTelemetry();
-//        telemetryLine("---------Color Data----------");
+//        addLine("---------Color Data----------");
 //        colorSensorTelemetry();
-        telemetryLine("---------Distance Sensor----------");
-        distanceSensorTelemetry();
+        addLine("---------Distance Sensor----------");
+//        distanceSensorTelemetry();
     }
 
     private void distanceSensorTelemetry() {
-        telemetryData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));
+//        addData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));
     }
 
 //    private void colorSensorTelemetry() {
 //        NormalizedRGBA colors = colorSensor.getNormalizedColors();
-//        telemetryLine()
+//        addLine()
 //                .addData("Red", "%.3f", colors.red)
 //                .addData("Green", "%.3f", colors.green)
 //                .addData("Blue", "%.3f", colors.blue);
 //    }
 
     private void poseTelemetry() {
-//        telemetryLine(String.format("Estimated Pose: %s", drive.getPoseEstimate().toString()));
+//        addLine(String.format("Estimated Pose: %s", drive.getPoseEstimate().toString()));
     }
 
     @SuppressLint("DefaultLocale")
-    private void aprilTagTelemetry() {
-            List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
-            telemetryData("# AprilTags Detected", currentDetections.size());
-
-            // Step through the list of detections and display info for each one.
-            for (AprilTagDetection detection : currentDetections) {
-                if (detection.metadata != null) {
-                    telemetryLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                    telemetryLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                    telemetryLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                    telemetryLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-                } else {
-                    telemetryLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                    telemetryLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-                }
-            }   // end for() loop
-    }
+//    private void aprilTagTelemetry() {
+//            List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
+//            addData("# AprilTags Detected", currentDetections.size());
+//
+//            // Step through the list of detections and display info for each one.
+//            for (AprilTagDetection detection : currentDetections) {
+//                if (detection.metadata != null) {
+//                    addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+//                    addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+//                    addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+//                    addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+//                } else {
+//                    addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+//                    addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+//                }
+//            }   // end for() loop
+//    }
 
     private void IMUTelemetry() {
 //        TODO: create IMU Class.
@@ -183,22 +184,21 @@ public class AutonomousMode extends LinearOpMode {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
 
-        telemetryData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
-        telemetryData("Pitch (X)", "%.2f Deg.", orientation.getPitch(AngleUnit.DEGREES));
-        telemetryData("Roll (Y)", "%.2f Deg.\n", orientation.getRoll(AngleUnit.DEGREES));
-        telemetryData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
-        telemetryData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
-        telemetryData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
+        addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+        addData("Pitch (X)", "%.2f Deg.", orientation.getPitch(AngleUnit.DEGREES));
+        addData("Roll (Y)", "%.2f Deg.\n", orientation.getRoll(AngleUnit.DEGREES));
+        addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
+        addData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
+        addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
         telemetry.update();
     }
 
-    private void telemetryLine(String log) {
+    private void addLine(String log) {
         telemetry.addLine(log);
-        RobotLog.d(log);
+        RobotLog.d("HAX40:" + log);
     }
-    private void telemetryData(String log, Object... args) {
+    private void addData(String log, Object... args) {
         telemetry.addData(log, args);
-        RobotLog.d(log, args);
-        
+        RobotLog.d("HAX40:" + log, args);
     }
 }
