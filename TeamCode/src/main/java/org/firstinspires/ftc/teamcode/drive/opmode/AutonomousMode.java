@@ -140,6 +140,8 @@ public class AutonomousMode extends LinearOpMode {
 //        addLine("---------Color Data----------");
 //        colorSensorTelemetry();
         addLine("---------Distance Sensor----------");
+        telemetry.addLine("test12345");
+        RobotLog.d("HAX40:test12345");
 //        distanceSensorTelemetry();
     }
 
