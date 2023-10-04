@@ -58,31 +58,31 @@ public class AutonomousMode extends LinearOpMode {
         // TODO: Fix Drive Constants physical measurements!!!
 //        TODO: Move Reverse to here.
 
-        Thread telemetryThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
-                    outputTelemetry();
-                    try {
-                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            }
-        });
+//        Thread telemetryThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
+//                    outputTelemetry();
+//                    try {
+//                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
+//                    } catch (InterruptedException e) {
+//                        Thread.currentThread().interrupt();
+//                    }
+//                }
+//            }
+//        });
 
         waitForStart();
 
-        telemetryThread.start(); // Starting telemetry thread
+//        telemetryThread.start(); // Starting telemetry thread
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
-//               opModeLoop();
+               outputTelemetry();
             }
         }
 
-        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
+//        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
 
     private void opModeLoop() {
@@ -143,6 +143,7 @@ public class AutonomousMode extends LinearOpMode {
         telemetry.addLine("test12345");
         RobotLog.d("HAX40:test12345");
 //        distanceSensorTelemetry();
+        telemetry.update();
     }
 
     private void distanceSensorTelemetry() {
@@ -192,7 +193,6 @@ public class AutonomousMode extends LinearOpMode {
         addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
         addData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
         addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
-        telemetry.update();
     }
 
     private void addLine(String log) {
