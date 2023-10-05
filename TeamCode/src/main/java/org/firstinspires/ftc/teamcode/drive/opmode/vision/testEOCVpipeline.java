@@ -148,16 +148,19 @@ public class testEOCVpipeline implements VisionProcessor {
     public enum obtainedLocation {
         ERROR(-1),
         START(0),
-        LEFT(1),
+        RIGHT(1),
         MIDDLE(2),
-        RIGHT(3);
+        LEFT(3);
         int val;
         obtainedLocation(int i) {int val = i;}
         private int val() {return val;}
     }
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight,float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {}
 
-    public int pieceLocation() {
+    public int locationInt() {
         return location.val();
+    }
+    public obtainedLocation getLocation() {
+        return this.location;
     }
 }
