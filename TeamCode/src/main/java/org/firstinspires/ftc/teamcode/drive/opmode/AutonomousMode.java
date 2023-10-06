@@ -5,6 +5,7 @@ import android.graphics.Color;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -41,20 +42,20 @@ public class AutonomousMode extends LinearOpMode {
     AprilTagProcessor aprilTagProcessor;
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
     testEOCVpipeline detector = new testEOCVpipeline();
-
 //    TODO: Use dead wheels
         SampleMecanumDrive drive;
         //TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
 
     NormalizedColorSensor colorSensor;
-    TrajectorySequence trajSeq1;
-//    TrajectorySequence trajSeq2 = new TrajectorySequence();
 
     DistanceSensor sensorDistance;
     int status;
     int itemSector;
     Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
+    double detX;
+    double distForward;
+
     @Override
     public void runOpMode() throws InterruptedException {
         aprilTagProcessor = initAprilTag();
@@ -110,22 +111,31 @@ public class AutonomousMode extends LinearOpMode {
 
         return vPortalBuilder.build();
     }
-    private void trajSeqSetup() {
-
-        double setMotorTime = 1; // What time we set the motor power
-        double setMotorWait = 1.5; // How long we wait until we turn off the motor
-
-        trajSeq1 = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(-36,-36, Math.toRadians((itemSector-1)*90)))
-                .lineToSplineHeading(new Pose2d(42,-36, Math.toRadians(0)))
+    private void driveToLine() {
+        TrajectorySequence traj1;
+        traj1 = drive.trajectorySequenceBuilder(startPose)
+                .forward(24)
+                .turn(Math.toRadians(180-((itemSector*90))))
+//                .lineToLinearHeading(new Pose2d(48, -36, 0))
+//                .addDisplacementMarker(() -> {
+//                    findTargetTag();
+//                })
+//                .lineToConstantHeading(new Vector2d(48, -36-detX))
+//                .addDisplacementMarker(() -> {
+//                    fixDistance(); // fix the two markers if they don't work
+//                })
+//                .forward(distForward-12.75)
                 // camera stuff
                 // add a delay/wait here if interfering auto modes during comp
                 .build();
+        drive.followTrajectorySequence(traj1);
 
-//        trajSeq2 = drive.trajectorySequenceBuilder(new Pose2d())
-//                .lineToLinearHeading(new Pose2d(45,45, Math.toRadians(90)))
-//                .build();
     }
+//    }
+//    private void setupTrajSeq2(Pose2d pose) { // get pose estimate, add second one
+//        trajSeq2 = drive.trajectorySequenceBuilder(pose)
+//                .build();
+//    }
 
     private void setupIMU() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -155,7 +165,8 @@ public class AutonomousMode extends LinearOpMode {
                 break;
             case 1: driveToLine();
                 break;
-
+            case 2:
+                break;
         }
     }
 
@@ -164,9 +175,8 @@ public class AutonomousMode extends LinearOpMode {
         vPortal.setProcessorEnabled(detector, true);
         boolean stop = false;
         while (!stop) {
-            if (detector.getLocation() != testEOCVpipeline.obtainedLocation.START) {
+            if (detector.locationInt() != 0) {
                 itemSector = detector.locationInt();
-                trajSeqSetup();
                 //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
                 stop = true;
                 status = 1;
@@ -174,10 +184,24 @@ public class AutonomousMode extends LinearOpMode {
             }
         }
     }
-
-    private void driveToLine() {
-        drive.followTrajectorySequence(trajSeq1);
-        // color sensor stuff goes here
+    private void findTargetTag() {
+        vPortal.resumeStreaming();
+        vPortal.setProcessorEnabled(aprilTagProcessor, true);
+        List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.id % 3 == itemSector || detection.id % 3 == itemSector-3) {
+                detX = detection.ftcPose.x;
+                vPortal.close();
+                break;
+            }
+        }
+    }
+    private void fixDistance() {
+        if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
+            distForward = sensorDistance.getDistance(DistanceUnit.INCH);
+        } else {
+            distForward = 12.75;
+        }
     }
 
 
@@ -185,7 +209,7 @@ public class AutonomousMode extends LinearOpMode {
         // TODO: Also output to .log file.
 //        telemetry.addLine("---------April Tag Data----------");
 //        aprilTagTelemetry();
-        telemetry.addData(String.valueOf(detector.getLocation()), itemSector + String.valueOf(detector.locationInt()));
+        telemetry.addLine(String.valueOf(itemSector));
         telemetry.addData("status: ", status);
         telemetry.addLine("---------IMU Data----------");
         IMUTelemetry();
@@ -212,7 +236,7 @@ public class AutonomousMode extends LinearOpMode {
 //    }
 
     private void poseTelemetry() {
-//        telemetry.addLine(String.format("Estimated Pose: %s", drive.getPoseEstimate().toString()));
+        telemetry.addLine(String.format("Estimated Pose: %s", drive.getPoseEstimate().toString()));
     }
 
     @SuppressLint("DefaultLocale")
@@ -233,6 +257,7 @@ public class AutonomousMode extends LinearOpMode {
                 }
             }   // end for() loop
     }
+
 
     private void IMUTelemetry() {
 //        TODO: create IMU Class.

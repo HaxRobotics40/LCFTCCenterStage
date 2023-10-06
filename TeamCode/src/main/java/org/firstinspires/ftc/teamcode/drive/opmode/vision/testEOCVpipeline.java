@@ -15,7 +15,7 @@ import java.util.List;
 
 public class testEOCVpipeline implements VisionProcessor {
     Mat secondary = new Mat();
-    private obtainedLocation location= obtainedLocation.START;
+    int location;
     private int width;
 
 
@@ -101,11 +101,11 @@ public class testEOCVpipeline implements VisionProcessor {
 //        String sectorWithMostOnes;
 
         if(maxCount == leftCount) {
-            location = obtainedLocation.LEFT;
+            location = 0;
         } else if(maxCount == middleCount) {
-            location = obtainedLocation.MIDDLE;
+            location = 1;
         } else {
-            location = obtainedLocation.RIGHT;
+            location = 2;
         }
 
 
@@ -148,19 +148,16 @@ public class testEOCVpipeline implements VisionProcessor {
     public enum obtainedLocation {
         ERROR(-1),
         START(0),
-        RIGHT(1),
+        LEFT(1),
         MIDDLE(2),
-        LEFT(3);
+        RIGHT(3);
         int val;
         obtainedLocation(int i) {int val = i;}
-        private int val() {return val;}
+        public int val() {return val;}
     }
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight,float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {}
 
     public int locationInt() {
-        return location.val();
-    }
-    public obtainedLocation getLocation() {
-        return this.location;
+        return location;
     }
 }
