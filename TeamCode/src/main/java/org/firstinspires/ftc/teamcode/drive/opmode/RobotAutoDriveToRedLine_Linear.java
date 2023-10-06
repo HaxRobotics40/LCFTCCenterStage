@@ -19,7 +19,7 @@ public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
 
 
     static final double RED_THRESHOLD = 0.4; // Adjust this threshold as needed
-    static final double APPROACH_SPEED = 0.15;
+    static final double APPROACH_SPEED = 0.25;
 
     @Override
     public void runOpMode() {
@@ -31,7 +31,7 @@ public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
             ((SwitchableLight) colorSensor).enableLight(true);
         }
 
-        colorSensor.setGain(100);
+        colorSensor.setGain(30);
 
         while (opModeInInit()) {
             telemetry.addData("Status", "Ready to drive to red line.");
