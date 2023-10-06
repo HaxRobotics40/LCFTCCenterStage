@@ -28,6 +28,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import com.qualcomm.robotcore.util.RobotLog;
+
 
 @Autonomous
 public class TestLog extends LinearOpMode {
@@ -35,36 +37,42 @@ public class TestLog extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+//        aprilTagProcessor = initAprilTag();
+        //vPortal = initVisionPortal(aprilTagProcessor);
 //        initLogging();
-        //drive = new SampleMecanumDrive(hardwareMap);
+        //setupIMU();
+//        setupColorSensor();
+        //setupDistanceSensor();
+//        drive = new SampleMecanumDrive(hardwareMap);
         // TODO: Fix Drive Constants physical measurements!!!
-//        TODO: Move Rever
-//         se to here.
+//        TODO: Move Reverse to here.
 
-//        Thread telemetryThread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
-//                    outputTelemetry();
-//                    try {
-//                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
-//                    } catch (InterruptedException e) {
-//                        Thread.currentThread().interrupt();
-//                    }
-//                }
-//            }
-//        });
+        Thread telemetryThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
+                    //outputTelemetry();
+                    try {
+                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        });
 
         waitForStart();
 
-//        telemetryThread.start(); // Starting telemetry thread
+        telemetryThread.start(); // Starting telemetry thread
 
-        if (opModeIsActive()) {
-            while (opModeIsActive()) {
-                telemetry.setAutoClear(false);
-               telemetry.addLine(String.valueOf(Math.random()*1000));
-            }
+        while (opModeIsActive()) {
+
+//               opModeLoop();
+            teleLogging("hello world!");
+            telemetry.update();
         }
+
+
 
 //        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
@@ -109,4 +117,10 @@ public class TestLog extends LinearOpMode {
 //        telemetry.addLine(s);
 ////        logger.info(s);
 //    }
+private void teleLogging(String s) {
+    telemetry.addLine(s);
+    RobotLog.d(s);
 }
+}
+
+
