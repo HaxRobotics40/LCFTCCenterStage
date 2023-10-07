@@ -38,6 +38,7 @@ public class MeepMeepTesting_Kai {
                                 .turn(Math.toRadians(45))
                                 .build()
                 );
+
         meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_OFFICIAL)
                 .setDarkMode(true)
                 // Background opacity from 0-1
