@@ -19,7 +19,7 @@ public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
 
 
     static final double RED_THRESHOLD = 0.4; // Adjust this threshold as needed
-    static final double APPROACH_SPEED = 0.25;
+    static final double APPROACH_SPEED = 0.375;
 
     @Override
     public void runOpMode() {
