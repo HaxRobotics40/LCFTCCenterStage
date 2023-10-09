@@ -202,6 +202,10 @@ public class AutonomousMode extends LinearOpMode {
         } else {
             distForward = 12.75;
         }
+        if (distForward != 12.75) {
+            double i = 12.75-distForward;
+            drive.setMotorPowers(i, i, i, i);
+        }
     }
 
 
