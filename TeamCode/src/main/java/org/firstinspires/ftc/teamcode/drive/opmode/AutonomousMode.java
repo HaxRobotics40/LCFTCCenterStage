@@ -163,6 +163,7 @@ public class AutonomousMode extends LinearOpMode {
                 .turn(Math.toRadians(180-((itemSector*90))))
                 .build();
         drive.followTrajectorySequence(traj1);
+        status++;
 
     }
     //    }

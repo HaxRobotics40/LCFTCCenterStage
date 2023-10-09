@@ -6,6 +6,10 @@ import com.qualcomm.robotcore.hardware.SwitchableLight;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
+
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
@@ -16,10 +20,12 @@ public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
 
     SampleMecanumDrive drive;
     private NormalizedColorSensor colorSensor;
+    Trajectory trajectory;
 
 
     static final double RED_THRESHOLD = 0.4; // Adjust this threshold as needed
-    static final double APPROACH_SPEED = 0.375;
+    static final double APPROACH_SPEED = 0.225;
+
 
     @Override
     public void runOpMode() {
@@ -31,7 +37,7 @@ public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
             ((SwitchableLight) colorSensor).enableLight(true);
         }
 
-        colorSensor.setGain(30);
+        colorSensor.setGain(35);
 
         while (opModeInInit()) {
             telemetry.addData("Status", "Ready to drive to red line.");
@@ -39,7 +45,10 @@ public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
             telemetry.addLine(drive.getWheelVelocities().toString());
         }
 
-        drive.setMotorPowers(APPROACH_SPEED,APPROACH_SPEED,APPROACH_SPEED,APPROACH_SPEED);
+        Trajectory myTrajectory = drive.trajectoryBuilder(new Pose2d())
+                .forward(0.25)
+                .build();
+        drive.followTrajectory(myTrajectory);
 
 
 
@@ -47,6 +56,8 @@ public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
             telemetry.addLine(drive.getWheelVelocities().toString());
         }
         telemetry.addLine("Rec");
+//        drive.setMotorPowers(-0.1,-0.1,-0.1,-0.1);
+//        sleep(800);
         drive.setMotorPowers(0,0,0,0);
     }
 
