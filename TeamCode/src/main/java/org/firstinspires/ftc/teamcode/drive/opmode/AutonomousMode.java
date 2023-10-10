@@ -5,6 +5,7 @@ import android.graphics.Color;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -159,8 +160,8 @@ public class AutonomousMode extends LinearOpMode {
     private void driveToLine() {
         TrajectorySequence traj1;
         traj1 = drive.trajectorySequenceBuilder(startPose)
-                .forward(24)
-                .turn(Math.toRadians(180-((itemSector*90))))
+                .forward(32)
+                .turn(Math.toRadians(180-(itemSector*90)))
                 .build();
         drive.followTrajectorySequence(traj1);
         status++;
@@ -168,7 +169,23 @@ public class AutonomousMode extends LinearOpMode {
     }
     //    }
     private void alignLine() { // get pose estimate, add second one
-        // color sensor stuff
+        double redValue =  colorSensor.getNormalizedColors().red;
+        double blueValue = colorSensor.getNormalizedColors().blue;
+
+        telemetry.addData("Red Value (0 to 1)", "%4.2f", redValue);
+        telemetry.addData("Blue Value (0 to 1)", "%4.2f", blueValue);
+        telemetry.update();
+
+        if (redValue > 0.4 || blueValue > 0.5) {
+            // We found a line (either red or blue)
+            drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
+        } else {
+            // Continue moving forward if no line is detected
+            Trajectory myTrajectory = drive.trajectoryBuilder(new Pose2d())
+                    .forward(3)
+                    .build();
+            drive.followTrajectory(myTrajectory);
+        }
     }
     private void crossField() {
         // cross the field.
