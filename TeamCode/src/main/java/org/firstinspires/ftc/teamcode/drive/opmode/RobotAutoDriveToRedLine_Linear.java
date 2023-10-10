@@ -48,12 +48,13 @@ public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
         Trajectory myTrajectory = drive.trajectoryBuilder(new Pose2d())
                 .forward(0.25)
                 .build();
-        drive.followTrajectory(myTrajectory);
 
 
 
         while (opModeIsActive() && (getRedValue() < RED_THRESHOLD)) {
             telemetry.addLine(drive.getWheelVelocities().toString());
+            drive.followTrajectory(myTrajectory);
+
         }
         telemetry.addLine("Rec");
 //        drive.setMotorPowers(-0.1,-0.1,-0.1,-0.1);
