@@ -35,105 +35,111 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import com.qualcomm.robotcore.util.RobotLog;
+
 
 @Autonomous
 public class AutonomousMode extends LinearOpMode {
-    VisionPortal.Builder vPortalBuilder;
-    VisionPortal vPortal;
-    AprilTagProcessor aprilTagProcessor;
-    AprilTagProcessor.Builder aprilTagProcessorBuilder;
-    SampleMecanumDrive drive;
+//    VisionPortal.Builder vPortalBuilder;
+//    VisionPortal vPortal;
+//    AprilTagProcessor aprilTagProcessor;
+//    AprilTagProcessor.Builder aprilTagProcessorBuilder;
+//    SampleMecanumDrive drive;
 //    TODO: Use dead wheels
 //    TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
 //    NormalizedColorSensor colorSensor;
-    DistanceSensor sensorDistance;
-    Logger logger;
+   // DistanceSensor sensorDistance;
+//    Logger logger;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        aprilTagProcessor = initAprilTag();
-        vPortal = initVisionPortal(aprilTagProcessor);
-        initLogging();
+//        aprilTagProcessor = initAprilTag();
+        //vPortal = initVisionPortal(aprilTagProcessor);
+//        initLogging();
         setupIMU();
 //        setupColorSensor();
-        setupDistanceSensor();
-
-        drive = new SampleMecanumDrive(hardwareMap);
+        //setupDistanceSensor();
+//        drive = new SampleMecanumDrive(hardwareMap);
         // TODO: Fix Drive Constants physical measurements!!!
 //        TODO: Move Reverse to here.
 
-        Thread telemetryThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
-                    outputTelemetry();
-                    try {
-                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            }
-        });
+//        Thread telemetryThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
+//                    //outputTelemetry();
+//                    try {
+//                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
+//                    } catch (InterruptedException e) {
+//                        Thread.currentThread().interrupt();
+//                    }
+//                }
+//            }
+//        });
 
         waitForStart();
 
-        telemetryThread.start(); // Starting telemetry thread
+//        telemetryThread.start(); // Starting telemetry thread
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
 //               opModeLoop();
+                teleLogging("This is the test message");
+                IMUTelemetry();
+                telemetry.update();
             }
         }
 
-        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
+
+
+//        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
 
     private void opModeLoop() {
 
     }
 
-    private void initLogging() {
-        Logger logger = Logger.getLogger("MyLogger");
-        // Set up FileHandler
-        FileHandler fileHandler = null;
-        try {
-            fileHandler = new FileHandler("log.log");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//    private void initLogging() {
+//        Logger logger = Logger.getLogger("MyLogger");
+//        // Set up FileHandler
+//        FileHandler fileHandler = null;
+//        try {
+//            fileHandler = new FileHandler("log.log");
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
 
         // Specify the log format
-        SimpleFormatter formatter = new SimpleFormatter();
-        fileHandler.setFormatter(formatter);
-
-        ConsoleHandler consoleHandler = new ConsoleHandler();
-        SimpleFormatter consoleFormatter = new SimpleFormatter();
-        consoleHandler.setFormatter(consoleFormatter);
+//        SimpleFormatter formatter = new SimpleFormatter();
+//        //fileHandler.setFormatter(formatter);
+//
+//        ConsoleHandler consoleHandler = new ConsoleHandler();
+//        SimpleFormatter consoleFormatter = new SimpleFormatter();
+        //consoleHandler.setFormatter(consoleFormatter);
 
         // Add both handlers to the logger
-        logger.addHandler(fileHandler);
-        logger.addHandler(consoleHandler);
+        //logger.addHandler(fileHandler);
+        //logger.addHandler(consoleHandler);
 
         // Set the logger level (optional, default is Level.INFO)
-        logger.setLevel(Level.INFO);
-    }
+        //logger.setLevel(Level.INFO);
+//    }
 
-    private AprilTagProcessor initAprilTag() {
-        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
-        aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
+//    private AprilTagProcessor initAprilTag() {
+//        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
+//        aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
+//
+//        return aprilTagProcessorBuilder.build();
+//    }
 
-        return aprilTagProcessorBuilder.build();
-    }
+   // private VisionPortal initVisionPortal(AprilTagProcessor atp) {
+        //vPortalBuilder = new VisionPortal.Builder();
+        //vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
+        //vPortalBuilder.addProcessor(atp);
 
-    private VisionPortal initVisionPortal(AprilTagProcessor atp) {
-        vPortalBuilder = new VisionPortal.Builder();
-        vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
-        vPortalBuilder.addProcessor(atp);
-
-        return vPortalBuilder.build();
-    }
+        //return vPortalBuilder.build();
+   // }
 
     private void setupIMU() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -154,29 +160,29 @@ public class AutonomousMode extends LinearOpMode {
 //        // TODO: FInd Color Sensor docs on best gain
 //    }
 
-    private void setupDistanceSensor() {
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
-    }
+//    private void setupDistanceSensor() {
+//        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
+//    }
 
 
-    private void outputTelemetry() {
-        // TODO: Also output to .log file.
-        teleLogging("---------April Tag Data----------");
-        aprilTagTelemetry();
-        teleLogging("---------IMU Data----------");
-        IMUTelemetry();
-        teleLogging("---------Pose Data----------");
-//        TODO: Add beysian estimate. Kalman filter.
-        poseTelemetry();
-//        teleLogging("---------Color Data----------");
-//        colorSensorTelemetry();
-        teleLogging("---------Distance Sensor----------");
-        distanceSensorTelemetry();
-    }
+//    private void outputTelemetry() {
+//        // TODO: Also output to .log file.
+//        teleLogging("---------April Tag Data----------");
+//        aprilTagTelemetry();
+//        teleLogging("---------IMU Data----------");
+//        IMUTelemetry();
+//        teleLogging("---------Pose Data----------");
+////        TODO: Add beysian estimate. Kalman filter.
+//        poseTelemetry();
+////        teleLogging("---------Color Data----------");
+////        colorSensorTelemetry();
+//        teleLogging("---------Distance Sensor----------");
+//        distanceSensorTelemetry();
+//    }
 
-    private void distanceSensorTelemetry() {
-        telemetry.addData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));
-    }
+//    private void distanceSensorTelemetry() {
+//        telemetry.addData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));
+//    }
 
 //    private void colorSensorTelemetry() {
 //        NormalizedRGBA colors = colorSensor.getNormalizedColors();
@@ -186,28 +192,28 @@ public class AutonomousMode extends LinearOpMode {
 //                .addData("Blue", "%.3f", colors.blue);
 //    }
 
-    private void poseTelemetry() {
+//    private void poseTelemetry() {
 //        teleLogging(String.format("Estimated Pose: %s", drive.getPoseEstimate().toString()));
-    }
 
-    @SuppressLint("DefaultLocale")
-    private void aprilTagTelemetry() {
-            List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
-            telemetry.addData("# AprilTags Detected", currentDetections.size());
 
-            // Step through the list of detections and display info for each one.
-            for (AprilTagDetection detection : currentDetections) {
-                if (detection.metadata != null) {
-                    teleLogging(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                    teleLogging(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                    teleLogging(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                    teleLogging(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-                } else {
-                    teleLogging(String.format("\n==== (ID %d) Unknown", detection.id));
-                    teleLogging(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-                }
-            }   // end for() loop
-    }
+//    @SuppressLint("DefaultLocale")
+//    private void aprilTagTelemetry() {
+//            List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
+//            telemetry.addData("# AprilTags Detected", currentDetections.size());
+//
+//            // Step through the list of detections and display info for each one.
+//            for (AprilTagDetection detection : currentDetections) {
+//                if (detection.metadata != null) {
+//                    teleLogging(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+//                    teleLogging(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+//                    teleLogging(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+//                    teleLogging(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+//                } else {
+//                    teleLogging(String.format("\n==== (ID %d) Unknown", detection.id));
+//                    teleLogging(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+//                }
+//            }   // end for() loop
+//    }
 
     private void IMUTelemetry() {
 //        TODO: create IMU Class.
@@ -215,16 +221,24 @@ public class AutonomousMode extends LinearOpMode {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
 
-        telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
-        telemetry.addData("Pitch (X)", "%.2f Deg.", orientation.getPitch(AngleUnit.DEGREES));
-        telemetry.addData("Roll (Y)", "%.2f Deg.\n", orientation.getRoll(AngleUnit.DEGREES));
-        telemetry.addData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
-        telemetry.addData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
-        telemetry.addData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
-        telemetry.update();
+        teleData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
+        teleData("Pitch (X)", "%.2f Deg.", orientation.getPitch(AngleUnit.DEGREES));
+        teleData("Roll (Y)", "%.2f Deg.\n", orientation.getRoll(AngleUnit.DEGREES));
+        teleData("Yaw (Z) velocity", "%.2f Deg/Sec", angularVelocity.zRotationRate);
+        teleData("Pitch (X) velocity", "%.2f Deg/Sec", angularVelocity.xRotationRate);
+        teleData("Roll (Y) velocity", "%.2f Deg/Sec", angularVelocity.yRotationRate);
     }
     private void teleLogging(String s) {
         telemetry.addLine(s);
-        logger.info(s);
+        RobotLog.d(s);
+    }
+//    private void teleData(String s,Object anythinguwant){
+//        telemetry.addData(s,anythinguwant);
+//        RobotLog.d(s, anythinguwant);
+//    }
+    private void teleData(String s, String format, Object... args) {
+        telemetry.addData(s, format, args);
+        String stringArguments = String.format(format, args);
+        RobotLog.d(s + ": " + stringArguments);
     }
 }

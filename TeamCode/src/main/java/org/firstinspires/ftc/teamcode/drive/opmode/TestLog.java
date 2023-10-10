@@ -69,7 +69,7 @@ public class TestLog extends LinearOpMode {
 
 //               opModeLoop();
             teleLogging("hello world!");
-            telemetry.update();
+
         }
 
 
@@ -120,6 +120,7 @@ public class TestLog extends LinearOpMode {
 private void teleLogging(String s) {
     telemetry.addLine(s);
     RobotLog.d(s);
+    telemetry.update();
 }
 }
 
