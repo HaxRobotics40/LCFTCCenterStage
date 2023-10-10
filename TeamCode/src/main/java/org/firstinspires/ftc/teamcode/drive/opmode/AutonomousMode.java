@@ -169,8 +169,8 @@ public class AutonomousMode extends LinearOpMode {
     private void driveToLine() {
         TrajectorySequence traj1;
         traj1 = drive.trajectorySequenceBuilder(startPose)
-                .forward(24)
-                .turn(Math.toRadians(90-((itemSector*90))))
+                .forward(36)
+                .turn(Math.toRadians(130-((itemSector*130))))
                 .build();
         drive.followTrajectorySequence(traj1);
         status++;
@@ -180,8 +180,8 @@ public class AutonomousMode extends LinearOpMode {
         double redValue =  colorSensor.getNormalizedColors().red;
         double blueValue = colorSensor.getNormalizedColors().blue;
 
-        telemetry.addData("Red Value (0 to 1)", "%4.2f", redValue);
-        telemetry.addData("Blue Value (0 to 1)", "%4.2f", blueValue);
+        teleData("Red Value (0 to 1)", "%4.2f", redValue);
+        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
         telemetry.update();
 
         if (redValue > 0.4 || blueValue > 0.5) {
@@ -213,7 +213,7 @@ public class AutonomousMode extends LinearOpMode {
         vPortal.setProcessorEnabled(detector, true);
         boolean stop = false;
         while (!stop) {
-            if (detector.locationInt() != 0) {
+            if (detector.locationInt() != -1) {
                 itemSector = detector.locationInt();
                 //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
                 stop = true;
