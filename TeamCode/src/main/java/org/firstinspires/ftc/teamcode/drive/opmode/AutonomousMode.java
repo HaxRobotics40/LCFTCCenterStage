@@ -202,20 +202,23 @@ public class AutonomousMode extends LinearOpMode {
         vPortal.setProcessorEnabled(aprilTagProcessor, true);
         List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
         for (AprilTagDetection detection : currentDetections) {
-            if (detection.id % 3 == itemSector || detection.id % 3 == itemSector-3) {
-                detX = detection.ftcPose.x;
-                if(detX !=0) {
-                    if (detX > 0) {
-                        drive.setMotorPowers(0.1,-0.1,0.1,-0.1);
-                    } else {
-                        drive.setMotorPowers(-0.1,0.1,-0.1,0.1);
-                    }
 
-                } else {
-                    vPortal.close();
-                    break;
-                }
-            }
+
+
+//            if (detection.id % 3 == itemSector || detection.id % 3 == itemSector-3) {
+//                detX = detection.ftcPose.x;
+//                if(detX !=0) {
+//                    if (detX > 0) {
+//                        drive.setMotorPowers(0.1,-0.1,0.1,-0.1);
+//                    } else {
+//                        drive.setMotorPowers(-0.1,0.1,-0.1,0.1);
+//                    }
+//
+//                } else {
+//                    vPortal.close();
+//                    break;
+//                }
+//            }
         }
     }
     private void fixDistance() {

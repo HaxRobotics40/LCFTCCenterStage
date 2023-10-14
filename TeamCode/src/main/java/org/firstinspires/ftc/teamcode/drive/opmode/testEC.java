@@ -2,10 +2,13 @@ package org.firstinspires.ftc.teamcode.drive.opmode;
 
 import android.annotation.SuppressLint;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.arcrobotics.ftclib.controller.PIDController;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -17,6 +20,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import com.acmerobotics.roadrunner.geometry.*;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.teamcode.trajectorysequence.*;
 
 import java.util.*;
@@ -26,19 +31,27 @@ import java.util.*;
 
 @Autonomous
 public class testEC extends LinearOpMode {
+    private PIDController controller;
+    public static double p = 0, i = 0, d = 0;
+    public static int target = 0;
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
-    boolean proceed = false;
 
     AprilTagProcessor aprilTagProcessor;
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
-    TrajectorySequence trajSeq;
 
     SampleMecanumDrive drive;
-    int targetTag;
     double detX;
-    double threshold = 0.4;
-    Pose2d startPose = new Pose2d(36,-60,Math.toRadians(90));
+    double detBearing;
+    double threshold = 0.2;
+    private final double kP = 0.1;
+    private final double kI = 0.0;
+    private final double kD = 0.0;
+    private double previousError = 0;
+    private double integral = 0;
+    double power;
+    ElapsedTime timer = new ElapsedTime();
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -46,7 +59,8 @@ public class testEC extends LinearOpMode {
         vPortal = initVisionPortal(aprilTagProcessor);
 
         drive = new SampleMecanumDrive(hardwareMap); //try followTrajectoryAsync later?
-        targetTag = 3;
+        controller = new PIDController(p,i,d);
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         waitForStart();
 
@@ -54,12 +68,20 @@ public class testEC extends LinearOpMode {
         if (opModeIsActive()) {
             vPortal.setProcessorEnabled(aprilTagProcessor, true);
             while (opModeIsActive()) {
-                if(!proceed) {
-                    aprilTagTelemetry();
-                    telemetry.update();
+                controller.setPID(p,i,d);
+                getVals();
+//                double error = controller.getPositionError();
+                double error = 0-detX;
+                power = pidCorrection(detX);
+//                power = controller.calculate(detX,0);
+                telemetry.addData("Error:", error);
+                telemetry.addData("detX: ", detX);
+                telemetry.addData("Output: ", power);
+                telemetry.update();
+                if (shouldStopStrafing()) {
+                    drive.setMotorPowers(0,0,0,0);
                 } else {
-                    drive.setMotorPowers(0, 0, 0, 0);
-                    vPortal.close();
+                    drive.setMotorPowers(power, -power, power, -power);
                 }
             }
         }
@@ -81,29 +103,32 @@ public class testEC extends LinearOpMode {
 
         return vPortalBuilder.build();
     }
-    @SuppressLint("DefaultLocale")
-    private void aprilTagTelemetry() {
-            List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
-            telemetry.addData("# AprilTags Detected", currentDetections.size());
-            for (AprilTagDetection det : currentDetections) {
-                if (det.id % 3 == targetTag || det.id % 3 == targetTag-3) {
-                    telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", det.ftcPose.x, det.ftcPose.y, det.ftcPose.z));
-                    detX = det.ftcPose.x;
-                    if(currentDetections.size() != 0) {
-                        if ((detX > 0 + threshold || detX < 0 - threshold) && !proceed) {
-                            if (detX > 0 + threshold) {
-                                drive.setMotorPowers(0.2, -0.2, 0.2, -0.2);
-                            } else {
-                                drive.setMotorPowers(-0.2, 0.2, -0.2, 0.2);
-                            }
-                        } else {
-                            proceed = true;
-                        }
-                    } else {
-                        drive.setMotorPowers(0,0,0,0);
-                    }
-                }
+    private void getVals() {
+        List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.id == 6) {
+                detX = detection.ftcPose.x;
+                detBearing = detection.ftcPose.bearing;
             }
-
+        }
     }
+    private double pidCorrection(double error) {
+        double derivative = (error - previousError)/timer.seconds();
+        integral += (error*timer.seconds());
+
+        double output = kP * error + kI * integral + kD * derivative;
+        previousError = error;
+        return output;
+    }
+    public boolean shouldStopStrafing() {
+        List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.id == 6 && Math.abs(detection.ftcPose.x) < 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 }
