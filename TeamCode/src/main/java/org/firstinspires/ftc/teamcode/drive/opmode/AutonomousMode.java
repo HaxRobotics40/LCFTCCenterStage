@@ -6,7 +6,6 @@ import android.os.Environment;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -169,31 +168,15 @@ public class AutonomousMode extends LinearOpMode {
     private void driveToLine() {
         TrajectorySequence traj1;
         traj1 = drive.trajectorySequenceBuilder(startPose)
-                .forward(36)
-                .turn(Math.toRadians(130-((itemSector*130))))
+                .forward(24)
+                .turn(Math.toRadians(180-((itemSector*90))))
                 .build();
         drive.followTrajectorySequence(traj1);
         status++;
     }
     //    }
     private void alignLine() { // get pose estimate, add second one
-        double redValue =  colorSensor.getNormalizedColors().red;
-        double blueValue = colorSensor.getNormalizedColors().blue;
-
-        teleData("Red Value (0 to 1)", "%4.2f", redValue);
-        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
-        telemetry.update();
-
-        if (redValue > 0.4 || blueValue > 0.5) {
-            // We found a line (either red or blue)
-            drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
-        } else {
-            // Continue moving forward if no line is detected
-            Trajectory myTrajectory = drive.trajectoryBuilder(new Pose2d())
-                    .forward(3)
-                    .build();
-            drive.followTrajectory(myTrajectory);
-        }
+        // color sensor stuff
     }
     private void crossField() {
         // cross the field.
@@ -213,7 +196,7 @@ public class AutonomousMode extends LinearOpMode {
         vPortal.setProcessorEnabled(detector, true);
         boolean stop = false;
         while (!stop) {
-            if (detector.locationInt() != -1) {
+            if (detector.locationInt() != 0) {
                 itemSector = detector.locationInt();
                 //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
                 stop = true;

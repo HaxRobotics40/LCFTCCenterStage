@@ -15,7 +15,7 @@ import java.util.List;
 
 public class testEOCVpipeline implements VisionProcessor {
     Mat secondary = new Mat();
-    int location = -1;
+    int location;
     private int width;
 
 

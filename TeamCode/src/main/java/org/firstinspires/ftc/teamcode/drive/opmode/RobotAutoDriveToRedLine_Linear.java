@@ -17,7 +17,7 @@ import java.util.List;
 
 @Autonomous(name="Robot: Auto Drive To Red Line", group="Robot")
 public class RobotAutoDriveToRedLine_Linear extends LinearOpMode {
-;
+
     SampleMecanumDrive drive;
     private NormalizedColorSensor colorSensor;
     Trajectory trajectory;
