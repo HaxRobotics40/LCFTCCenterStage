@@ -64,6 +64,7 @@ public class AutonomousMode extends LinearOpMode {
     Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
     double detX;
     double distForward;
+    int isRed = -1;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -187,6 +188,12 @@ public class AutonomousMode extends LinearOpMode {
         if (redValue > 0.4 || blueValue > 0.5) {
             // We found a line (either red or blue)
             drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
+            if (redValue > 0.4){
+                isRed = 0;
+            }
+            else if (blueValue > 0.5){
+                isRed = 1;
+            }
         } else {
             // Continue moving forward if no line is detected
             Trajectory myTrajectory = drive.trajectoryBuilder(new Pose2d())
@@ -196,7 +203,14 @@ public class AutonomousMode extends LinearOpMode {
         }
     }
     private void crossField() {
-        // cross the field.
+        if (isRed == 0) {
+            // turns right if red
+            drive.turn(Math.toRadians(-90));
+        }
+        else if (isRed == 1) {
+            // turns left if blue
+            drive.turn(Math.toRadians(90));
+        }
     }
     private void park() {
         // park.
