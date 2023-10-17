@@ -112,6 +112,7 @@ public class AutonomousMode extends LinearOpMode {
     private AprilTagProcessor initAprilTag() {
         aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
         aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
+        aprilTagProcessorBuilder.setLensIntrinsics(162,162,360,360);
 
         return aprilTagProcessorBuilder.build();
     }
@@ -167,12 +168,11 @@ public class AutonomousMode extends LinearOpMode {
         }
     }
     private void driveToLine() {
-        TrajectorySequence traj1;
-        traj1 = drive.trajectorySequenceBuilder(startPose)
-                .forward(36)
-                .turn(Math.toRadians(130-((itemSector*130))))
+        Trajectory traj1;
+        traj1 = drive.trajectoryBuilder(startPose)
+                .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(180-(itemSector*90))))
                 .build();
-        drive.followTrajectorySequence(traj1);
+        drive.followTrajectory(traj1);
         status++;
     }
     //    }
