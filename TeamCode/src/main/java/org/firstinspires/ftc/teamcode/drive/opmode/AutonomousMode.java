@@ -8,6 +8,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -65,6 +66,13 @@ public class AutonomousMode extends LinearOpMode {
     double detX;
     double distForward;
     int isRed = -1;
+    Pose2d pose2;
+    TrajectorySequence trajCross;
+    double detBearing;
+    private final double kP = 0;
+    private final double kI = 0;
+    private final double kD = 0 ;
+    PIDController pid = new PIDController(kP, kI, kD);
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -170,8 +178,7 @@ public class AutonomousMode extends LinearOpMode {
     private void driveToLine() {
         TrajectorySequence traj1;
         traj1 = drive.trajectorySequenceBuilder(startPose)
-                .forward(36)
-                .turn(Math.toRadians(130-((itemSector*130))))
+                .lineToLinearHeading(new Pose2d(-36,-24, Math.toRadians(180-(itemSector*90))))
                 .build();
         drive.followTrajectorySequence(traj1);
         status++;
@@ -188,11 +195,13 @@ public class AutonomousMode extends LinearOpMode {
         if (redValue > 0.4 || blueValue > 0.5) {
             // We found a line (either red or blue)
             drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
+            pose2 = drive.getPoseEstimate();
+            status = 4;
             if (redValue > 0.4){
-                isRed = 0;
+                isRed = 1;
             }
             else if (blueValue > 0.5){
-                isRed = 1;
+                isRed = 0;
             }
         } else {
             // Continue moving forward if no line is detected
@@ -203,14 +212,13 @@ public class AutonomousMode extends LinearOpMode {
         }
     }
     private void crossField() {
-        if (isRed == 0) {
-            // turns right if red
-            drive.turn(Math.toRadians(-90));
-        }
-        else if (isRed == 1) {
-            // turns left if blue
-            drive.turn(Math.toRadians(90));
-        }
+        trajCross = drive.trajectorySequenceBuilder(pose2)
+                .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(90*2*isRed)))
+                .forward(72)
+                .strafeRight((itemSector-1)*5.25)
+                .build();
+        drive.followTrajectorySequence(trajCross);
+        // do something about strafing
     }
     private void park() {
         // park.
@@ -243,19 +251,10 @@ public class AutonomousMode extends LinearOpMode {
         for (AprilTagDetection detection : currentDetections) {
             if (detection.id % 3 == itemSector || detection.id % 3 == itemSector-3) {
                 detX = detection.ftcPose.x;
-                if(detX !=0) {
-                    if (detX > 0) {
-                        drive.setMotorPowers(0.1,-0.1,0.1,-0.1);
-                    } else {
-                        drive.setMotorPowers(-0.1,0.1,-0.1,0.1);
-                    }
-
-                } else {
-                    vPortal.close();
-                    break;
-                }
+                detBearing = detection.ftcPose.bearing;
             }
         }
+
     }
     private void fixDistance() {
         if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
