@@ -68,12 +68,12 @@ public class testEC extends LinearOpMode {
         if (opModeIsActive()) {
             vPortal.setProcessorEnabled(aprilTagProcessor, true);
             while (opModeIsActive()) {
-                controller.setPID(p,i,d);
+//                controller.setPID(p,i,d);
                 getVals();
 //                double error = controller.getPositionError();
                 double error = 0-detX;
-                power = pidCorrection(detX);
-//                power = controller.calculate(detX,0);
+                power = pidCorrection(error);
+                // power = kP*error;
                 telemetry.addData("Error:", error);
                 telemetry.addData("detX: ", detX);
                 telemetry.addData("Output: ", power);
@@ -116,7 +116,7 @@ public class testEC extends LinearOpMode {
         double derivative = (error - previousError)/timer.seconds();
         integral += (error*timer.seconds());
 
-        double output = kP * error + kI * integral + kD * derivative;
+        double output = (kP * error) + (kI * integral) + (kD * derivative);
         previousError = error;
         return output;
     }

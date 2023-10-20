@@ -4,6 +4,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
@@ -19,6 +20,7 @@ public class ColorDropAuto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        Servo pixel = hardwareMap.get(Servo.class, "pixel");
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -34,13 +36,9 @@ public class ColorDropAuto extends LinearOpMode {
             );
 
             if (gamepad1.a) {
-                drive.setMotorPowers(0,0,1,0);
+                pixel.setPosition(pixel.getPosition()  + 0.02);
             } else if (gamepad1.b) {
-                drive.setMotorPowers(0,0,0,1);
-            } else if (gamepad1.x) {
-                drive.setMotorPowers(0,1,0,0);
-            } else if (gamepad1.y) {
-                drive.setMotorPowers(1,0,0,0);
+                pixel.setPosition(pixel.getPosition() - 0.02);
             }
 
             drive.update();
