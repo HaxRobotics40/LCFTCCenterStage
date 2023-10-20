@@ -31,6 +31,10 @@ public class TestLog extends LinearOpMode {
     IMU imu;
     double start = System.currentTimeMillis();
 
+    PIDFController pidf = new PIDFController(kP, kI, kD, kF);
+    PIDController pid = new PIDController(kP, kI, kD);
+    PDController pd = new PDController(kP, kD);
+    PController p = new PController(kP);
 
 
 
@@ -155,10 +159,8 @@ public class TestLog extends LinearOpMode {
         String stringArguments = String.valueOf(args);
         RobotLog.d(s + ": " + stringArguments);
     }
-    PIDFController pidf = new PIDFController(kP, kI, kD, kF);
-    PIDController pid = new PIDController(kP, kI, kD);
-    PDController pd = new PDController(kP, kD);
-    PController p = new PController(kP);
+
+
 
 
 }
