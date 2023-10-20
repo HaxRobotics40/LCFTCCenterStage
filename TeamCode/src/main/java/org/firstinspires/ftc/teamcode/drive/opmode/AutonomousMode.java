@@ -8,6 +8,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -64,6 +65,14 @@ public class AutonomousMode extends LinearOpMode {
     Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
     double detX;
     double distForward;
+    int isRed = -1;
+    Pose2d pose2;
+    TrajectorySequence trajCross;
+    double detBearing;
+    private final double kP = 0;
+    private final double kI = 0;
+    private final double kD = 0 ;
+    PIDController pid = new PIDController(kP, kI, kD);
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -169,8 +178,7 @@ public class AutonomousMode extends LinearOpMode {
     private void driveToLine() {
         TrajectorySequence traj1;
         traj1 = drive.trajectorySequenceBuilder(startPose)
-                .forward(24)
-                .turn(Math.toRadians(90-((itemSector*90))))
+                .lineToLinearHeading(new Pose2d(-36,-24, Math.toRadians(180-(itemSector*90))))
                 .build();
         drive.followTrajectorySequence(traj1);
         status++;
@@ -180,13 +188,21 @@ public class AutonomousMode extends LinearOpMode {
         double redValue =  colorSensor.getNormalizedColors().red;
         double blueValue = colorSensor.getNormalizedColors().blue;
 
-        telemetry.addData("Red Value (0 to 1)", "%4.2f", redValue);
-        telemetry.addData("Blue Value (0 to 1)", "%4.2f", blueValue);
+        teleData("Red Value (0 to 1)", "%4.2f", redValue);
+        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
         telemetry.update();
 
         if (redValue > 0.4 || blueValue > 0.5) {
             // We found a line (either red or blue)
             drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
+            pose2 = drive.getPoseEstimate();
+            status = 4;
+            if (redValue > 0.4){
+                isRed = 1;
+            }
+            else if (blueValue > 0.5){
+                isRed = 0;
+            }
         } else {
             // Continue moving forward if no line is detected
             Trajectory myTrajectory = drive.trajectoryBuilder(new Pose2d())
@@ -196,7 +212,13 @@ public class AutonomousMode extends LinearOpMode {
         }
     }
     private void crossField() {
-        // cross the field.
+        trajCross = drive.trajectorySequenceBuilder(pose2)
+                .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(90*2*isRed)))
+                .forward(72)
+                .strafeRight((itemSector-1)*5.25)
+                .build();
+        drive.followTrajectorySequence(trajCross);
+        // do something about strafing
     }
     private void park() {
         // park.
@@ -213,7 +235,7 @@ public class AutonomousMode extends LinearOpMode {
         vPortal.setProcessorEnabled(detector, true);
         boolean stop = false;
         while (!stop) {
-            if (detector.locationInt() != 0) {
+            if (detector.locationInt() != -1) {
                 itemSector = detector.locationInt();
                 //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
                 stop = true;
@@ -229,19 +251,10 @@ public class AutonomousMode extends LinearOpMode {
         for (AprilTagDetection detection : currentDetections) {
             if (detection.id % 3 == itemSector || detection.id % 3 == itemSector-3) {
                 detX = detection.ftcPose.x;
-                if(detX !=0) {
-                    if (detX > 0) {
-                        drive.setMotorPowers(0.1,-0.1,0.1,-0.1);
-                    } else {
-                        drive.setMotorPowers(-0.1,0.1,-0.1,0.1);
-                    }
-
-                } else {
-                    vPortal.close();
-                    break;
-                }
+                detBearing = detection.ftcPose.bearing;
             }
         }
+
     }
     private void fixDistance() {
         if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {

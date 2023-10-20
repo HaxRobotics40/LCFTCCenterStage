@@ -42,7 +42,7 @@ public class Color_Sensor extends LinearOpMode {
             telemetry.addData("Blue Value (0 to 1)", "%4.2f", blueValue);
             telemetry.update();
 
-            if (redValue < LINE_THRESHOLD || blueValue < LINE_THRESHOLD) {
+            if (redValue > LINE_THRESHOLD || blueValue > LINE_THRESHOLD) {
                 // We found a line (either red or blue)
                 drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
                 break; // Exit the loop
