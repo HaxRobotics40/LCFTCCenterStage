@@ -93,7 +93,7 @@ public class AutonomousMode extends LinearOpMode {
             public void run() {
                 while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
                     outputTelemetry();
-
+                    telemetry.update();
                     try {
                         Thread.sleep(10); // Introducing a small delay to prevent excessive updates
                     } catch (InterruptedException e) {
@@ -110,6 +110,7 @@ public class AutonomousMode extends LinearOpMode {
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 opModeLoop();
+                telemetry.update();
             }
         }
 
@@ -262,9 +263,10 @@ public class AutonomousMode extends LinearOpMode {
             distForward = sensorDistance.getDistance(DistanceUnit.INCH);
         } else {
             distForward = 12.75;
+            teleLogging("Infinity Distance detected");
         }
         if (distForward != 12.75) {
-            double i = 12.75-distForward;
+            double i = distForward - 12.75;
             drive.setMotorPowers(i, i, i, i);
         }
     }
@@ -288,7 +290,7 @@ public class AutonomousMode extends LinearOpMode {
 
     @SuppressLint("DefaultLocale")
     private void distanceSensorTelemetry() {
-        teleData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));
+        teleData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.INCH)));
     }
 
     private void colorSensorTelemetry() {
