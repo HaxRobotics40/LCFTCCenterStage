@@ -12,10 +12,13 @@ import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.SwitchableLight;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -73,11 +76,15 @@ public class AutonomousMode extends LinearOpMode {
     private final double kI = 0;
     private final double kD = 0 ;
     PIDController pid = new PIDController(kP, kI, kD);
-
+    Servo pixel;
+    Pose2d parkPose;
+    int parkSide = 0;
     @Override
     public void runOpMode() throws InterruptedException {
         aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
+        pixel = hardwareMap.get(Servo.class, "pixel");
+        pixel.setPosition(1);
 
         setupIMU();
 
@@ -102,7 +109,12 @@ public class AutonomousMode extends LinearOpMode {
                 }
             }
         });
-
+        if (gamepad1.dpad_left && gamepad1.left_bumper) {
+            parkSide = 1;
+        } else if (gamepad1.dpad_right && gamepad1.right_bumper) {
+            parkSide = -1;
+        }
+        telemetry.update();
         waitForStart();
 
         telemetryThread.start(); // Starting telemetry thread
@@ -197,7 +209,7 @@ public class AutonomousMode extends LinearOpMode {
             // We found a line (either red or blue)
             drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
             pose2 = drive.getPoseEstimate();
-            status = 4;
+            status++;
             if (redValue > 0.4){
                 isRed = 1;
             }
@@ -219,16 +231,24 @@ public class AutonomousMode extends LinearOpMode {
                 .strafeRight((itemSector-1)*5.25)
                 .build();
         drive.followTrajectorySequence(trajCross);
-        // do something about strafing
+        status++;
     }
     private void park() {
-        // park.
+        TrajectorySequence park = drive.trajectorySequenceBuilder(parkPose)
+                .strafeTo(new Vector2d(parkPose.getX(), parkPose.getY()+(18*parkSide)))
+                .build();
     }
     private void dropPixel() {
-        // we don't have a scoring mechanism yet
+        pixel.setPosition(0.2);
+        TrajectorySequence traj = drive.trajectorySequenceBuilder(new Pose2d())
+                .waitSeconds(1)
+                .build();
+        drive.followTrajectorySequence(traj);
+        pixel.setPosition(1);
+        status++;
     }
     private void scorePixel() {
-        // see above
+        // almost there :D
     }
 
     private void runPieceDetector() {
@@ -240,7 +260,7 @@ public class AutonomousMode extends LinearOpMode {
                 itemSector = detector.locationInt();
                 //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
                 stop = true;
-                status = 1;
+                status++;
                 vPortal.stopStreaming();
             }
         }
@@ -255,6 +275,7 @@ public class AutonomousMode extends LinearOpMode {
                 detBearing = detection.ftcPose.bearing;
             }
         }
+        // do pid stuff later
 
     }
     private void fixDistance() {
@@ -267,6 +288,9 @@ public class AutonomousMode extends LinearOpMode {
             double i = 12.75-distForward;
             drive.setMotorPowers(i, i, i, i);
         }
+        status++;
+        parkPose = drive.getPoseEstimate();
+        // do pid stuff later
     }
 
     private void outputTelemetry() {
@@ -284,6 +308,7 @@ public class AutonomousMode extends LinearOpMode {
         colorSensorTelemetry();
         teleLogging("---------Distance Sensor----------");
         distanceSensorTelemetry();
+        teleData("parkSide", parkSide);
     }
 
     @SuppressLint("DefaultLocale")

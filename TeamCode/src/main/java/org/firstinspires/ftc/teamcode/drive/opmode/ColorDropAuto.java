@@ -4,6 +4,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
@@ -21,7 +22,9 @@ public class ColorDropAuto extends LinearOpMode {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
+        Servo pixel = hardwareMap.get(Servo.class, "pixel");
+        pixel.setPosition(1);
+    
         waitForStart();
 
         while (!isStopRequested()) {
@@ -41,6 +44,14 @@ public class ColorDropAuto extends LinearOpMode {
                 drive.setMotorPowers(0,1,0,0);
             } else if (gamepad1.y) {
                 drive.setMotorPowers(1,0,0,0);
+            } else if (gamepad1.dpad_up) {
+                pixel.setPosition(pixel.getPosition() + 0.02);
+            } else if (gamepad1.dpad_down) {
+                pixel.setPosition(pixel.getPosition() - 0.02);
+            } else if (gamepad1.dpad_left) {
+                pixel.setPosition(0.2);
+            } else if (gamepad1.dpad_right) {
+                pixel.setPosition(1);
             }
 
             drive.update();
@@ -49,6 +60,7 @@ public class ColorDropAuto extends LinearOpMode {
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());
             telemetry.addData("heading", poseEstimate.getHeading());
+            telemetry.addData("Servo Position: ", pixel.getPosition());
             telemetry.update();
         }
     }
