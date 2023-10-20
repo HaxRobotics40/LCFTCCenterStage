@@ -83,7 +83,7 @@ public class AutonomousMode extends LinearOpMode {
             public void run() {
                 while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
                     outputTelemetry();
-
+                    telemetry.update();
                     try {
                         Thread.sleep(10); // Introducing a small delay to prevent excessive updates
                     } catch (InterruptedException e) {
@@ -100,6 +100,7 @@ public class AutonomousMode extends LinearOpMode {
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 opModeLoop();
+                telemetry.update();
             }
         }
 
