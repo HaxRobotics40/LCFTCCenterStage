@@ -15,6 +15,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.opmode.vision.testEOCVpipeline;
 
 import com.qualcomm.robotcore.util.RobotLog;
+import com.arcrobotics.ftclib.controller.*;
 
 
 @Autonomous
@@ -31,6 +32,15 @@ public class TestLog extends LinearOpMode {
     IMU imu;
     double start = System.currentTimeMillis();
 
+    pidf.setP(0.37);
+    pidf.setI(0.05);
+    pidf.setD(1.02);
+
+    // get our gain constants
+    float kP = pidf.getP();
+    float kI = pidf.getI();
+    float kD = pidf.getD();
+    float kD = pidf.getD();
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     PIDController pid = new PIDController(kP, kI, kD);
     PDController pd = new PDController(kP, kD);
