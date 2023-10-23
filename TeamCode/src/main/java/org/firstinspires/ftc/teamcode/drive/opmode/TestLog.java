@@ -32,15 +32,13 @@ public class TestLog extends LinearOpMode {
     IMU imu;
     double start = System.currentTimeMillis();
 
-    pidf.setP(0.37);
-    pidf.setI(0.05);
-    pidf.setD(1.02);
+
 
     // get our gain constants
-    float kP = pidf.getP();
-    float kI = pidf.getI();
-    float kD = pidf.getD();
-    float kD = pidf.getD();
+    double kP;
+    double kI;
+    double kD;
+    double kF;
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     PIDController pid = new PIDController(kP, kI, kD);
     PDController pd = new PDController(kP, kD);
@@ -58,6 +56,10 @@ public class TestLog extends LinearOpMode {
     double detX;
     double distForward;
 
+    public TestLog() {
+        kF = pidf.getF();
+    }
+
     @Override
     public void runOpMode() throws InterruptedException {
 //        aprilTagProcessor = initAprilTag();
@@ -65,8 +67,20 @@ public class TestLog extends LinearOpMode {
 
         setupIMU();
 
+        pidf.setP(0);
+        pidf.setI(0);
+        pidf.setD(0);
+        pidf.setF(0);
+        kP = pidf.getP();
+        kI = pidf.getI();
+        kD = pidf.getD();
+        kF = pidf.getF();
+
 //        setupColorSensor();
         setupDistanceSensor();
+
+
+
 
         drive = new SampleMecanumDrive(hardwareMap);
         // TODO: Fix Drive Constants physical measurements!!!
