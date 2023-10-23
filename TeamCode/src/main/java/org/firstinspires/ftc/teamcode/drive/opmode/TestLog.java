@@ -20,45 +20,38 @@ import com.arcrobotics.ftclib.controller.*;
 
 @Autonomous
 public class TestLog extends LinearOpMode {
-//    VisionPortal.Builder vPortalBuilder;
+    //    VisionPortal.Builder vPortalBuilder;
 //    VisionPortal vPortal;
 //
 //    AprilTagProcessor aprilTagProcessor;
 //    AprilTagProcessor.Builder aprilTagProcessorBuilder;
-    testEOCVpipeline detector = new testEOCVpipeline();
+//    testEOCVpipeline detector = new testEOCVpipeline();
     //    TODO: Use dead wheels
     SampleMecanumDrive drive;
     //TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
-    double start = System.currentTimeMillis();
+//    double start = System.currentTimeMillis();
 
 
 
     // get our gain constants
-    double kP;
-    double kI;
-    double kD;
-    double kF;
-    PIDFController pidf = new PIDFController(kP, kI, kD, kF);
-    PIDController pid = new PIDController(kP, kI, kD);
-    PDController pd = new PDController(kP, kD);
-    PController p = new PController(kP);
+
+    private final double kP = 0;
+    private final double kI = 0;
+    private final double kD = 0;
+    PIDController Distpidf = new PIDController(kP, kI, kD);
 
 
-
-    NormalizedColorSensor colorSensor;
+//    NormalizedColorSensor colorSensor;
 
 
     DistanceSensor sensorDistance;
-    int status;
-    int itemSector;
-    Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
-    double detX;
+    //    int status;
+//    int itemSector;
+//    Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
+//    double detX;
     double distForward;
 
-    public TestLog() {
-        kF = pidf.getF();
-    }
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -67,14 +60,6 @@ public class TestLog extends LinearOpMode {
 
         setupIMU();
 
-        pidf.setP(0);
-        pidf.setI(0);
-        pidf.setD(0);
-        pidf.setF(0);
-        kP = pidf.getP();
-        kI = pidf.getI();
-        kD = pidf.getD();
-        kF = pidf.getF();
 
 //        setupColorSensor();
         setupDistanceSensor();
@@ -106,7 +91,7 @@ public class TestLog extends LinearOpMode {
 
         telemetryThread.start(); // Starting telemetry thread
 
-        teleLogging("going to Barrier of distance, attem:15");
+        teleLogging("going to Barrier of distance, attem:16");
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
@@ -139,7 +124,7 @@ public class TestLog extends LinearOpMode {
 
         float wantedDistance = 12.75F; // how far away you want the robot to go
 
-        float thresholdDistanceinches = 0.1F;
+        float thresholdDistanceInches = 0.1F;
 
         distForward = sensorDistance.getDistance(DistanceUnit.INCH);
 
@@ -150,13 +135,15 @@ public class TestLog extends LinearOpMode {
             teleLogging("Infinity Distance detected");
         }
         if (distForward != wantedDistance) {
-            double motorPower = 0.001 * Math.pow((distForward - wantedDistance),3F);
-            String StrMotorPower = String.valueOf(motorPower);
+            double output = Distpidf.calculate(
+                    distForward, wantedDistance
+            );
+            String StrMotorPower = String.valueOf(output);
             teleLogging("wanted Motor Power:" + StrMotorPower);
-            drive.setMotorPowers(motorPower, motorPower, motorPower, motorPower);
+            drive.setMotorPowers(output, output, output, output);
         }
-        if ((distForward >= wantedDistance - thresholdDistanceinches) &&
-                (distForward <= wantedDistance + thresholdDistanceinches))
+        if ((distForward >= wantedDistance - thresholdDistanceInches) &&
+                (distForward <= wantedDistance + thresholdDistanceInches))
         {
             teleLogging("Achieved location");
             drive.setMotorPowers(0,0,0,0);
