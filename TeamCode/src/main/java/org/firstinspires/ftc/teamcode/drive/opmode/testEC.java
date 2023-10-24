@@ -23,6 +23,7 @@ import com.acmerobotics.roadrunner.geometry.*;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.trajectorysequence.*;
+import android.util.Size;
 
 import java.util.*;
 
@@ -99,6 +100,7 @@ public class testEC extends LinearOpMode {
     private VisionPortal initVisionPortal(AprilTagProcessor atp) {
         vPortalBuilder = new VisionPortal.Builder();
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
+        vPortalBuilder.setCameraResolution(new Size(1920,1080));
         vPortalBuilder.addProcessor(atp);
 
         return vPortalBuilder.build();

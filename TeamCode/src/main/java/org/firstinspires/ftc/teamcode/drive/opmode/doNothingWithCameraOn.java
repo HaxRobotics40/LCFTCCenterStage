@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
 import android.annotation.SuppressLint;
+import android.util.Size;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -50,7 +51,7 @@ public class doNothingWithCameraOn extends LinearOpMode {
     private AprilTagProcessor initAprilTag() {
         aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
         aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
-        aprilTagProcessorBuilder.setLensIntrinsics(162,162,360,360);
+//        aprilTagProcessorBuilder.setLensIntrinsics(162,162,360,360);
 
         return aprilTagProcessorBuilder.build();
     }
@@ -59,6 +60,7 @@ public class doNothingWithCameraOn extends LinearOpMode {
         vPortalBuilder = new VisionPortal.Builder();
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
         vPortalBuilder.addProcessor(atp);
+        vPortalBuilder.setCameraResolution(new Size(1920,1080));
         vPortalBuilder.enableLiveView(true);
 
         return vPortalBuilder.build();
