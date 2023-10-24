@@ -51,7 +51,7 @@ public class doNothingWithCameraOn extends LinearOpMode {
     private AprilTagProcessor initAprilTag() {
         aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
         aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
-//        aprilTagProcessorBuilder.setLensIntrinsics(162,162,360,360);
+        aprilTagProcessorBuilder.setLensIntrinsics(957.381, 957.381, 924.159, 537.109);
 
         return aprilTagProcessorBuilder.build();
     }
