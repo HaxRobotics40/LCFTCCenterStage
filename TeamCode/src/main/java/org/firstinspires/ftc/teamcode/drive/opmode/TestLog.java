@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.drive.opmode;
 import android.annotation.SuppressLint;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -39,7 +41,6 @@ public class TestLog extends LinearOpMode {
     private final double kP = 0;
     private final double kI = 0;
     private final double kD = 0;
-    PIDController Distpidf = new PIDController(kP, kI, kD);
 
 
 //    NormalizedColorSensor colorSensor;
@@ -122,9 +123,9 @@ public class TestLog extends LinearOpMode {
     private void goToBarrierOfDistance(double distance) {
 
 
-        float wantedDistance = 12.75F; // how far away you want the robot to go
+        double wantedDistance = 12.75; // how far away you want the robot to go
 
-        float thresholdDistanceInches = 0.1F;
+        double thresholdDistanceInches = 0.1;
 
         distForward = sensorDistance.getDistance(DistanceUnit.INCH);
 
@@ -135,12 +136,15 @@ public class TestLog extends LinearOpMode {
             teleLogging("Infinity Distance detected");
         }
         if (distForward != wantedDistance) {
-            double output = Distpidf.calculate(
-                    distForward, wantedDistance
-            );
+            double output = wantedDistance - distForward;
+            Trajectory Disttraj = drive.trajectoryBuilder(new Pose2d())
+                    .forward(output)
+                    .build();
+
+
             String StrMotorPower = String.valueOf(output);
             teleLogging("wanted Motor Power:" + StrMotorPower);
-            drive.setMotorPowers(output, output, output, output);
+            drive.followTrajectory(Disttraj);
         }
         if ((distForward >= wantedDistance - thresholdDistanceInches) &&
                 (distForward <= wantedDistance + thresholdDistanceInches))
