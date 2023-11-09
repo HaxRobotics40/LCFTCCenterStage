@@ -47,7 +47,7 @@ public class DriveConstants {
      */
 
     public static double WHEEL_RADIUS = 1.89; // in
-    public static double GEAR_RATIO = 1.31; // output (wheel) speed / input (motor) speed
+    public static double GEAR_RATIO = 1; // output (wheel) speed / input (motor) speed
     public static double TRACK_WIDTH = 14.2; // in
 
 
@@ -59,9 +59,9 @@ public class DriveConstants {
      * empirically tuned.
      */
 
-    public static double kV = 0.016;
-    public static double kA = 0.001;
-    public static double kStatic = 0.01;
+    public static double kV = 0.027;
+    public static double kA = 0.002;
+    public static double kStatic = 0.015;
 
     /*
      * These values are used to generate the trajectories for you robot. To ensure proper operation,
@@ -71,10 +71,10 @@ public class DriveConstants {
      * inches.
      */
 
-    public static double MAX_VEL = 48.9;
+    public static double MAX_VEL = 36;
     public static double MAX_ACCEL = 30;
-    public static double MAX_ANG_VEL = Math.toRadians(136.2);
-    public static double MAX_ANG_ACCEL = Math.toRadians(60);
+    public static double MAX_ANG_VEL = 2.007;
+    public static double MAX_ANG_ACCEL = Math.toRadians(180);
 
     /*
      * Adjust the orientations here to match your robot. See the FTC SDK documentation for details.
@@ -82,7 +82,7 @@ public class DriveConstants {
     public static RevHubOrientationOnRobot.LogoFacingDirection LOGO_FACING_DIR =
             RevHubOrientationOnRobot.LogoFacingDirection.UP;
     public static RevHubOrientationOnRobot.UsbFacingDirection USB_FACING_DIR =
-            RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+            RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD;
 
 
     public static double encoderTicksToInches(double ticks) {

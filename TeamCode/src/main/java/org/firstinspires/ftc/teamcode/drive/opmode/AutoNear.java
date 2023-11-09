@@ -1,25 +1,21 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
 import android.annotation.SuppressLint;
-import android.graphics.Color;
-import android.os.Environment;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.SwitchableLight;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -30,24 +26,15 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.opmode.vision.testEOCVpipeline;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.VisionProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.*;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import com.qualcomm.robotcore.util.RobotLog;
+import java.util.List;
 
 
 @Autonomous
-public class AutonomousMode extends LinearOpMode {
+public class AutoNear extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
 
@@ -114,6 +101,7 @@ public class AutonomousMode extends LinearOpMode {
         } else if (gamepad1.dpad_right && gamepad1.right_bumper) {
             parkSide = -1;
         }
+        telemetry.addData("Parking side", parkSide);
         telemetry.update();
         waitForStart();
 
@@ -189,11 +177,13 @@ public class AutonomousMode extends LinearOpMode {
         }
     }
     private void driveToLine() {
-        Trajectory traj1;
-        traj1 = drive.trajectoryBuilder(startPose)
+        TrajectorySequence traj1;
+        traj1 = drive.trajectorySequenceBuilder(startPose)
                 .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(180-(itemSector*90))))
+                .forward(36)
+                .turn(Math.toRadians((itemSector-1)*90))
                 .build();
-        drive.followTrajectory(traj1);
+        drive.followTrajectorySequence(traj1);
         status++;
     }
     //    }
@@ -237,6 +227,8 @@ public class AutonomousMode extends LinearOpMode {
         TrajectorySequence park = drive.trajectorySequenceBuilder(parkPose)
                 .strafeTo(new Vector2d(parkPose.getX(), parkPose.getY()+(18*parkSide)))
                 .build();
+        drive.followTrajectorySequence(park);
+        
     }
     private void dropPixel() {
         pixel.setPosition(0.2);
@@ -272,25 +264,47 @@ public class AutonomousMode extends LinearOpMode {
         for (AprilTagDetection detection : currentDetections) {
             if (detection.id % 3 == itemSector || detection.id % 3 == itemSector-3) {
                 detX = detection.ftcPose.x;
-                detBearing = detection.ftcPose.bearing;
             }
         }
+        Trajectory trajStrafe = drive.trajectoryBuilder(new Pose2d())
+                .strafeRight(detX)
+                .build();
+        drive.followTrajectory(trajStrafe);
+        status++;
         // do pid stuff later
 
     }
     private void fixDistance() {
+        double wantedDistance = 12.75; // how far away you want the robot to go
+
+        double thresholdDistanceInches = 0.1;
+
+        distForward = sensorDistance.getDistance(DistanceUnit.INCH);
+
         if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
             distForward = sensorDistance.getDistance(DistanceUnit.INCH);
         } else {
-            distForward = 12.75;
+            distForward = wantedDistance;
+            teleLogging("Infinity Distance detected");
         }
-        if (distForward != 12.75) {
-            double i = 12.75-distForward;
-            drive.setMotorPowers(i, i, i, i);
+        if (distForward != wantedDistance) {
+            double output = wantedDistance - distForward;
+            Trajectory Disttraj = drive.trajectoryBuilder(new Pose2d())
+                    .forward(output)
+                    .build();
+
+
+            String StrMotorPower = String.valueOf(output);
+            teleLogging("wanted Motor Power:" + StrMotorPower);
+            drive.followTrajectory(Disttraj);
         }
-        status++;
-        parkPose = drive.getPoseEstimate();
-        // do pid stuff later
+        if ((distForward >= wantedDistance - thresholdDistanceInches) &&
+                (distForward <= wantedDistance + thresholdDistanceInches))
+        {
+            teleLogging("Achieved location");
+            drive.setMotorPowers(0,0,0,0);
+            status++;
+        }
     }
 
     private void outputTelemetry() {

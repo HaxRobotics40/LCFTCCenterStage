@@ -43,6 +43,7 @@ public class ColorDropAuto extends LinearOpMode {
             } else if (gamepad1.dpad_left) {
                 pixel.setPosition(0.2);
             } else if (gamepad1.dpad_right) {
+            }
 
                 drive.update();
 
@@ -51,8 +52,10 @@ public class ColorDropAuto extends LinearOpMode {
                 telemetry.addData("y", poseEstimate.getY());
                 telemetry.addData("heading", poseEstimate.getHeading());
                 telemetry.addData("Servo Position: ", pixel.getPosition());
+                telemetry.addData("pos", drive.getWheelPositions());
+                telemetry.addData("Velocities", drive.getWheelVelocities());
                 telemetry.update();
-            }
+
         }
     }
 }
