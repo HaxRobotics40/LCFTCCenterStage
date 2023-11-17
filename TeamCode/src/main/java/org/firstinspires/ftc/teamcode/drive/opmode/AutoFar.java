@@ -52,6 +52,7 @@ public class AutoFar extends LinearOpMode {
     double distForward;
     int isBlue = -1;
     Pose2d pose2;
+    Pose2d pose3;
     TrajectorySequence trajCross;
     double detBearing;
     private final double kP = 0;
@@ -97,6 +98,7 @@ public class AutoFar extends LinearOpMode {
             parkSide = -1;
         }
         telemetry.update();
+        drive.setPoseEstimate(new Pose2d(-36,-60, Math.toRadians(90)));
         waitForStart();
 
         telemetryThread.start(); // Starting telemetry thread
@@ -172,12 +174,13 @@ public class AutoFar extends LinearOpMode {
     }
     private void driveToLine() {
         TrajectorySequence traj1;
-        traj1 = drive.trajectorySequenceBuilder(startPose)
-//                .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(180-(itemSector*90))))
-                .forward(36)
-                .turn(Math.toRadians((itemSector-2)*90))
+        traj1 = drive.trajectorySequenceBuilder(new Pose2d(-36,-60, Math.toRadians(90)))
+                .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180-(itemSector*90))))
+//                .forward(36)
+//                .turn(Math.toRadians((itemSector-2)*90))
                 .build();
         drive.followTrajectorySequence(traj1);
+        pose2 = drive.getPoseEstimate();
         status++;
     }
     //    }
@@ -192,25 +195,28 @@ public class AutoFar extends LinearOpMode {
         if (redValue > 0.4 || blueValue > 0.5) {
             // We found a line (either red or blue)
             drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
-            pose2 = drive.getPoseEstimate();
             status++;
             if (redValue > 0.4){
                 isBlue = 0;
+                pose3 = drive.getPoseEstimate();
             }
             else if (blueValue > 0.5){
                 isBlue = 1;
+                Pose2d thing = drive.getPoseEstimate();
+                pose3 = new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180));
             }
         } else {
             // Continue moving forward if no line is detected
-            Trajectory myTrajectory = drive.trajectoryBuilder(new Pose2d())
-                    .forward(3)
+            Trajectory myTrajectory = drive.trajectoryBuilder(pose2)
+                    .forward(1)
                     .build();
             drive.followTrajectory(myTrajectory);
+            pose2 = drive.getPoseEstimate();
         }
     }
     private void crossField() {
-        trajCross = drive.trajectorySequenceBuilder(pose2)
-                .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(180*isBlue)))
+        trajCross = drive.trajectorySequenceBuilder(pose3)
+                .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180*isBlue)))
                 .forward(72)
                 .strafeRight((itemSector-2)*5.25)
                 .build();
@@ -224,10 +230,7 @@ public class AutoFar extends LinearOpMode {
     }
     private void dropPixel() {
         pixel.setPosition(0.2);
-        TrajectorySequence traj = drive.trajectorySequenceBuilder(new Pose2d())
-                .waitSeconds(0.25)
-                .build();
-        drive.followTrajectorySequence(traj);
+        sleep(750);
         pixel.setPosition(1);
         status++;
     }

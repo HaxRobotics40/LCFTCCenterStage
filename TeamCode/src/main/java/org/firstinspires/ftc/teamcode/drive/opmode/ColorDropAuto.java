@@ -37,15 +37,20 @@ public class ColorDropAuto extends LinearOpMode {
             );
 
             if (gamepad1.dpad_up) {
-                pixel.setPosition(pixel.getPosition() + 0.02);
+                pixel.setPosition(1);
             } else if (gamepad1.dpad_down) {
-                pixel.setPosition(pixel.getPosition() - 0.02);
-            } else if (gamepad1.dpad_left) {
                 pixel.setPosition(0.2);
-            } else if (gamepad1.dpad_right) {
+            } else if (gamepad1.x) {
+                drive.setMotorPowers(1,0,0,0);
+            } else if (gamepad1.y) {
+                drive.setMotorPowers(0,1,0,0);
+            } else if (gamepad1.a) {
+                drive.setMotorPowers(0,0,1,0);
+            } else if (gamepad1.b) {
+                drive.setMotorPowers(0,0,0,1);
             }
 
-                drive.update();
+//                drive.update();
 
                 Pose2d poseEstimate = drive.getPoseEstimate();
                 telemetry.addData("x", poseEstimate.getX());

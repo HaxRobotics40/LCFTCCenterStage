@@ -5,7 +5,7 @@ import android.annotation.SuppressLint;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.arcrobotics.ftclib.controller.PIDController;
+//import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -55,14 +55,14 @@ public class AutoNear extends LinearOpMode {
     Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
     double detX;
     double distForward;
-    int isRed = -1;
+    int isBlue = -1;
     Pose2d pose2;
     TrajectorySequence trajCross;
     double detBearing;
     private final double kP = 0;
     private final double kI = 0;
     private final double kD = 0 ;
-    PIDController pid = new PIDController(kP, kI, kD);
+//    PIDController pid = new PIDController(kP, kI, kD);
     Servo pixel;
     Pose2d parkPose;
     int parkSide = 0;
@@ -125,7 +125,6 @@ public class AutoNear extends LinearOpMode {
 
         return aprilTagProcessorBuilder.build();
     }
-    //
     private VisionPortal initVisionPortal() {
         vPortalBuilder = new VisionPortal.Builder();
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
@@ -175,6 +174,7 @@ public class AutoNear extends LinearOpMode {
             case 8: park();
                 break;
         }
+        telemetry.update();
     }
     private void driveToLine() {
         TrajectorySequence traj1;
@@ -201,10 +201,10 @@ public class AutoNear extends LinearOpMode {
             pose2 = drive.getPoseEstimate();
             status++;
             if (redValue > 0.4){
-                isRed = 1;
+                isBlue = 0;
             }
             else if (blueValue > 0.5){
-                isRed = 0;
+                isBlue = 1;
             }
         } else {
             // Continue moving forward if no line is detected
@@ -216,7 +216,7 @@ public class AutoNear extends LinearOpMode {
     }
     private void crossField() {
         trajCross = drive.trajectorySequenceBuilder(pose2)
-                .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(90*2*isRed)))
+                .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(90*2*isBlue)))
                 .forward(72)
                 .strafeRight((itemSector-1)*5.25)
                 .build();
@@ -241,6 +241,7 @@ public class AutoNear extends LinearOpMode {
     }
     private void scorePixel() {
         // almost there :D
+        // that aged well
     }
 
     private void runPieceDetector() {

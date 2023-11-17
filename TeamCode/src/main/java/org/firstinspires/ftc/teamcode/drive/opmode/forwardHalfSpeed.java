@@ -37,7 +37,7 @@ public class forwardHalfSpeed extends LinearOpMode {
 
         waitForStart();
         if (opModeIsActive()) {
-            while (true) {
+            while (opModeIsActive()) {
                 drive.setMotorPowers(0.25, 0.25, 0.25, 0.25);
             }
         }
