@@ -25,11 +25,13 @@ public class TestIntake extends OpMode {
     }
     @Override
     public void loop() {
+        teleLogging(String.valueOf(left.getPosition())+"   " + String.valueOf(right.getPosition()));
         if (gamepad1.a && !ap) {
             //motor.setPower(0.5);
             left.setPosition(left.getPosition() + 0.05);
             right.setPosition(right.getPosition() - 0.05);
             ap = true;
+            teleLogging("AAAAAA");
         } else if (!gamepad1.a) {
             ap = false;
         }
@@ -38,9 +40,17 @@ public class TestIntake extends OpMode {
             left.setPosition(left.getPosition() - 0.05);
             right.setPosition(right.getPosition() + 0.05);
             bp = true;
+            teleLogging("BBBBBB");
         } else if (!gamepad1.b) {
             bp = false;
         }
+        telemetry.update();
+    }
+
+
+
+    private void teleLogging(String s) {
+        telemetry.addLine(s);
     }
 }
 
