@@ -215,11 +215,18 @@ public class AutoFar extends LinearOpMode {
         }
     }
     private void crossField() {
-        trajCross = drive.trajectorySequenceBuilder(pose3)
-                .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180*isBlue)))
-                .forward(72)
-                .strafeRight((itemSector-2)*5.25)
-                .build();
+        if (itemSector !=2) {
+            trajCross = drive.trajectorySequenceBuilder(pose3)
+                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
+                    .forward(82)
+                    .strafeRight((itemSector - 2) * 5.25)
+                    .build();
+        } else {
+            trajCross = drive.trajectorySequenceBuilder(pose3)
+                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
+                    .forward(82)
+                    .build();
+        }
         drive.followTrajectorySequence(trajCross);
         status++;
     }
@@ -240,7 +247,7 @@ public class AutoFar extends LinearOpMode {
         status++;
     }
 
-    private void runPieceDetector() {
+    private voidrunPieceDetector() {
         // R is 0, M is 1, L is 2
         vPortal.setProcessorEnabled(detector, true);
         boolean stop = false;

@@ -9,6 +9,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.FocusControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -30,19 +33,28 @@ public class doNothingWithCameraOn extends LinearOpMode {
 
     AprilTagProcessor aprilTagProcessor;
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
+    GainControl gainControl;
+
 
 
     @Override
     public void runOpMode() throws InterruptedException {
         aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal(aprilTagProcessor);
-        aprilTagProcessor.setDecimation(4);
-
+//        if (vPortal.getCameraState() == VisionPortal.CameraState.STREAMING) {
+//            telemetry.addLine("Ready");
+//        }
+        aprilTagProcessor.setDecimation(1);
+        telemetry.update();
 
         waitForStart();
         if (opModeIsActive()) {
             while (opModeIsActive()) {
+                vPortal.resumeStreaming();
+                gainControl = vPortal.getCameraControl(GainControl.class);
+                gainControl.setGain(40);
                 aprilTagTelemetry();
+                telemetry.update();
             }
         }
 
@@ -51,6 +63,7 @@ public class doNothingWithCameraOn extends LinearOpMode {
         aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
         aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
         aprilTagProcessorBuilder.setLensIntrinsics(957.381,957.381,924.159,537.109);
+//        aprilTagProcessorBuilder.setDecim
 
         return aprilTagProcessorBuilder.build();
     }
