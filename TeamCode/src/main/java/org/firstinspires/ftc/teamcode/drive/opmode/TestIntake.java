@@ -14,10 +14,15 @@ public class TestIntake extends OpMode {
     private  DcMotor motor;
     boolean ap;
     boolean bp;
+    boolean xPushed = false;
+    boolean intakeUp = true;
+
     public void init()  {
          left= hardwareMap.get(Servo.class, "left");
          right= hardwareMap.get(Servo.class, "right");
           motor = hardwareMap.get(DcMotor.class, "motor");
+//          left.setPosition(1);
+//          right.setPosition(0);
        boolean ap;
         ap=false;
          boolean bp;
@@ -28,8 +33,8 @@ public class TestIntake extends OpMode {
         teleLogging(String.valueOf(left.getPosition())+"   " + String.valueOf(right.getPosition()));
         if (gamepad1.a && !ap) {
             //motor.setPower(0.5);
-            left.setPosition(left.getPosition() + 0.05);
-            right.setPosition(right.getPosition() - 0.05);
+            left.setPosition(left.getPosition() + 0.01);
+            right.setPosition(right.getPosition() - 0.01);
             ap = true;
             teleLogging("AAAAAA");
         } else if (!gamepad1.a) {
@@ -37,15 +42,30 @@ public class TestIntake extends OpMode {
         }
         if (gamepad1.b && !bp) {
             //motor.setPower(-0.5);
-            left.setPosition(left.getPosition() - 0.05);
-            right.setPosition(right.getPosition() + 0.05);
+            left.setPosition(left.getPosition() - 0.01);
+            right.setPosition(right.getPosition() + 0.01);
             bp = true;
             teleLogging("BBBBBB");
         } else if (!gamepad1.b) {
             bp = false;
         }
+        motor.setPower(-gamepad1.right_trigger);
+        teleLogging(String.valueOf(motor.getPower()));
         telemetry.update();
+//        if (gamepad1.x && !xPushed) {
+//            xPushed = true;
+//            if(intakeUp){
+////                left.setPosition();
+//            } else {
+//                //intake down
+//            }
+//            intakeUp = !intakeUp;
+//
+//        }
+
     }
+
+
 
 
 
