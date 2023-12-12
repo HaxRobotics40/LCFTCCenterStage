@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
 import android.annotation.SuppressLint;
+import android.util.Size;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
@@ -61,13 +62,14 @@ public class AutoFar extends LinearOpMode {
     PIDController pid = new PIDController(kP, kI, kD);
     Servo pixel;
     Pose2d parkPose;
+    Pose2d scorePoseYellow;
     int parkSide = 0;
     @Override
     public void runOpMode() throws InterruptedException {
         aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
         pixel = hardwareMap.get(Servo.class, "pixel");
-        pixel.setPosition(1);
+        pixel.setPosition(0.9);
 
         setupIMU();
 
@@ -126,6 +128,7 @@ public class AutoFar extends LinearOpMode {
         vPortalBuilder = new VisionPortal.Builder();
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
         vPortalBuilder.addProcessors(detector, aprilTagProcessor);
+        vPortalBuilder.setCameraResolution(new Size (1920,1080));
 
         return vPortalBuilder.build();
     }
@@ -162,13 +165,18 @@ public class AutoFar extends LinearOpMode {
                 break;
             case 4: crossField();
                 break;
-            case 5: findTargetTag();
+            case 5: telemetry.addData("Item Sector:", itemSector);
+                status++;
                 break;
             case 6: fixDistance();
                 break;
             case 7: scorePixel();
                 break;
-            case 8: park();
+            case 8: goToStack();
+                break;
+            case 9: getStackPixels();
+                break;
+            case 10: park();
                 break;
         }
     }
@@ -228,6 +236,7 @@ public class AutoFar extends LinearOpMode {
                     .build();
         }
         drive.followTrajectorySequence(trajCross);
+
         status++;
     }
     private void park() {
@@ -247,7 +256,7 @@ public class AutoFar extends LinearOpMode {
         status++;
     }
 
-    private voidrunPieceDetector() {
+    private void runPieceDetector() {
         // R is 0, M is 1, L is 2
         vPortal.setProcessorEnabled(detector, true);
         boolean stop = false;
@@ -290,8 +299,25 @@ public class AutoFar extends LinearOpMode {
             drive.setMotorPowers(i, i, i, i);
         }
         status++;
-        parkPose = drive.getPoseEstimate();
+        scorePoseYellow = drive.getPoseEstimate();
         // put dist sense stuff here
+    }
+    private void goToStack() {
+        TrajectorySequence stackCross = drive.trajectorySequenceBuilder(scorePoseYellow)
+                .turn(Math.toRadians(180))
+                .splineToLinearHeading(new Pose2d(0,-11.5,Math.toRadians(180)),Math.toRadians(180))
+                .lineToConstantHeading(new Vector2d(-60,-11.5))
+                .build();
+        drive.followTrajectorySequence(stackCross);
+    }
+    private void getStackPixels() {
+        /*
+
+
+
+
+         */
+        pixel.setPosition(0.5);
     }
 
     private void outputTelemetry() {
