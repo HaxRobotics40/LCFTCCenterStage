@@ -22,13 +22,16 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        Servo pixel = hardwareMap.get(Servo.class, "pixel");
+        Servo wrist = hardwareMap.get(Servo.class, "wrist");
+        Servo clawL = hardwareMap.get(Servo.class, "clawL");
+        Servo clawR = hardwareMap.get(Servo.class, "clawR");
+        Servo hook = hardwareMap.get(Servo.class, "hook");
         DcMotor linearSlide = hardwareMap.get(DcMotor.class, "slide");
         linearSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         linearSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         linearSlide.setTargetPosition(0);
-        pixel.setPosition(1);
+        wrist.setPosition(1);
 
         waitForStart();
 
@@ -42,9 +45,9 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
             );
 
             if (gamepad1.dpad_up) {
-                pixel.setPosition(1);
+                wrist.setPosition(1);
             } else if (gamepad1.dpad_down) {
-                pixel.setPosition(0.2);
+                wrist.setPosition(0.2);
             }
             if (gamepad1.a) {
                 linearSlide.setTargetPosition(507);
