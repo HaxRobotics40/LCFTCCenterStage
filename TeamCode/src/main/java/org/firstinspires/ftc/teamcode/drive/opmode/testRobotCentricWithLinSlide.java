@@ -27,10 +27,15 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
         Servo clawR = hardwareMap.get(Servo.class, "clawR");
         Servo hook = hardwareMap.get(Servo.class, "hook");
         DcMotor linearSlide = hardwareMap.get(DcMotor.class, "slide");
+        DcMotor pivot = hardwareMap.get(DcMotor.class, "pivot");
         linearSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         linearSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         linearSlide.setTargetPosition(0);
+        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        pivot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        pivot.setTargetPosition(0);
         wrist.setPosition(1);
 
         waitForStart();
