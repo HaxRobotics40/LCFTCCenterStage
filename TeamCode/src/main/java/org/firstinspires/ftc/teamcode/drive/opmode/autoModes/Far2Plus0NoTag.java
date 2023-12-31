@@ -1,11 +1,12 @@
-package org.firstinspires.ftc.teamcode.drive.opmode;
+package org.firstinspires.ftc.teamcode.drive.opmode.autoModes;
 
 import android.annotation.SuppressLint;
+import android.util.Size;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-//import com.arcrobotics.ftclib.controller.PIDController;
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -32,12 +33,10 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
-
 @Autonomous
-public class AutoNear extends LinearOpMode {
+public class Far2Plus0NoTag extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
-
     AprilTagProcessor aprilTagProcessor;
     AprilTagProcessor.Builder aprilTagProcessorBuilder;
     testEOCVpipeline detector = new testEOCVpipeline();
@@ -45,10 +44,7 @@ public class AutoNear extends LinearOpMode {
     SampleMecanumDrive drive;
     //TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
-
     NormalizedColorSensor colorSensor;
-
-
     DistanceSensor sensorDistance;
     int status;
     int itemSector;
@@ -57,21 +53,23 @@ public class AutoNear extends LinearOpMode {
     double distForward;
     int isBlue = -1;
     Pose2d pose2;
+    Pose2d pose3;
     TrajectorySequence trajCross;
     double detBearing;
     private final double kP = 0;
     private final double kI = 0;
     private final double kD = 0 ;
-//    PIDController pid = new PIDController(kP, kI, kD);
+    PIDController pid = new PIDController(kP, kI, kD);
     Servo pixel;
     Pose2d parkPose;
+    Pose2d scorePoseYellow;
     int parkSide = 0;
     @Override
     public void runOpMode() throws InterruptedException {
         aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
         pixel = hardwareMap.get(Servo.class, "pixel");
-        pixel.setPosition(1);
+        pixel.setPosition(0.9);
 
         setupIMU();
 
@@ -101,8 +99,8 @@ public class AutoNear extends LinearOpMode {
         } else if (gamepad1.dpad_right && gamepad1.right_bumper) {
             parkSide = -1;
         }
-        telemetry.addData("Parking side", parkSide);
         telemetry.update();
+        drive.setPoseEstimate(new Pose2d(-36,-60, Math.toRadians(90)));
         waitForStart();
 
         telemetryThread.start(); // Starting telemetry thread
@@ -125,10 +123,12 @@ public class AutoNear extends LinearOpMode {
 
         return aprilTagProcessorBuilder.build();
     }
+    //
     private VisionPortal initVisionPortal() {
         vPortalBuilder = new VisionPortal.Builder();
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
         vPortalBuilder.addProcessors(detector, aprilTagProcessor);
+        vPortalBuilder.setCameraResolution(new Size (1920,1080));
 
         return vPortalBuilder.build();
     }
@@ -165,7 +165,8 @@ public class AutoNear extends LinearOpMode {
                 break;
             case 4: crossField();
                 break;
-            case 5: findTargetTag();
+            case 5: telemetry.addData("Item Sector:", itemSector);
+                status++;
                 break;
             case 6: fixDistance();
                 break;
@@ -174,16 +175,16 @@ public class AutoNear extends LinearOpMode {
             case 8: park();
                 break;
         }
-        telemetry.update();
     }
     private void driveToLine() {
         TrajectorySequence traj1;
-        traj1 = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(180-(itemSector*90))))
-                .forward(36)
-                .turn(Math.toRadians((itemSector-1)*90))
+        traj1 = drive.trajectorySequenceBuilder(new Pose2d(-36,-60, Math.toRadians(90)))
+                .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180-(itemSector*90))))
+//                .forward(36)
+//                .turn(Math.toRadians((itemSector-2)*90))
                 .build();
         drive.followTrajectorySequence(traj1);
+        pose2 = drive.getPoseEstimate();
         status++;
     }
     //    }
@@ -198,50 +199,57 @@ public class AutoNear extends LinearOpMode {
         if (redValue > 0.4 || blueValue > 0.5) {
             // We found a line (either red or blue)
             drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
-            pose2 = drive.getPoseEstimate();
             status++;
             if (redValue > 0.4){
                 isBlue = 0;
+                pose3 = drive.getPoseEstimate();
             }
             else if (blueValue > 0.5){
                 isBlue = 1;
+                Pose2d thing = drive.getPoseEstimate();
+                pose3 = new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180));
             }
         } else {
             // Continue moving forward if no line is detected
-            Trajectory myTrajectory = drive.trajectoryBuilder(new Pose2d())
-                    .forward(3)
+            Trajectory myTrajectory = drive.trajectoryBuilder(pose2)
+                    .forward(1)
                     .build();
             drive.followTrajectory(myTrajectory);
+            pose2 = drive.getPoseEstimate();
         }
     }
     private void crossField() {
-        trajCross = drive.trajectorySequenceBuilder(pose2)
-                .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(90*2*isBlue)))
-                .forward(72)
-                .strafeRight((itemSector-1)*5.25)
-                .build();
+        if (itemSector !=2) {
+            trajCross = drive.trajectorySequenceBuilder(pose3)
+                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
+                    .forward(82)
+                    .strafeRight((itemSector - 2) * 5.25)
+                    .build();
+        } else {
+            trajCross = drive.trajectorySequenceBuilder(pose3)
+                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
+                    .forward(82)
+                    .build();
+        }
         drive.followTrajectorySequence(trajCross);
+
         status++;
     }
     private void park() {
         TrajectorySequence park = drive.trajectorySequenceBuilder(parkPose)
                 .strafeTo(new Vector2d(parkPose.getX(), parkPose.getY()+(18*parkSide)))
                 .build();
-        drive.followTrajectorySequence(park);
-        
     }
     private void dropPixel() {
         pixel.setPosition(0.2);
-        TrajectorySequence traj = drive.trajectorySequenceBuilder(new Pose2d())
-                .waitSeconds(1)
-                .build();
-        drive.followTrajectorySequence(traj);
+        sleep(750);
         pixel.setPosition(1);
         status++;
     }
     private void scorePixel() {
         // almost there :D
-        // that aged well
+        pixel.setPosition(0.5);
+        status++;
     }
 
     private void runPieceDetector() {
@@ -258,54 +266,19 @@ public class AutoNear extends LinearOpMode {
             }
         }
     }
-    private void findTargetTag() {
-        vPortal.resumeStreaming();
-        vPortal.setProcessorEnabled(aprilTagProcessor, true);
-        List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
-        for (AprilTagDetection detection : currentDetections) {
-            if (detection.id % 3 == itemSector || detection.id % 3 == itemSector-3) {
-                detX = detection.ftcPose.x;
-            }
-        }
-        Trajectory trajStrafe = drive.trajectoryBuilder(new Pose2d())
-                .strafeRight(detX)
-                .build();
-        drive.followTrajectory(trajStrafe);
-        status++;
-        // do pid stuff later
-
-    }
     private void fixDistance() {
-        double wantedDistance = 12.75; // how far away you want the robot to go
-
-        double thresholdDistanceInches = 0.1;
-
-        distForward = sensorDistance.getDistance(DistanceUnit.INCH);
-
         if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
             distForward = sensorDistance.getDistance(DistanceUnit.INCH);
         } else {
-            distForward = wantedDistance;
-            teleLogging("Infinity Distance detected");
+            distForward = 12.75;
         }
-        if (distForward != wantedDistance) {
-            double output = wantedDistance - distForward;
-            Trajectory Disttraj = drive.trajectoryBuilder(new Pose2d())
-                    .forward(output)
-                    .build();
-
-
-            String StrMotorPower = String.valueOf(output);
-            teleLogging("wanted Motor Power:" + StrMotorPower);
-            drive.followTrajectory(Disttraj);
+        if (distForward != 12.75) {
+            double i = (12.75-distForward)/12.75;
+            drive.setMotorPowers(i, i, i, i);
         }
-        if ((distForward >= wantedDistance - thresholdDistanceInches) &&
-                (distForward <= wantedDistance + thresholdDistanceInches))
-        {
-            teleLogging("Achieved location");
-            drive.setMotorPowers(0,0,0,0);
-            status++;
-        }
+        status++;
+        scorePoseYellow = drive.getPoseEstimate();
+        // put dist sense stuff here
     }
 
     private void outputTelemetry() {

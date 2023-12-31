@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.drive.opmode;
+package org.firstinspires.ftc.teamcode.drive.opmode.autoModes;
 
 import android.annotation.SuppressLint;
 import android.util.Size;
@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.SwitchableLight;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -26,15 +27,14 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.opmode.vision.testEOCVpipeline;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
-import java.util.*;
+import java.util.List;
 
-import com.qualcomm.robotcore.util.RobotLog;
 @Autonomous
-public class AutoFar extends LinearOpMode {
+public class Far2Plus0 extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
     AprilTagProcessor aprilTagProcessor;
@@ -51,7 +51,7 @@ public class AutoFar extends LinearOpMode {
     Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
     double detX;
     double distForward;
-    int isBlue = -1;
+    int isBlue = 0;
     Pose2d pose2;
     Pose2d pose3;
     TrajectorySequence trajCross;
@@ -165,18 +165,13 @@ public class AutoFar extends LinearOpMode {
                 break;
             case 4: crossField();
                 break;
-            case 5: telemetry.addData("Item Sector:", itemSector);
-                status++;
+            case 5: findTargetTag();
                 break;
             case 6: fixDistance();
                 break;
             case 7: scorePixel();
                 break;
-            case 8: goToStack();
-                break;
-            case 9: getStackPixels();
-                break;
-            case 10: park();
+            case 8: park();
                 break;
         }
     }
@@ -205,7 +200,7 @@ public class AutoFar extends LinearOpMode {
             drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
             status++;
             if (redValue > 0.4){
-                isBlue = 0;
+                isBlue = -1;
                 pose3 = drive.getPoseEstimate();
             }
             else if (blueValue > 0.5){
@@ -225,13 +220,13 @@ public class AutoFar extends LinearOpMode {
     private void crossField() {
         if (itemSector !=2) {
             trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
+                    .lineToLinearHeading(new Pose2d(-36, 28*isBlue, Math.toRadians(180 * isBlue)))
                     .forward(82)
                     .strafeRight((itemSector - 2) * 5.25)
                     .build();
         } else {
             trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
+                    .lineToLinearHeading(new Pose2d(-36, 28*isBlue, Math.toRadians(180 * isBlue)))
                     .forward(82)
                     .build();
         }
@@ -299,27 +294,9 @@ public class AutoFar extends LinearOpMode {
             drive.setMotorPowers(i, i, i, i);
         }
         status++;
-        scorePoseYellow = drive.getPoseEstimate();
+        parkPose = drive.getPoseEstimate();
         // put dist sense stuff here
     }
-    private void goToStack() {
-        TrajectorySequence stackCross = drive.trajectorySequenceBuilder(scorePoseYellow)
-                .turn(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(0,-11.5,Math.toRadians(180)),Math.toRadians(180))
-                .lineToConstantHeading(new Vector2d(-60,-11.5))
-                .build();
-        drive.followTrajectorySequence(stackCross);
-    }
-    private void getStackPixels() {
-        /*
-
-
-
-
-         */
-        pixel.setPosition(0.5);
-    }
-
     private void outputTelemetry() {
         // TODO: Also output to .log file.
 //        teleLogging("---------April Tag Data----------");
