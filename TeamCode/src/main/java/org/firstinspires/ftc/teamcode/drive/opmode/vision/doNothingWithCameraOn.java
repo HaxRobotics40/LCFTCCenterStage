@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.drive.opmode;
+package org.firstinspires.ftc.teamcode.drive.opmode.vision;
 
 import android.annotation.SuppressLint;
 
@@ -25,7 +25,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import java.util.List;
 
 //rr and strucutre layouts for post tuning stuff
-
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+@Disabled
 @Autonomous
 public class doNothingWithCameraOn extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;

@@ -33,7 +33,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
-@Autonomous
+@Autonomous(group = "comp")
 public class Far2Plus0 extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
@@ -51,7 +51,7 @@ public class Far2Plus0 extends LinearOpMode {
     Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
     double detX;
     double distForward;
-    int isBlue = 0;
+    int isBlue = -1;
     Pose2d pose2;
     Pose2d pose3;
     TrajectorySequence trajCross;
@@ -165,7 +165,8 @@ public class Far2Plus0 extends LinearOpMode {
                 break;
             case 4: crossField();
                 break;
-            case 5: findTargetTag();
+            case 5: telemetry.addData("Item Sector:", itemSector);
+                status++;
                 break;
             case 6: fixDistance();
                 break;
@@ -200,7 +201,7 @@ public class Far2Plus0 extends LinearOpMode {
             drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
             status++;
             if (redValue > 0.4){
-                isBlue = -1;
+                isBlue = 0;
                 pose3 = drive.getPoseEstimate();
             }
             else if (blueValue > 0.5){
@@ -220,13 +221,13 @@ public class Far2Plus0 extends LinearOpMode {
     private void crossField() {
         if (itemSector !=2) {
             trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(-36, 28*isBlue, Math.toRadians(180 * isBlue)))
+                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
                     .forward(82)
                     .strafeRight((itemSector - 2) * 5.25)
                     .build();
         } else {
             trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(-36, 28*isBlue, Math.toRadians(180 * isBlue)))
+                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
                     .forward(82)
                     .build();
         }
@@ -265,24 +266,6 @@ public class Far2Plus0 extends LinearOpMode {
             }
         }
     }
-    private void findTargetTag() {
-        vPortal.resumeStreaming();
-        vPortal.setProcessorEnabled(aprilTagProcessor, true);
-        List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
-        for (AprilTagDetection detection : currentDetections) {
-            if (detection.id % 3 == itemSector || detection.id % 3 == itemSector-3) {
-                detX = detection.ftcPose.x;
-                detBearing = detection.ftcPose.bearing;
-                vPortal.close();
-                break;
-            }
-        }
-        Trajectory trajStrafe = drive.trajectoryBuilder(new Pose2d())
-                .strafeRight(detX)
-                .build();
-
-        drive.followTrajectory(trajStrafe);
-    }
     private void fixDistance() {
         if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
             distForward = sensorDistance.getDistance(DistanceUnit.INCH);
@@ -294,9 +277,10 @@ public class Far2Plus0 extends LinearOpMode {
             drive.setMotorPowers(i, i, i, i);
         }
         status++;
-        parkPose = drive.getPoseEstimate();
+        scorePoseYellow = drive.getPoseEstimate();
         // put dist sense stuff here
     }
+
     private void outputTelemetry() {
         // TODO: Also output to .log file.
 //        teleLogging("---------April Tag Data----------");

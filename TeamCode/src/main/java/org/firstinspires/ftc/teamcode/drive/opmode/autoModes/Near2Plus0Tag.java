@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+//import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -30,10 +31,11 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+@Disabled
 
-
-@Autonomous
-public class Near2Plus0NoTag extends LinearOpMode {
+@Autonomous(group = "experimental")
+public class Near2Plus0Tag extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
 
@@ -164,7 +166,7 @@ public class Near2Plus0NoTag extends LinearOpMode {
                 break;
             case 4: crossField();
                 break;
-            case 5: status++;
+            case 5: findTargetTag();
                 break;
             case 6: fixDistance();
                 break;
@@ -324,6 +326,7 @@ public class Near2Plus0NoTag extends LinearOpMode {
         distanceSensorTelemetry();
         teleData("parkSide", parkSide);
     }
+
     @SuppressLint("DefaultLocale")
     private void distanceSensorTelemetry() {
         teleData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));

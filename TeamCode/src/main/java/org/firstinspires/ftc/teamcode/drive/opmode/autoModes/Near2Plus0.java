@@ -5,10 +5,10 @@ import android.annotation.SuppressLint;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-//import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
@@ -33,7 +33,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import java.util.List;
 
 
-@Autonomous
+@Autonomous(group = "comp")
 public class Near2Plus0 extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
@@ -47,9 +47,15 @@ public class Near2Plus0 extends LinearOpMode {
     IMU imu;
 
     NormalizedColorSensor colorSensor;
-
-
     DistanceSensor sensorDistance;
+
+    Servo wrist;
+    Servo clawL;
+    Servo clawR;
+    Servo hook;
+    DcMotor linearSlide;
+    DcMotor pivot;
+
     int status;
     int itemSector;
     Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
@@ -58,20 +64,34 @@ public class Near2Plus0 extends LinearOpMode {
     int isBlue = -1;
     Pose2d pose2;
     TrajectorySequence trajCross;
-    double detBearing;
-    private final double kP = 0;
-    private final double kI = 0;
-    private final double kD = 0 ;
+//    double detBearing;
+//    private final double kP = 0;
+//    private final double kI = 0;
+//    private final double kD = 0 ;
 //    PIDController pid = new PIDController(kP, kI, kD);
-    Servo pixel;
     Pose2d parkPose;
+    Pose2d scorePoseYellow;
     int parkSide = 0;
     @Override
     public void runOpMode() throws InterruptedException {
+        wrist = hardwareMap.get(Servo.class, "wrist");
+        clawL = hardwareMap.get(Servo.class, "clawL");
+        clawR = hardwareMap.get(Servo.class, "clawR");
+        hook = hardwareMap.get(Servo.class, "hook");
+        linearSlide = hardwareMap.get(DcMotor.class, "slide");
+        pivot = hardwareMap.get(DcMotor.class, "pivot");
+        linearSlide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        linearSlide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        linearSlide.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        linearSlide.setTargetPosition(0);
+        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        pivot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        pivot.setTargetPosition(0);
+        wrist.setPosition(1);
         aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
-        pixel = hardwareMap.get(Servo.class, "pixel");
-        pixel.setPosition(1);
+
 
         setupIMU();
 
@@ -79,23 +99,21 @@ public class Near2Plus0 extends LinearOpMode {
         setupDistanceSensor();
 
         drive = new SampleMecanumDrive(hardwareMap);
-        // TODO: Fix Drive Constants physical measurements!!!
-//        TODO: Move Reverse to here.
 
-        Thread telemetryThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
-                    outputTelemetry();
-
-                    try {
-                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            }
-        });
+//        Thread telemetryThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
+//                    outputTelemetry();
+//
+//                    try {
+//                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
+//                    } catch (InterruptedException e) {
+//                        Thread.currentThread().interrupt();
+//                    }
+//                }
+//            }
+//        });
         if (gamepad1.dpad_left && gamepad1.left_bumper) {
             parkSide = 1;
         } else if (gamepad1.dpad_right && gamepad1.right_bumper) {
@@ -105,7 +123,7 @@ public class Near2Plus0 extends LinearOpMode {
         telemetry.update();
         waitForStart();
 
-        telemetryThread.start(); // Starting telemetry thread
+//        telemetryThread.start(); // Starting telemetry thread
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
@@ -115,7 +133,7 @@ public class Near2Plus0 extends LinearOpMode {
 
 
 
-        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
+//        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
 
     private AprilTagProcessor initAprilTag() {
@@ -165,13 +183,17 @@ public class Near2Plus0 extends LinearOpMode {
                 break;
             case 4: crossField();
                 break;
-            case 5: findTargetTag();
+            case 5: status++;
                 break;
             case 6: fixDistance();
                 break;
             case 7: scorePixel();
                 break;
-            case 8: park();
+            case 8: goToStack();
+                break;
+            case 9: getStackPixels();
+                break;
+            case 10: park();
                 break;
         }
         telemetry.update();
@@ -231,17 +253,18 @@ public class Near2Plus0 extends LinearOpMode {
         
     }
     private void dropPixel() {
-        pixel.setPosition(0.2);
+        clawL.setPosition(0.2);
+        clawR.setPosition(0.8);
         TrajectorySequence traj = drive.trajectorySequenceBuilder(new Pose2d())
                 .waitSeconds(1)
                 .build();
         drive.followTrajectorySequence(traj);
-        pixel.setPosition(1);
+        clawL.setPosition(0);
+        clawR.setPosition(1);
         status++;
     }
     private void scorePixel() {
-        // almost there :D
-        // that aged well
+
     }
 
     private void runPieceDetector() {
@@ -305,7 +328,25 @@ public class Near2Plus0 extends LinearOpMode {
             teleLogging("Achieved location");
             drive.setMotorPowers(0,0,0,0);
             status++;
+            Pose2d scorePoseYellow = drive.getPoseEstimate();
         }
+    }
+    private void goToStack() {
+        TrajectorySequence stackCross = drive.trajectorySequenceBuilder(scorePoseYellow)
+                .turn(Math.toRadians(180))
+                .splineToLinearHeading(new Pose2d(0,-11.5,Math.toRadians(180)),Math.toRadians(180))
+                .lineToConstantHeading(new Vector2d(-60,-11.5))
+                .build();
+        drive.followTrajectorySequence(stackCross);
+    }
+    private void getStackPixels() {
+        /*
+
+
+
+
+         */
+        wrist.setPosition(0.5);
     }
 
     private void outputTelemetry() {
@@ -325,7 +366,6 @@ public class Near2Plus0 extends LinearOpMode {
         distanceSensorTelemetry();
         teleData("parkSide", parkSide);
     }
-
     @SuppressLint("DefaultLocale")
     private void distanceSensorTelemetry() {
         teleData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));

@@ -33,7 +33,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import java.util.*;
 
 import com.qualcomm.robotcore.util.RobotLog;
-@Autonomous
+@Autonomous(group = "comp")
 public class Far2Plus2 extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
@@ -222,7 +222,7 @@ public class Far2Plus2 extends LinearOpMode {
             pose2 = drive.getPoseEstimate();
         }
     }
-    private void crossField() {
+    private void crossField() { // This has issues
         if (itemSector !=2) {
             trajCross = drive.trajectorySequenceBuilder(pose3)
                     .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
@@ -269,24 +269,6 @@ public class Far2Plus2 extends LinearOpMode {
                 vPortal.stopStreaming();
             }
         }
-    }
-    private void findTargetTag() {
-        vPortal.resumeStreaming();
-        vPortal.setProcessorEnabled(aprilTagProcessor, true);
-        List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
-        for (AprilTagDetection detection : currentDetections) {
-            if (detection.id % 3 == itemSector || detection.id % 3 == itemSector-3) {
-                detX = detection.ftcPose.x;
-                detBearing = detection.ftcPose.bearing;
-                vPortal.close();
-                break;
-            }
-        }
-        Trajectory trajStrafe = drive.trajectoryBuilder(new Pose2d())
-                .strafeRight(detX)
-                .build();
-
-        drive.followTrajectory(trajStrafe);
     }
     private void fixDistance() {
         if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
