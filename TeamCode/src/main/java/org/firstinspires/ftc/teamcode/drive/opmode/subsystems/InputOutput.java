@@ -23,9 +23,9 @@ public class InputOutput {
     private int targetLevel = 0;
     private int degAngle = 0;
     private final double ticksPerDeg = 3.9581;
-    private int lastLevel;
-    private double maxPowerSlide;
-    private double maxPowerPivot;
+//    private int lastLevel;
+    private final double maxPowerSlide;
+    private final double maxPowerPivot;
 
     public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot) {
         pivot = hw.get(DcMotor.class, "pivot");
@@ -46,7 +46,7 @@ public class InputOutput {
 
         levels = new ArrayList<>();
         
-        if (autoFillLevels == true) {
+        if (autoFillLevels) {
             fillLevels();
         }
         this.maxPowerSlide = maxPowerSlide;
