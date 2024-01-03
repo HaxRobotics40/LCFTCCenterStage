@@ -24,9 +24,10 @@ public class InputOutput {
     private int degAngle = 0;
     private final double ticksPerDeg = 3.9581;
     private int lastLevel;
-    private double maxPower;
+    private double maxPowerSlide;
+    private double maxPowerPivot;
 
-    public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPower) {
+    public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot) {
         pivot = hw.get(DcMotor.class, "pivot");
         // startup position is 0
         pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -48,7 +49,8 @@ public class InputOutput {
         if (autoFillLevels == true) {
             fillLevels();
         }
-        this.maxPower = maxPower;
+        this.maxPowerSlide = maxPowerSlide;
+        this.maxPowerPivot = maxPowerPivot;
     }
 
     // Adds new level with associated encoder position
@@ -58,7 +60,7 @@ public class InputOutput {
         return this;
     }
     public void fillLevels() {
-        this.addLevel(507).addLevel(6268).addLevel(9623).addLevel(13042);
+        this.addLevel(507).addLevel(5234).addLevel(10468).addLevel(13042);
     }
     // erase all levels
     public void clearLevels() {
@@ -91,7 +93,7 @@ public class InputOutput {
             return;
         }
         targetLevel = level;
-        double direction = maxPower * Math.signum((double) levels.get(targetLevel) - slide.getCurrentPosition());
+        double direction = maxPowerSlide * Math.signum((double) levels.get(targetLevel) - slide.getCurrentPosition());
         slide.setPower(direction);
 
     }
@@ -102,8 +104,11 @@ public class InputOutput {
     private void setAngle(int deg) { // can change if 0 ticks isn't 0 deg actually
         double posDouble = deg * ticksPerDeg;
         int posInt = (int) posDouble;
-        pivot.setTargetPosition(posInt);
         degAngle = deg;
+        pivot.setTargetPosition(posInt);
+        pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        pivot.setPower(maxPowerPivot * Math.signum((double) posInt - pivot.getCurrentPosition()));
+
     }
     public void ground() {
         setAngle(0);
@@ -147,6 +152,10 @@ public class InputOutput {
     public int getAngle() {
         return degAngle;
     }
+    public int getSlidePos() { return slide.getCurrentPosition(); }
+    public int getPivotPos() { return pivot.getCurrentPosition(); }
+    public double getRightPos() { return clawR.getPosition(); }
+    public double getLeftPos() { return clawL.getPosition(); }
     public void setTolerance(int newTolerance) {
         tolerance = newTolerance;
     }

@@ -27,12 +27,22 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        InputOutput arm = new InputOutput(hardwareMap, true, .25);
+        InputOutput arm = new InputOutput(hardwareMap, true, .25, .15);
 
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         Servo hook = hardwareMap.get(Servo.class, "hook");
         Servo wrist = hardwareMap.get(Servo.class, "wrist");
+        DcMotor slide = hardwareMap.get(DcMotor.class, "slide");
+        DcMotor pivot = hardwareMap.get(DcMotor.class, "pivot");
+        slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        slide.setTargetPosition(0);
+        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        pivot.setTargetPosition(0);
+        Servo clawL = hardwareMap.get(Servo.class, "clawL");
+        Servo clawR = hardwareMap.get(Servo.class, "clawR");
 
 
 
@@ -46,36 +56,70 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
                             -gamepad1.right_stick_x
                     )
             );
-
-            buttonPressedDown();
-            buttonPressedUp();
-            if (wasUpPressed) {
-                arm.goTo(arm.getLevel() + 1);
-                wasUpPressed = false;
-            } else if (wasDownPressed) {
-                arm.goTo(arm.getLevel() - 1);
-                wasDownPressed = false;
-            }
-
-            if (gamepad1.x) {
-                arm.ground();
-            } else if (gamepad1.y) {
-                arm.board();
-            } else if (gamepad1.b) {
-                arm.over();
-            }
-
-            if (gamepad1.left_bumper) {
-                arm.release();
-            } else if (gamepad1.right_bumper) {
-                arm.grab();
-            }
-
+            // analog up/down for pivot & arm & wrist
             if (gamepad1.dpad_left) {
                 wrist.setPosition(wrist.getPosition()-.002);
             } else if (gamepad1.dpad_right) {
                 wrist.setPosition(wrist.getPosition()+.002);
             }
+
+            if (gamepad1.left_bumper) {
+                clawL.setPosition(wrist.getPosition()+.002);
+            } else if (gamepad1.left_trigger > .5) {
+                clawL.setPosition(wrist.getPosition()-.002);
+            }
+            if (gamepad1.right_bumper) {
+                clawR.setPosition(wrist.getPosition()+.002);
+            } else if (gamepad1.right_trigger > .5) {
+                clawR.setPosition(wrist.getPosition()-.002);
+            }
+
+            if (gamepad1.dpad_up) {
+                slide.setTargetPosition(slide.getCurrentPosition()+5);
+            } else if (gamepad1.dpad_down) {
+                slide.setTargetPosition(slide.getCurrentPosition()-5);
+            }
+
+
+            if (gamepad1.x) {
+                pivot.setTargetPosition(pivot.getCurrentPosition()-5);
+            } else if (gamepad1.b) {
+                pivot.setTargetPosition(pivot.getCurrentPosition()+5);
+            }
+            slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            slide.setPower(0.25);
+            pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            pivot.setPower(.15);
+
+
+
+
+            // preset positions: requires tuning/position determing and making sure directions are right
+
+//            buttonPressedDown();
+//            buttonPressedUp();
+//            if (wasUpPressed) {
+//                arm.goTo(arm.getLevel() + 1);
+//                wasUpPressed = false;
+//            } else if (wasDownPressed) {
+//                arm.goTo(arm.getLevel() - 1);
+//                wasDownPressed = false;
+//            }
+//
+//            if (gamepad1.x) {
+//                arm.ground();
+//            } else if (gamepad1.y) {
+//                arm.board();
+//            } else if (gamepad1.b) {
+//                arm.over();
+//            }
+//
+//            if (gamepad1.left_bumper) {
+//                arm.release();
+//            } else if (gamepad1.right_bumper) {
+//                arm.grab();
+//            }
+
 
 
             drive.update();
@@ -87,9 +131,10 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
 //            telemetry.addData("heading", poseEstimate.getHeading());
             telemetry.addData("pos", drive.getWheelPositions());
             telemetry.addData("Velocities", drive.getWheelVelocities());
-            telemetry.addData("Level", arm.getLevel());
-            telemetry.addData("Angle", arm.getAngle());
+            telemetry.addData("Elevator Position", arm.getSlidePos());
+            telemetry.addData("Arm Position", arm.getPivotPos());
             telemetry.addData("Wrist Pos", wrist.getPosition());
+            telemetry.addData("Claw L & R Pos", arm.getLeftPos() + " "  + arm.getRightPos());
             telemetry.update();
 
         }
