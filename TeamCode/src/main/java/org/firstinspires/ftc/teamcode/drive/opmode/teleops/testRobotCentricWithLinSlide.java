@@ -44,34 +44,37 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
         Servo clawL = hardwareMap.get(Servo.class, "clawL");
         Servo clawR = hardwareMap.get(Servo.class, "clawR");
 
+        clawL.setPosition(.65);
+        clawR.setPosition(1);
+        wrist.setPosition(.73);
 
 
         waitForStart();
 
         while (!isStopRequested()) {
-            drive.setWeightedDrivePower(
-                    new Pose2d(
-                            -gamepad1.left_stick_y,
-                            -gamepad1.left_stick_x,
-                            -gamepad1.right_stick_x
-                    )
-            );
+//            drive.setWeightedDrivePower(
+//                    new Pose2d(
+//                            -gamepad1.left_stick_y,
+//                            -gamepad1.left_stick_x,
+//                            -gamepad1.right_stick_x
+//                    )
+//            );
             // analog up/down for pivot & arm & wrist
             if (gamepad1.dpad_left) {
-                wrist.setPosition(wrist.getPosition()-.002);
+                wrist.setPosition(wrist.getPosition()-.01);
             } else if (gamepad1.dpad_right) {
-                wrist.setPosition(wrist.getPosition()+.002);
+                wrist.setPosition(wrist.getPosition()+.01);
             }
 
             if (gamepad1.left_bumper) {
-                clawL.setPosition(wrist.getPosition()+.002);
-            } else if (gamepad1.left_trigger > .5) {
-                clawL.setPosition(wrist.getPosition()-.002);
+                clawL.setPosition(clawL.getPosition()+.002);
+            } else if (gamepad1.left_trigger > .1) {
+                clawL.setPosition(clawL.getPosition()-.002);
             }
             if (gamepad1.right_bumper) {
-                clawR.setPosition(wrist.getPosition()+.002);
-            } else if (gamepad1.right_trigger > .5) {
-                clawR.setPosition(wrist.getPosition()-.002);
+                clawR.setPosition(clawR.getPosition()+.002);
+            } else if (gamepad1.right_trigger > .1) {
+                clawR.setPosition(clawR.getPosition()-.002);
             }
 
             if (gamepad1.dpad_up) {
@@ -87,9 +90,9 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
                 pivot.setTargetPosition(pivot.getCurrentPosition()+5);
             }
             slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            slide.setPower(0.25);
+            slide.setPower(0.2);
             pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            pivot.setPower(.15);
+            pivot.setPower(0.1);
 
 
 

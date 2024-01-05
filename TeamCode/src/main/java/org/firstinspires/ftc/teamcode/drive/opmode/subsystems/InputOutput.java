@@ -112,22 +112,31 @@ public class InputOutput {
     }
     public void ground() {
         setAngle(0);
+        wrist.setPosition(.73);
+    }
+    public void extendo() {
+        setAngle(0);
+        wrist.setPosition(.73);
+        goTo(levels.size());
     }
     public void over() {
-        setAngle(45); // TODO: det if this is necessary; if so find deg
+        setAngle(135);
+        wrist.setPosition(1); // idk if we need this? are our slides long enough?
+        // TODO: det if this is necessary; if so find deg
     }
     public void board() { // 60 deg
-        setAngle(60);
+        setAngle(126);
+        wrist.setPosition(.73);
     }
 
     public void grab() {
-        clawL.setPosition(1);
-        clawR.setPosition(0);
+        clawL.setPosition(.65);
+        clawR.setPosition(1);
     }
 
     public void release() {
-        clawL.setPosition(0);
-        clawR.setPosition(1);
+        clawL.setPosition(0.9);
+        clawR.setPosition(.85);
     }
 
 
