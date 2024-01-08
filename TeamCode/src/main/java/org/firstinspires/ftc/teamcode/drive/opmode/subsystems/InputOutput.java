@@ -139,7 +139,18 @@ public class InputOutput {
         clawR.setPosition(.85);
     }
 
-
+    public void grabLeft() {
+        clawL.setPosition(.65);
+    }
+    public void grabRight() {
+        clawR.setPosition(1);
+    }
+    public void releaseLeft() {
+        clawL.setPosition(.9);
+    }
+    public void releaseRight() {
+        clawR.setPosition(.85);
+    }
     // check if arm is at target, stopping it if it is
     public void update() {
         if (targetLevel == -1) {

@@ -24,6 +24,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 import org.firstinspires.ftc.teamcode.drive.opmode.vision.testEOCVpipeline;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -46,6 +47,7 @@ public class Far2Plus0 extends LinearOpMode {
     IMU imu;
     NormalizedColorSensor colorSensor;
     DistanceSensor sensorDistance;
+    InputOutput arm;
     int status;
     int itemSector;
     Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
@@ -80,20 +82,20 @@ public class Far2Plus0 extends LinearOpMode {
         // TODO: Fix Drive Constants physical measurements!!!
 //        TODO: Move Reverse to here.
 
-        Thread telemetryThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
-                    outputTelemetry();
-
-                    try {
-                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            }
-        });
+//        Thread telemetryThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
+//                    outputTelemetry();
+//
+//                    try {
+//                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
+//                    } catch (InterruptedException e) {
+//                        Thread.currentThread().interrupt();
+//                    }
+//                }
+//            }
+//        });
         if (gamepad1.dpad_left && gamepad1.left_bumper) {
             parkSide = 1;
         } else if (gamepad1.dpad_right && gamepad1.right_bumper) {
@@ -103,7 +105,7 @@ public class Far2Plus0 extends LinearOpMode {
         drive.setPoseEstimate(new Pose2d(-36,-60, Math.toRadians(90)));
         waitForStart();
 
-        telemetryThread.start(); // Starting telemetry thread
+//        telemetryThread.start(); // Starting telemetry thread
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
@@ -113,7 +115,7 @@ public class Far2Plus0 extends LinearOpMode {
 
 
 
-        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
+//        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
 
     private AprilTagProcessor initAprilTag() {
