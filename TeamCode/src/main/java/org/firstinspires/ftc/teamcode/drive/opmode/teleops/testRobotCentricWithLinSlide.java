@@ -6,6 +6,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 
@@ -37,12 +38,13 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
         DcMotor pivot = hardwareMap.get(DcMotor.class, "pivot");
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        slide.setTargetPosition(0);
+//        slide.setTargetPosition(0);
         pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        pivot.setTargetPosition(0);
+//        pivot.setTargetPosition(0);
         Servo clawL = hardwareMap.get(Servo.class, "clawL");
         Servo clawR = hardwareMap.get(Servo.class, "clawR");
+        slide.setDirection(DcMotorSimple.Direction.REVERSE);
 
         clawL.setPosition(.65);
         clawR.setPosition(1);
@@ -78,9 +80,13 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
             }
 
             if (gamepad1.dpad_up) {
-                slide.setTargetPosition(slide.getCurrentPosition()+5);
+//                slide.setTargetPosition(slide.getCurrentPosition()+5);
+                slide.setPower(.75);
             } else if (gamepad1.dpad_down) {
                 slide.setTargetPosition(slide.getCurrentPosition()-5);
+                slide.setPower(-.75);
+            } else {
+                slide.setPower(0);
             }
 
 
@@ -89,10 +95,10 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
             } else if (gamepad1.b) {
                 pivot.setTargetPosition(pivot.getCurrentPosition()+5);
             }
-            slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            slide.setPower(0.2);
-            pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            pivot.setPower(0.1);
+//            slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//            slide.setPower(0.75);
+//            pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//            pivot.setPower(0.1);
 
 
 

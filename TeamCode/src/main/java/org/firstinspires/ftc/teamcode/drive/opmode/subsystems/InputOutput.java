@@ -60,7 +60,7 @@ public class InputOutput {
         return this;
     }
     public void fillLevels() {
-        this.addLevel(507).addLevel(5234).addLevel(10468).addLevel(13042);
+        this.addLevel(0).addLevel(9600).addLevel(17520).addLevel(25440);
     }
     // erase all levels
     public void clearLevels() {
