@@ -70,8 +70,8 @@ public class Far2Plus0 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
-        pixel = hardwareMap.get(Servo.class, "pixel");
-        pixel.setPosition(0.9);
+//        pixel = hardwareMap.get(Servo.class, "pixel");
+//        pixel.setPosition(0.9);
 
         setupIMU();
 
