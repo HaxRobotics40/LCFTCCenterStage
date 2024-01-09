@@ -243,9 +243,6 @@ public class Far2Plus0 extends LinearOpMode {
                 .build();
     }
     private void dropPixel() {
-        pixel.setPosition(0.2);
-        sleep(750);
-        pixel.setPosition(1);
         status++;
     }
     private void scorePixel() {
