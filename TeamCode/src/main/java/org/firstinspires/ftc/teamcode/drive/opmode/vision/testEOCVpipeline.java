@@ -16,7 +16,7 @@ import java.util.List;
 public class testEOCVpipeline implements VisionProcessor {
     Mat secondary = new Mat();
     int location = -1;
-    private int width;
+    private String color;
 
 
     public void init(int width, int height, CameraCalibration cameraCalibration) {
@@ -50,11 +50,11 @@ public class testEOCVpipeline implements VisionProcessor {
         Mat maskR = new Mat();
         Mat maskB = new Mat();
         Mat maskR2 = new Mat();
-        Mat colorOnly = new Mat();
+//        Mat colorOnly = new Mat();
         Mat mask = new Mat();
         Mat edges = new Mat();
-        int amountColor;
-        int type = colorOnly.type();
+//        int amountColor;
+//        int type = colorOnly.type();
 
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5,5));
 
@@ -72,16 +72,21 @@ public class testEOCVpipeline implements VisionProcessor {
         Imgproc.morphologyEx(maskB, maskB, Imgproc.MORPH_CLOSE, kernel);
         Imgproc.morphologyEx(maskR2, maskR2, Imgproc.MORPH_CLOSE, kernel);
 
-        Core.bitwise_and(input, input, colorOnly, maskR = maskR);
-        Core.bitwise_and(input, input, colorOnly, maskB = maskB);
-        Core.bitwise_and(input, input, colorOnly, maskR2 = maskR2);
+//        Core.bitwise_and(input, input, colorOnly, maskR = maskR);
+//        Core.bitwise_and(input, input, colorOnly, maskB = maskB);
+//        Core.bitwise_and(input, input, colorOnly, maskR2 = maskR2);
+        if (Core.countNonZero(maskR) + Core.countNonZero(maskR2) > Core.countNonZero(maskB)) {
+            color = "RED";
+        } else {
+            color = "BLUE";
+        }
         Core.bitwise_and(maskR, maskR, mask, maskR = maskR);
         Core.bitwise_and(maskB, maskB, mask, maskB = maskB);
         Core.bitwise_and(maskR2, maskR2, mask, maskR2 = maskR2);
         maskR.release();
         maskB.release();
         maskR2.release();
-        colorOnly.release();
+//        colorOnly.release();
 
         int width = mask.cols(); // Get the width of the mask
         int sectorWidth = width / 3; // Divide it by 3 to get each sector's width
@@ -155,6 +160,7 @@ public class testEOCVpipeline implements VisionProcessor {
         obtainedLocation(int i) {int val = i;}
         public int val() {return val;}
     }
+    public String getColor() { return color; }
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight,float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {}
 
     public int locationInt() {
