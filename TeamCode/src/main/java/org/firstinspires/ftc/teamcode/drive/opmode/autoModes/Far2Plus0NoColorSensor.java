@@ -45,7 +45,6 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     SampleMecanumDrive drive;
     //TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
-    NormalizedColorSensor colorSensor;
     DistanceSensor sensorDistance;
     InputOutput arm;
     int status;
@@ -75,7 +74,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
 
         setupIMU();
 
-        setupColorSensor();
+
         setupDistanceSensor();
 
         drive = new SampleMecanumDrive(hardwareMap);
@@ -137,20 +136,12 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
 
     private void setupIMU() {
         imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+        RevHubOrientationOnRobot.LogoFa3cingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
 
-    private void setupColorSensor() {
-        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
-        if (colorSensor instanceof SwitchableLight) {
-            ((SwitchableLight)colorSensor).enableLight(true);
-        }
-
-        colorSensor.setGain(40);
-    }
 
     private void setupDistanceSensor() {
         sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
@@ -161,7 +152,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
                 break;
             case 1: driveToLine();
                 break;
-            case 2: alignLine();
+            case 2: colorProcess();
                 break;
             case 3: dropPixel();
                 break;
@@ -190,36 +181,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
         status++;
     }
     //    }
-    private void alignLine() { // get pose estimate, add second one
-        double redValue =  colorSensor.getNormalizedColors().red;
-        double blueValue = colorSensor.getNormalizedColors().blue;
 
-        teleData("Red Value (0 to 1)", "%4.2f", redValue);
-        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
-        telemetry.update();
-
-        if (redValue > 0.4 || blueValue > 0.5) {
-            // We found a line (either red or blue)
-            drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
-            status++;
-            if (redValue > 0.4){
-                isBlue = 0;
-                pose3 = drive.getPoseEstimate();
-            }
-            else if (blueValue > 0.5){
-                isBlue = 1;
-                Pose2d thing = drive.getPoseEstimate();
-                pose3 = new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180));
-            }
-        } else {
-            // Continue moving forward if no line is detected
-            Trajectory myTrajectory = drive.trajectoryBuilder(pose2)
-                    .forward(1)
-                    .build();
-            drive.followTrajectory(myTrajectory);
-            pose2 = drive.getPoseEstimate();
-        }
-    }
     private void crossField() {
         if (itemSector !=2) {
             trajCross = drive.trajectorySequenceBuilder(pose3)
@@ -282,6 +244,35 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
         scorePoseYellow = drive.getPoseEstimate();
         // put dist sense stuff here
     }
+    private void colorProcess() { // get pose estimate, add second one
+//        double redValue =  colorSensor.getNormalizedColors().red;
+//        double blueValue = colorSensor.getNormalizedColors().blue;
+//
+//        teleData("Red Value (0 to 1)", "%4.2f", redValue);
+//        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
+//        telemetry.update();
+
+//        if (redValue > 0.4 || blueValue > 0.5) {
+        // We found a line (either red or blue)
+//            drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
+        status++;
+        if (detector.getColor() == "RED") {
+            isBlue = 0;
+            pose3 = drive.getPoseEstimate();
+        } else if (detector.getColor() == "BLUE") {
+            isBlue = 1;
+            Pose2d thing = drive.getPoseEstimate();
+            pose3 = new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180));
+        }
+//        } else {
+        // Continue moving forward if no line is detected
+//            Trajectory myTrajectory = drive.trajectoryBuilder(pose2)
+//                    .forward(1)
+//                    .build();
+//            drive.followTrajectory(myTrajectory);
+//            pose2 = drive.getPoseEstimate();
+//        }
+    }
 
     private void outputTelemetry() {
         // TODO: Also output to .log file.
@@ -295,7 +286,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
 //        TODO: Add beysian estimate. Kalman filter.
         poseTelemetry();
         teleLogging("---------Color Data----------");
-        colorSensorTelemetry();
+
         teleLogging("---------Distance Sensor----------");
         distanceSensorTelemetry();
         teleData("parkSide", parkSide);
@@ -304,14 +295,6 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     @SuppressLint("DefaultLocale")
     private void distanceSensorTelemetry() {
         teleData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));
-    }
-
-    private void colorSensorTelemetry() {
-        NormalizedRGBA colors = colorSensor.getNormalizedColors();
-        teleData("Red", "%.3f", colors.red);
-        teleData("Green", "%.3f", colors.green);
-        teleData("Blue", "%.3f", colors.blue);
-
     }
 
     private void poseTelemetry() {

@@ -7,11 +7,37 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 
 @TeleOp
 public class FieldCentricDrive extends LinearOpMode {
+    boolean isDepressedUp = false;
+    boolean isDepressedDown = false;
+    boolean wasUpPressed;
+    boolean wasDownPressed;
+    public void buttonPressedUp() {
+        if (gamepad1.dpad_up && !isDepressedUp) {
+            isDepressedUp = true;
+            wasUpPressed = false;
+        }
+        if (!gamepad1.dpad_up && isDepressedUp) {
+            isDepressedUp = false;
+            wasUpPressed = true;
+        }
+    }
+    public void buttonPressedDown() {
+        if (gamepad1.dpad_down && !isDepressedDown) {
+            isDepressedDown = true;
+            wasDownPressed = false;
+        }
+        if (!gamepad1.dpad_down && isDepressedDown) {
+            isDepressedDown = false;
+            wasDownPressed = true;
+        }
+    }
     @Override
     public void runOpMode() throws InterruptedException {
+        InputOutput arm = new InputOutput(hardwareMap, true, .25, .15);
         // Declare our motors
         // Make sure your ID's match your configuration
         DcMotor frontLeftMotor = hardwareMap.dcMotor.get("leftFront");
@@ -30,8 +56,9 @@ public class FieldCentricDrive extends LinearOpMode {
         IMU imu = hardwareMap.get(IMU.class, "imu");
         // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+                //CHANGE THESE ONCE ORIENTATION IS KNOW
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
         frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -75,6 +102,30 @@ public class FieldCentricDrive extends LinearOpMode {
             backLeftMotor.setPower(backLeftPower);
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
+
+            buttonPressedDown();
+            buttonPressedUp();
+           if (wasUpPressed) {
+               arm.goTo(arm.getLevel() + 1);
+               wasUpPressed = false;
+           } else if (wasDownPressed) {
+               arm.goTo(arm.getLevel() - 1);
+               wasDownPressed = false;
+            }
+            if (gamepad1.x) {
+                arm.ground();
+           } else if (gamepad1.y) {
+                arm.board();
+            } else if (gamepad1.b) {
+                arm.over();
+           }
+
+           if (gamepad1.left_bumper) {
+                arm.release();
+            } else if (gamepad1.right_bumper) {
+              arm.grab();
+           }
+
         }
     }
 }

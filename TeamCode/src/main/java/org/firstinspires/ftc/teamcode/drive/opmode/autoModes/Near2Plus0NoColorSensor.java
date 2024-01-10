@@ -74,8 +74,6 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
 
 
         setupIMU();
-
-        setupColorSensor();
         setupDistanceSensor();
 
         drive = new SampleMecanumDrive(hardwareMap);
@@ -113,20 +111,15 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
 
     private void setupIMU() {
         imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP; // TODO: Update once it's done being built
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT; // TODO: Update once it's done being built
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
 
-    private void setupColorSensor() {
-        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
-        if (colorSensor instanceof SwitchableLight) {
-            ((SwitchableLight)colorSensor).enableLight(true);
-        }
 
-        colorSensor.setGain(40);
-    }
+
+
 
     private void setupDistanceSensor() {
         sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
