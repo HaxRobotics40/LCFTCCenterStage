@@ -35,7 +35,7 @@ import java.util.List;
 
 
 @Autonomous(group = "comp")
-public class Near2Plus0 extends LinearOpMode {
+public class Near2Plus0NoColorSensor extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
 
@@ -46,30 +46,29 @@ public class Near2Plus0 extends LinearOpMode {
     SampleMecanumDrive drive;
     //TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
-
     NormalizedColorSensor colorSensor;
     DistanceSensor sensorDistance;
-
     InputOutput arm;
     int status;
     int itemSector;
-    Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
+    Pose2d startPose = new Pose2d(12,-66, Math.toRadians(90));
     double detX;
     double distForward;
     int isBlue = -1;
     Pose2d pose2;
     Pose2d pose3;
+    Pose2d boardPose;
     TrajectorySequence trajCross;
 //    double detBearing;
 //    private final double kP = 0;
 //    private final double kI = 0;
 //    private final double kD = 0 ;
 //    PIDController pid = new PIDController(kP, kI, kD);
-    Pose2d boardPose;
     Pose2d scorePoseYellow;
     int parkSide = 0;
     @Override
     public void runOpMode() throws InterruptedException {
+        arm = new InputOutput(hardwareMap, true, 1, 1);
         aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
 
@@ -81,26 +80,20 @@ public class Near2Plus0 extends LinearOpMode {
 
         drive = new SampleMecanumDrive(hardwareMap);
 
-        if (gamepad1.dpad_left && gamepad1.left_bumper) {
+        if (gamepad1.dpad_left) {
             parkSide = 1;
-        } else if (gamepad1.dpad_right && gamepad1.right_bumper) {
+        } else if (gamepad1.dpad_right) {
             parkSide = -1;
         }
         telemetry.addData("Parking side", parkSide);
         telemetry.update();
         waitForStart();
 
-//        telemetryThread.start(); // Starting telemetry thread
-
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 opModeLoop();
             }
         }
-
-
-
-//        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
     }
 
     private AprilTagProcessor initAprilTag() {
@@ -135,14 +128,18 @@ public class Near2Plus0 extends LinearOpMode {
         colorSensor.setGain(40);
     }
 
-    private void setupDistanceSensor() { sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");}
+    private void setupDistanceSensor() {
+        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
+    }
     private void opModeLoop() {
         switch(status) {
             case 0: runPieceDetector();
                 break;
-            case 1: driveToLine();
+            case 1: driveToLine(); // assume red side until alignLine()
                 break;
-            case 2: alignLine();
+            case 2:
+                colorProcess();
+                status++;
                 break;
             case 3: dropPixel();
                 break;
@@ -162,41 +159,40 @@ public class Near2Plus0 extends LinearOpMode {
     private void driveToLine() {
         TrajectorySequence traj1;
         traj1 = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(-36, -24, Math.toRadians(180-(itemSector*90))))
-                .forward(36)
-                .turn(Math.toRadians((itemSector-1)*90))
+                .lineToLinearHeading(new Pose2d(12, -60, Math.toRadians(90+((itemSector-1)*-21.2))))
                 .build();
         drive.followTrajectorySequence(traj1);
         status++;
     }
     //    }
-    private void alignLine() { // get pose estimate, add second one
-        double redValue =  colorSensor.getNormalizedColors().red;
-        double blueValue = colorSensor.getNormalizedColors().blue;
+    private void colorProcess() { // get pose estimate, add second one
+//        double redValue =  colorSensor.getNormalizedColors().red;
+//        double blueValue = colorSensor.getNormalizedColors().blue;
+//
+//        teleData("Red Value (0 to 1)", "%4.2f", redValue);
+//        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
+//        telemetry.update();
 
-        teleData("Red Value (0 to 1)", "%4.2f", redValue);
-        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
-        telemetry.update();
-
-        if (redValue > 0.4 || blueValue > 0.5) {
+//        if (redValue > 0.4 || blueValue > 0.5) {
             // We found a line (either red or blue)
-            drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
-            pose3 = drive.getPoseEstimate();
+//            drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
             status++;
-            if (redValue > 0.4){
-                isBlue = 0;
-            }
-            else if (blueValue > 0.5){
-                isBlue = 1;
-            }
-        } else {
-            // Continue moving forward if no line is detected
-            Trajectory myTrajectory = drive.trajectoryBuilder(pose2)
-                    .forward(3)
-                    .build();
-            drive.followTrajectory(myTrajectory);
-            pose2 = drive.getPoseEstimate();
+        if (detector.getColor() == "RED") {
+            isBlue = 0;
+            pose3 = drive.getPoseEstimate();
+        } else if (detector.getColor() == "BLUE") {
+            isBlue = 1;
+            Pose2d thing = drive.getPoseEstimate();
+            pose3 = new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180));
         }
+//        } else {
+            // Continue moving forward if no line is detected
+//            Trajectory myTrajectory = drive.trajectoryBuilder(pose2)
+//                    .forward(1)
+//                    .build();
+//            drive.followTrajectory(myTrajectory);
+//            pose2 = drive.getPoseEstimate();
+//        }
     }
     private void crossField() {
         if (itemSector !=2) {
@@ -220,7 +216,7 @@ public class Near2Plus0 extends LinearOpMode {
                 .strafeTo(new Vector2d(scorePoseYellow.getX(), scorePoseYellow.getY()+(18*parkSide)))
                 .build();
         drive.followTrajectorySequence(park);
-
+        
     }
     private void dropPixel() {
         arm.extendo();

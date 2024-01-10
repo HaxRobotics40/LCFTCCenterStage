@@ -23,8 +23,10 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 public class testRobotCentricWithLinSlide extends LinearOpMode {
     boolean isDepressedUp = false;
     boolean isDepressedDown = false;
+    boolean isDepressedBack = false;
     boolean wasUpPressed;
     boolean wasDownPressed;
+    boolean wasBackPressed;
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
@@ -95,6 +97,9 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
             } else if (gamepad1.b) {
                 pivot.setTargetPosition(pivot.getCurrentPosition()+5);
             }
+
+
+
 //            slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 //            slide.setPower(0.75);
 //            pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -154,6 +159,16 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
             wasUpPressed = false;
         }
         if (!gamepad1.dpad_up && isDepressedUp) {
+            isDepressedUp = false;
+            wasUpPressed = true;
+        }
+    }
+    public void buttonPressedback() {
+        if (gamepad1.back && !isDepressedBack) {
+            isDepressedUp = true;
+            wasUpPressed = false;
+        }
+        if (!gamepad1.back && isDepressedBack) {
             isDepressedUp = false;
             wasUpPressed = true;
         }

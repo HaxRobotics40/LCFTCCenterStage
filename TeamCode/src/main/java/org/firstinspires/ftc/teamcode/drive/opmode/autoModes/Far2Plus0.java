@@ -223,13 +223,13 @@ public class Far2Plus0 extends LinearOpMode {
     private void crossField() {
         if (itemSector !=2) {
             trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
+                    .lineToLinearHeading(new Pose2d(-36, Math.signum(pose3.getY())*28, Math.toRadians(180 * isBlue)))
                     .forward(82)
                     .strafeRight((itemSector - 2) * 5.25)
                     .build();
         } else {
             trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
+                    .lineToLinearHeading(new Pose2d(-36, Math.signum(pose3.getY())*28, Math.toRadians(180 * isBlue)))
                     .forward(82)
                     .build();
         }

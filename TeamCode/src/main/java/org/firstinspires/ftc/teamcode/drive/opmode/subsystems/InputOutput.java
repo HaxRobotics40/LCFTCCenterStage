@@ -120,12 +120,17 @@ public class InputOutput {
         goTo(levels.size());
     }
     public void over() {
-        setAngle(135);
+        setAngle(45);
         wrist.setPosition(1); // idk if we need this? are our slides long enough?
         // TODO: det if this is necessary; if so find deg
     }
+    public void rest() {
+        setAngle(135);
+        goTo(0);
+        wrist.setPosition(0);
+    }
     public void board() { // 60 deg
-        setAngle(126);
+        setAngle(60);
         wrist.setPosition(.73);
     }
 
