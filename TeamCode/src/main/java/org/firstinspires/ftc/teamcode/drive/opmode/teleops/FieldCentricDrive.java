@@ -6,6 +6,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 
@@ -44,6 +47,11 @@ public class FieldCentricDrive extends LinearOpMode {
         DcMotor backLeftMotor = hardwareMap.dcMotor.get("leftRear");
         DcMotor frontRightMotor = hardwareMap.dcMotor.get("rightFront");
         DcMotor backRightMotor = hardwareMap.dcMotor.get("rightRear");
+
+        DcMotor winch = hardwareMap.dcMotor.get("winch");
+        Servo droneRelease = hardwareMap.servo.get("droneRelease");
+        Servo hook = hardwareMap.servo.get("hook");
+        ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
@@ -124,6 +132,22 @@ public class FieldCentricDrive extends LinearOpMode {
                 arm.release();
             } else if (gamepad1.right_bumper) {
               arm.grab();
+           }
+
+           if (timer.time() > 90) {
+               hook.setPosition(1);
+           }
+
+           if (gamepad1.right_bumper) {
+               winch.setPower(1);
+           } else if (gamepad1.left_bumper) {
+               winch.setPower(-1);
+           } else {
+               winch.setPower(0);
+           }
+
+           if (timer.time() > 90 && gamepad1.right_trigger > 0.5 && gamepad1.left_trigger > 0.5) {
+               droneRelease.setPosition(1);
            }
 
         }

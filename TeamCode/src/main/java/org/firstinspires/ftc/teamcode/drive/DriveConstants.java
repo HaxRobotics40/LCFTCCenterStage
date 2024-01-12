@@ -59,8 +59,8 @@ public class DriveConstants {
      * empirically tuned.
      */
 
-    public static double kV = 0.01675;
-    public static double kA = 0.0015;
+    public static double kV = 0.02125;
+    public static double kA = 0.0016;
     public static double kStatic = 0.001;
 
     /*
@@ -71,9 +71,9 @@ public class DriveConstants {
      * inches.
      */
 
-    public static double MAX_VEL = 36;
+    public static double MAX_VEL = 35;
     public static double MAX_ACCEL = 30;
-    public static double MAX_ANG_VEL = 2.023;
+    public static double MAX_ANG_VEL = 2.275;
     public static double MAX_ANG_ACCEL = Math.toRadians(180);
 
     /*

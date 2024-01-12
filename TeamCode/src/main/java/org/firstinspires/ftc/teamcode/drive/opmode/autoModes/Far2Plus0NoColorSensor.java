@@ -49,7 +49,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     InputOutput arm;
     int status;
     int itemSector;
-    Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
+    Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(270));
     double detX;
     double distForward;
     int isBlue = -1;
@@ -136,7 +136,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
 
     private void setupIMU() {
         imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot.LogoFa3cingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
@@ -200,9 +200,17 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
         status++;
     }
     private void park() {
-        TrajectorySequence park = drive.trajectorySequenceBuilder(parkPose)
-                .strafeTo(new Vector2d(parkPose.getX(), parkPose.getY()+(18*parkSide)))
-                .build();
+        if (isBlue == 1) {
+            TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
+                    .strafeLeft(18)
+                    .build();
+            drive.followTrajectorySequence(park);
+        } else {
+            TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
+                    .strafeLeft(18)
+                    .build();
+            drive.followTrajectorySequence(park);
+        }
     }
     private void dropPixel() {
         pixel.setPosition(0.2);

@@ -15,12 +15,14 @@ public class InputOutput {
     Servo clawR;
     Servo hook;
     Servo wrist;
+    int posInt;
     // positions of arm
     private final ArrayList<Integer> levels;
     // tolerance for encoder values
     private int tolerance = 25;
     // most recent target level
     private int targetLevel = 0;
+    private final int tolerancePivot = 15;
     private int degAngle = 0;
     private final double ticksPerDeg = 3.9581;
 //    private int lastLevel;
@@ -60,7 +62,7 @@ public class InputOutput {
         return this;
     }
     public void fillLevels() {
-        this.addLevel(0).addLevel(9600).addLevel(17520).addLevel(25440);
+        this.addLevel(0).addLevel(580).addLevel(1160).addLevel(1740);
     }
     // erase all levels
     public void clearLevels() {
@@ -103,20 +105,19 @@ public class InputOutput {
 
     private void setAngle(int deg) { // can change if 0 ticks isn't 0 deg actually
         double posDouble = deg * ticksPerDeg;
-        int posInt = (int) posDouble;
+        posInt = (int) posDouble;
         degAngle = deg;
         pivot.setTargetPosition(posInt);
         pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         pivot.setPower(maxPowerPivot * Math.signum((double) posInt - pivot.getCurrentPosition()));
-
     }
     public void ground() {
         setAngle(0);
-        wrist.setPosition(.73);
+        wrist.setPosition(.79);
     }
     public void extendo() {
         setAngle(0);
-        wrist.setPosition(.73);
+        wrist.setPosition(.79);
         goTo(levels.size());
     }
     public void over() {
@@ -125,46 +126,50 @@ public class InputOutput {
         // TODO: det if this is necessary; if so find deg
     }
     public void rest() {
-        setAngle(135);
+        setAngle(45);
         goTo(0);
         wrist.setPosition(0);
     }
     public void board() { // 60 deg
-        setAngle(60);
-        wrist.setPosition(.73);
+        setAngle(120);
+        wrist.setPosition(.79);
     }
 
     public void grab() {
-        clawL.setPosition(.65);
-        clawR.setPosition(1);
+        clawL.setPosition(.75);
+        clawR.setPosition(.15);
     }
 
     public void release() {
-        clawL.setPosition(0.9);
-        clawR.setPosition(.85);
+        clawL.setPosition(.9);
+        clawR.setPosition(0);
     }
 
-    public void grabLeft() {
-        clawL.setPosition(.65);
-    }
+    public void grabLeft() { clawL.setPosition(.75); }
     public void grabRight() {
-        clawR.setPosition(1);
+        clawR.setPosition(.15);
     }
     public void releaseLeft() {
         clawL.setPosition(.9);
     }
     public void releaseRight() {
-        clawR.setPosition(.85);
+        clawR.setPosition(0);
     }
     // check if arm is at target, stopping it if it is
     public void update() {
-        if (targetLevel == -1) {
-            return;
-        }
         if (atLevel(targetLevel)) {
             slide.setPower(0);
         }
 
+        if (atAngle()) {
+            pivot.setPower(0);
+        }
+        if (targetLevel == -1) {
+            return;
+        }
+    }
+    public boolean atAngle() {
+        return Math.abs(pivot.getCurrentPosition() - posInt) < tolerancePivot;
     }
 
     // whether we are withing the tolerance for a given level

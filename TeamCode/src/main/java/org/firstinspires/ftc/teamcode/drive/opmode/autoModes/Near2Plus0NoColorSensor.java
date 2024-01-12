@@ -51,7 +51,7 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
     InputOutput arm;
     int status;
     int itemSector;
-    Pose2d startPose = new Pose2d(12,-66, Math.toRadians(90));
+    Pose2d startPose = new Pose2d(12,-66, Math.toRadians(270));
     double detX;
     double distForward;
     int isBlue = -1;
@@ -205,10 +205,17 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
         status++;
     }
     private void park() {
-        TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
-                .strafeTo(new Vector2d(scorePoseYellow.getX(), scorePoseYellow.getY()+(18*parkSide)))
-                .build();
-        drive.followTrajectorySequence(park);
+        if (isBlue == 1) {
+            TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
+                    .strafeLeft(18)
+                    .build();
+            drive.followTrajectorySequence(park);
+        } else {
+            TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
+                    .strafeLeft(18)
+                    .build();
+            drive.followTrajectorySequence(park);
+        }
         
     }
     private void dropPixel() {
