@@ -68,10 +68,10 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
     int parkSide = 0;
     @Override
     public void runOpMode() throws InterruptedException {
-        arm = new InputOutput(hardwareMap, true, 1, 1);
+        arm = new InputOutput(hardwareMap, true, .5, .5);
         aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
-
+        arm.rest();
 
         setupIMU();
         setupDistanceSensor();
@@ -152,7 +152,7 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
     private void driveToLine() {
         TrajectorySequence traj1;
         traj1 = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(12, -60, Math.toRadians(90+((itemSector-1)*-21.2))))
+                .lineToLinearHeading(new Pose2d(12, -43, Math.toRadians(90+((itemSector-1)*-39.4))))
                 .build();
         drive.followTrajectorySequence(traj1);
         status++;
@@ -190,13 +190,13 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
     private void crossField() {
         if (itemSector !=2) {
             trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(12, Math.signum(pose3.getY())*28, 0))
+                    .lineToLinearHeading(new Pose2d(12, Math.signum(pose3.getY())*36, 0))
                     .forward(36)
                     .strafeRight((itemSector - 2) * 5.25)
                     .build();
         } else {
             trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(12, Math.signum(pose3.getY())*28, 0))
+                    .lineToLinearHeading(new Pose2d(12, Math.signum(pose3.getY())*36, 0))
                     .forward(36)
                     .build();
         }
@@ -207,26 +207,26 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
     private void park() {
         if (isBlue == 1) {
             TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
-                    .strafeLeft(18)
+                    .strafeLeft(24)
                     .build();
             drive.followTrajectorySequence(park);
         } else {
             TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
-                    .strafeLeft(18)
+                    .strafeRight(24)
                     .build();
             drive.followTrajectorySequence(park);
         }
         
     }
     private void dropPixel() {
-        arm.extendo();
-        arm.releaseRight();
+        arm.ground();
+        arm.releaseLeft();
         arm.rest();
         status++;
     }
     private void scorePixel() {
         arm.board();
-        arm.releaseLeft();
+        arm.releaseRight();
         arm.rest();
     }
 

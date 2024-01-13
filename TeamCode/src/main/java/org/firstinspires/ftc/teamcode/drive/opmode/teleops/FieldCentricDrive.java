@@ -111,44 +111,48 @@ public class FieldCentricDrive extends LinearOpMode {
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
 
+
+
             buttonPressedDown();
             buttonPressedUp();
-           if (wasUpPressed) {
+            if (wasUpPressed) {
                arm.goTo(arm.getLevel() + 1);
                wasUpPressed = false;
-           } else if (wasDownPressed) {
+            } else if (wasDownPressed) {
                arm.goTo(arm.getLevel() - 1);
                wasDownPressed = false;
             }
-            if (gamepad1.x) {
-                arm.ground();
-           } else if (gamepad1.y) {
-                arm.board();
-            } else if (gamepad1.b) {
-                arm.over();
-           }
 
-           if (gamepad1.left_bumper) {
+            if (gamepad2.x) {
+                arm.ground();
+            } else if (gamepad2.y) {
+                arm.board();
+                } else if (gamepad2.b) {
+                arm.rest();
+            }
+
+           if (gamepad2.left_bumper) {
                 arm.release();
-            } else if (gamepad1.right_bumper) {
+            } else if (gamepad2.right_bumper) {
               arm.grab();
            }
 
-           if (timer.time() > 90) {
-               hook.setPosition(1);
+           if (timer.time() > 90 && gamepad2.back) {
+               droneRelease.setPosition(.5);
            }
 
-           if (gamepad1.right_bumper) {
-               winch.setPower(1);
-           } else if (gamepad1.left_bumper) {
-               winch.setPower(-1);
-           } else {
-               winch.setPower(0);
-           }
+            if (timer.time() > 90) {
+                hook.setPosition(0);
+            }
 
-           if (timer.time() > 90 && gamepad1.right_trigger > 0.5 && gamepad1.left_trigger > 0.5) {
-               droneRelease.setPosition(1);
-           }
+            if (timer.time() > 90 && gamepad2.right_trigger > .5) {
+                winch.setPower(1);
+            } else if (timer.time() > 90 && gamepad2.left_trigger > .5) {
+                winch.setPower(-1);
+            } else {
+                winch.setPower(0);
+            }
+
 
         }
     }

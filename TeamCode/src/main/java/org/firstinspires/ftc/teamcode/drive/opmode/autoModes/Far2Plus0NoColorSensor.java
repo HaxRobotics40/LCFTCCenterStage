@@ -57,6 +57,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     Pose2d pose3;
     TrajectorySequence trajCross;
     double detBearing;
+    Pose2d boardPose;
     private final double kP = 0;
     private final double kI = 0;
     private final double kD = 0 ;
@@ -64,13 +65,14 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     Servo pixel;
     Pose2d parkPose;
     Pose2d scorePoseYellow;
-    int parkSide = 0;
     @Override
     public void runOpMode() throws InterruptedException {
+        arm = new InputOutput(hardwareMap, true, .5, .5);
         aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
-        pixel = hardwareMap.get(Servo.class, "pixel");
-        pixel.setPosition(0.9);
+//        pixel = hardwareMap.get(Servo.class, "pixel");
+//        pixel.setPosition(0.9);
+        arm.rest();
 
         setupIMU();
 
@@ -95,11 +97,6 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
 //                }
 //            }
 //        });
-        if (gamepad1.dpad_left && gamepad1.left_bumper) {
-            parkSide = 1;
-        } else if (gamepad1.dpad_right && gamepad1.right_bumper) {
-            parkSide = -1;
-        }
         telemetry.update();
         drive.setPoseEstimate(new Pose2d(-36,-60, Math.toRadians(90)));
         waitForStart();
@@ -171,8 +168,8 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     }
     private void driveToLine() {
         TrajectorySequence traj1;
-        traj1 = drive.trajectorySequenceBuilder(new Pose2d(-36,-60, Math.toRadians(90)))
-                .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180-(itemSector*90))))
+        traj1 = drive.trajectorySequenceBuilder(startPose)
+                .lineToLinearHeading(new Pose2d(-36, -43, Math.toRadians(90+((itemSector-1)*-39.4))))
 //                .forward(36)
 //                .turn(Math.toRadians((itemSector-2)*90))
                 .build();
@@ -185,43 +182,43 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     private void crossField() {
         if (itemSector !=2) {
             trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
-                    .forward(82)
+                    .lineToLinearHeading(new Pose2d(-36, Math.signum(pose3.getY())*36, 0))
+                    .forward(36)
                     .strafeRight((itemSector - 2) * 5.25)
                     .build();
         } else {
             trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180 * isBlue)))
-                    .forward(82)
+                    .lineToLinearHeading(new Pose2d(-36, Math.signum(pose3.getY())*36, 0))
+                    .forward(36)
                     .build();
         }
         drive.followTrajectorySequence(trajCross);
-
+        boardPose = drive.getPoseEstimate();
         status++;
     }
     private void park() {
         if (isBlue == 1) {
             TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
-                    .strafeLeft(18)
+                    .strafeLeft(24)
                     .build();
             drive.followTrajectorySequence(park);
         } else {
             TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
-                    .strafeLeft(18)
+                    .strafeRight(24)
                     .build();
             drive.followTrajectorySequence(park);
         }
     }
     private void dropPixel() {
-        pixel.setPosition(0.2);
-        sleep(750);
-        pixel.setPosition(1);
+        arm.ground();
+        arm.releaseLeft();
+        arm.rest();
         status++;
     }
     private void scorePixel() {
-        // almost there :D
-        pixel.setPosition(0.5);
-        status++;
+        arm.board();
+        arm.releaseRight();
+        arm.rest();
     }
 
     private void runPieceDetector() {
@@ -239,18 +236,37 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
         }
     }
     private void fixDistance() {
+        double wantedDistance = 12.75; // how far away you want the robot to go
+
+        double thresholdDistanceInches = 0.1;
+
+        distForward = sensorDistance.getDistance(DistanceUnit.INCH);
+
         if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
             distForward = sensorDistance.getDistance(DistanceUnit.INCH);
         } else {
-            distForward = 12.75;
+            distForward = wantedDistance;
+            teleLogging("Infinity Distance detected");
+            scorePoseYellow = drive.getPoseEstimate();
         }
-        if (distForward != 12.75) {
-            double i = (12.75-distForward)/12.75;
-            drive.setMotorPowers(i, i, i, i);
+        if (distForward != wantedDistance) {
+            double output = wantedDistance - distForward;
+            Trajectory Disttraj = drive.trajectoryBuilder(boardPose)
+                    .forward(output)
+                    .build();
+
+
+            String StrMotorPower = String.valueOf(output);
+            teleLogging("wanted Motor Power:" + StrMotorPower);
+            drive.followTrajectory(Disttraj);
         }
-        status++;
-        scorePoseYellow = drive.getPoseEstimate();
-        // put dist sense stuff here
+        if ((distForward >= wantedDistance - thresholdDistanceInches) &&
+                (distForward <= wantedDistance + thresholdDistanceInches)) {
+            teleLogging("Achieved location");
+            drive.setMotorPowers(0,0,0,0);
+            status++;
+//            Pose2d scorePoseYellow = drive.getPoseEstimate();
+        }
     }
     private void colorProcess() { // get pose estimate, add second one
 //        double redValue =  colorSensor.getNormalizedColors().red;
@@ -297,7 +313,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
 
         teleLogging("---------Distance Sensor----------");
         distanceSensorTelemetry();
-        teleData("parkSide", parkSide);
+//        teleData("parkSide", parkSide);
     }
 
     @SuppressLint("DefaultLocale")

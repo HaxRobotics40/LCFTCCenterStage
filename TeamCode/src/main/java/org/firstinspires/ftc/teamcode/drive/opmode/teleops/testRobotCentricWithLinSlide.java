@@ -111,19 +111,19 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
 
 
 
-            if (gamepad1.start) {
-                hook.setPosition(1);
+            if (timer.time() > 90) {
+                hook.setPosition(0);
             }
 
-            if (gamepad2.right_bumper) {
+            if (timer.time() > 90 && gamepad2.right_trigger > .5) {
                 winch.setPower(1);
-            } else if (gamepad2.left_bumper) {
+            } else if (timer.time() > 90 && gamepad2.left_trigger > .5) {
                 winch.setPower(-1);
             } else {
                 winch.setPower(0);
             }
 
-            if (gamepad1.back) {
+            if (timer.time() > 90 && gamepad2.back) {
                 droneRelease.setPosition(.5);
             }
 
@@ -148,17 +148,17 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
                 wasDownPressed = false;
             }
 
-            if (gamepad1.x) {
-                arm.rest();
-            } else if (gamepad1.y) {
-                arm.board();
-            } else if (gamepad1.b) {
+            if (gamepad2.x) {
                 arm.ground();
+            } else if (gamepad2.y) {
+                arm.board();
+            } else if (gamepad2.b) {
+                arm.rest();
             }
 
-            if (gamepad1.left_bumper) {
+            if (gamepad2.left_bumper) {
                 arm.release();
-            } else if (gamepad1.right_bumper) {
+            } else if (gamepad2.right_bumper) {
                 arm.grab();
             }
 
@@ -182,31 +182,31 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
         }
     }
     public void buttonPressedUp() {
-        if (gamepad1.dpad_up && !isDepressedUp) {
+        if (gamepad2.dpad_up && !isDepressedUp) {
             isDepressedUp = true;
             wasUpPressed = false;
         }
-        if (!gamepad1.dpad_up && isDepressedUp) {
+        if (!gamepad2.dpad_up && isDepressedUp) {
             isDepressedUp = false;
             wasUpPressed = true;
         }
     }
     public void buttonPressedback() {
-        if (gamepad1.back && !isDepressedBack) {
+        if (gamepad2.back && !isDepressedBack) {
             isDepressedUp = true;
             wasUpPressed = false;
         }
-        if (!gamepad1.back && isDepressedBack) {
+        if (!gamepad2.back && isDepressedBack) {
             isDepressedUp = false;
             wasUpPressed = true;
         }
     }
     public void buttonPressedDown() {
-        if (gamepad1.dpad_down && !isDepressedDown) {
+        if (gamepad2.dpad_down && !isDepressedDown) {
             isDepressedDown = true;
             wasDownPressed = false;
         }
-        if (!gamepad1.dpad_down && isDepressedDown) {
+        if (!gamepad2.dpad_down && isDepressedDown) {
             isDepressedDown = false;
             wasDownPressed = true;
         }
