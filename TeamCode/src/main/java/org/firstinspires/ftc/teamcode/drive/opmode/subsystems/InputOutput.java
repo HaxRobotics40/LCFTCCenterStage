@@ -28,7 +28,7 @@ public class InputOutput {
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-
+    private final int[] levelsPivot = {0, 65, 177};
     public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot) {
         pivot = hw.get(DcMotor.class, "pivot");
         // startup position is 0
@@ -62,7 +62,7 @@ public class InputOutput {
         return this;
     }
     public void fillLevels() {
-        this.addLevel(0).addLevel(580).addLevel(1160).addLevel(1740);
+        this.addLevel(0).addLevel(-580).addLevel(-1160).addLevel(-1740);
     }
     // erase all levels
     public void clearLevels() {
@@ -103,57 +103,67 @@ public class InputOutput {
         goTo(supplier.getAsInt());
     }
 
-    private void setAngle(int deg) { // can change if 0 ticks isn't 0 deg actually
-        double posDouble = deg * ticksPerDeg;
-        posInt = (int) posDouble;
-        degAngle = deg;
-        pivot.setTargetPosition(posInt);
+    private void setAngle(int levelPivot) { // can change if 0 ticks isn't 0 deg actually
+        pivot.setTargetPosition(levelsPivot[levelPivot]);
         pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        pivot.setPower(maxPowerPivot * Math.signum((double) posInt - pivot.getCurrentPosition()));
+        if (Math.abs(pivot.getCurrentPosition() - pivot.getTargetPosition()) > 4) {
+            pivot.setPower(maxPowerPivot * Math.signum((double) levelsPivot[levelPivot] - pivot.getCurrentPosition()));
+        } else {
+            pivot.setPower(0);
+        }
     }
     public void ground() {
         setAngle(0);
-        wrist.setPosition(.79);
+        wrist.setPosition(.85);
     }
-    public void extendo() {
-        setAngle(0);
-        wrist.setPosition(.79);
-        goTo(levels.size());
+    public void setup () {
+        wrist.setPosition(.85);
+        slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        slide.setTargetPosition(0);
+        pivot.setTargetPosition((144));
     }
+//    public void extendo() {
+//        setAngle(0);
+//        wrist.setPosition(.85);
+//        goTo(levels.size());
+//    }
     public void over() {
         setAngle(45);
         wrist.setPosition(1); // idk if we need this? are our slides long enough?
         // TODO: det if this is necessary; if so find deg
     }
     public void rest() {
-        setAngle(45);
+        setAngle(1);
         goTo(0);
-        wrist.setPosition(0);
+        wrist.setPosition(.5);
     }
     public void board() { // 60 deg
-        setAngle(120);
-        wrist.setPosition(.79);
+        setAngle(2);
+        wrist.setPosition(.85);
     }
 
     public void grab() {
-        clawL.setPosition(.75);
-        clawR.setPosition(.15);
+        clawL.setPosition(.15);
+        clawR.setPosition(.56);
     }
 
     public void release() {
         clawL.setPosition(.9);
-        clawR.setPosition(0);
+        clawR.setPosition(1);
     }
 
     public void grabLeft() { clawL.setPosition(.75); }
     public void grabRight() {
-        clawR.setPosition(.15);
+        clawR.setPosition(.56);
     }
     public void releaseLeft() {
         clawL.setPosition(.9);
     }
     public void releaseRight() {
-        clawR.setPosition(0);
+        clawR.setPosition(1);
     }
     // check if arm is at target, stopping it if it is
     public void update() {

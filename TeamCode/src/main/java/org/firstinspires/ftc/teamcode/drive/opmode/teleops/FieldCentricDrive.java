@@ -19,21 +19,21 @@ public class FieldCentricDrive extends LinearOpMode {
     boolean wasUpPressed;
     boolean wasDownPressed;
     public void buttonPressedUp() {
-        if (gamepad1.dpad_up && !isDepressedUp) {
+        if (gamepad2.dpad_up && !isDepressedUp) {
             isDepressedUp = true;
             wasUpPressed = false;
         }
-        if (!gamepad1.dpad_up && isDepressedUp) {
+        if (!gamepad2.dpad_up && isDepressedUp) {
             isDepressedUp = false;
             wasUpPressed = true;
         }
     }
     public void buttonPressedDown() {
-        if (gamepad1.dpad_down && !isDepressedDown) {
+        if (gamepad2.dpad_down && !isDepressedDown) {
             isDepressedDown = true;
             wasDownPressed = false;
         }
-        if (!gamepad1.dpad_down && isDepressedDown) {
+        if (!gamepad2.dpad_down && isDepressedDown) {
             isDepressedDown = false;
             wasDownPressed = true;
         }
@@ -73,6 +73,7 @@ public class FieldCentricDrive extends LinearOpMode {
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        arm.grab();
         waitForStart();
 
         if (isStopRequested()) return;
@@ -80,7 +81,7 @@ public class FieldCentricDrive extends LinearOpMode {
         while (opModeIsActive()) {
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
+            double rx = -gamepad1.right_stick_x;
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
@@ -122,13 +123,15 @@ public class FieldCentricDrive extends LinearOpMode {
                arm.goTo(arm.getLevel() - 1);
                wasDownPressed = false;
             }
-
+            if (gamepad2.dpad_right) {
+                arm.goTo(0);
+            }
             if (gamepad2.x) {
                 arm.ground();
             } else if (gamepad2.y) {
-                arm.board();
-                } else if (gamepad2.b) {
                 arm.rest();
+            } else if (gamepad2.b) {
+                arm.board();
             }
 
            if (gamepad2.left_bumper) {
@@ -137,8 +140,8 @@ public class FieldCentricDrive extends LinearOpMode {
               arm.grab();
            }
 
-           if (timer.time() > 90 && gamepad2.back) {
-               droneRelease.setPosition(.5);
+           if (gamepad2.back) {
+               droneRelease.setPosition(1);
            }
 
             if (timer.time() > 90) {
@@ -152,7 +155,7 @@ public class FieldCentricDrive extends LinearOpMode {
             } else {
                 winch.setPower(0);
             }
-
+            arm.update();
 
         }
     }
