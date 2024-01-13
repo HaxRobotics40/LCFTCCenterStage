@@ -39,7 +39,7 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         Servo hook = hardwareMap.get(Servo.class, "hook");
-//        Servo wrist = hardwareMap.get(Servo.class, "wrist");
+        Servo wrist = hardwareMap.get(Servo.class, "wrist");
 //        DcMotor slide = hardwareMap.get(DcMotor.class, "slide");
 //        DcMotor pivot = hardwareMap.get(DcMotor.class, "pivot");
 //        slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -48,13 +48,13 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
 //        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //        pivot.setTargetPosition(0);
-//        Servo clawL = hardwareMap.get(Servo.class, "clawL");
-//        Servo clawR = hardwareMap.get(Servo.class, "clawR");
+        Servo clawL = hardwareMap.get(Servo.class, "clawL");
+        Servo clawR = hardwareMap.get(Servo.class, "clawR");
 //        slide.setDirection(DcMotorSimple.Direction.REVERSE);
 
-//        clawL.setPosition(.75);
-//        clawR.setPosition(.15);
-//        wrist.setPosition(.79);
+        clawL.setPosition(.75);
+        clawR.setPosition(.15);
+        wrist.setPosition(.79);
 
 
         waitForStart();
@@ -66,24 +66,24 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
                             -gamepad1.left_stick_x,
                             -gamepad1.right_stick_x
                     )
-            );
+            );if (gamepad1.dpad_left) {
+                wrist.setPosition(wrist.getPosition()-.01);
+            } else if (gamepad1.dpad_right) {
+                wrist.setPosition(wrist.getPosition()+.01);
+            }
             // analog up/down for pivot & arm & wrist
-//            if (gamepad1.dpad_left) {
-//                wrist.setPosition(wrist.getPosition()-.01);
-//            } else if (gamepad1.dpad_right) {
-//                wrist.setPosition(wrist.getPosition()+.01);
-//            }
 
-//            if (gamepad1.left_bumper) {
-//                clawL.setPosition(clawL.getPosition()+.002);
-//            } else if (gamepad1.left_trigger > .1) {
-//                clawL.setPosition(clawL.getPosition()-.002);
-//            }
-//            if (gamepad1.right_bumper) {
-//                clawR.setPosition(clawR.getPosition()+.002);
-//            } else if (gamepad1.right_trigger > .1) {
-//                clawR.setPosition(clawR.getPosition()-.002);
-//            }
+
+            if (gamepad1.left_bumper) {
+                clawL.setPosition(clawL.getPosition()+.01);
+            } else if (gamepad1.left_trigger > .1) {
+                clawL.setPosition(clawL.getPosition()-.01);
+            }
+            if (gamepad1.right_bumper) {
+                clawR.setPosition(clawR.getPosition()+.01);
+            } else if (gamepad1.right_trigger > .1) {
+                clawR.setPosition(clawR.getPosition()-.01);
+            }
 
 //            if (gamepad1.dpad_up) {
 ////                slide.setTargetPosition(slide.getCurrentPosition()+5);
@@ -111,8 +111,11 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
 
 
 
-            if (timer.time() > 90) {
+            if (gamepad2.a) {
                 hook.setPosition(0);
+            }
+            else if (gamepad2.dpad_left) {
+                hook.setPosition(1);
             }
 
             if (timer.time() > 90 && gamepad2.right_trigger > .5) {
@@ -123,8 +126,10 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
                 winch.setPower(0);
             }
 
-            if (timer.time() > 90 && gamepad2.back) {
-                droneRelease.setPosition(.5);
+            if (gamepad2.back) {
+                droneRelease.setPosition(0);
+            } else if (gamepad2.start) {
+                droneRelease.setPosition(1);
             }
 
 
