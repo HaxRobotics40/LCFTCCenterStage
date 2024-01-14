@@ -127,7 +127,7 @@ public class testRobotCentricWithLinSlide extends LinearOpMode {
             }
 
             if (gamepad2.back) {
-                droneRelease.setPosition(0);
+                droneRelease.setPosition(-1);
             } else if (gamepad2.start) {
                 droneRelease.setPosition(1);
             }

@@ -45,9 +45,8 @@ public class noscorefar extends LinearOpMode {
     SampleMecanumDrive drive;
     //TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
-    NormalizedColorSensor colorSensor;
     DistanceSensor sensorDistance;
-    InputOutput arm;
+//    InputOutput arm;
     int status;
     int itemSector;
     Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(90));
@@ -75,8 +74,6 @@ public class noscorefar extends LinearOpMode {
 
         setupIMU();
 
-        setupColorSensor();
-        setupDistanceSensor();
 
         drive = new SampleMecanumDrive(hardwareMap);
         // TODO: Fix Drive Constants physical measurements!!!
@@ -96,11 +93,11 @@ public class noscorefar extends LinearOpMode {
 //                }
 //            }
 //        });
-        if (gamepad1.dpad_left && gamepad1.left_bumper) {
-            parkSide = 1;
-        } else if (gamepad1.dpad_right && gamepad1.right_bumper) {
-            parkSide = -1;
-        }
+//        if (gamepad1.dpad_left && gamepad1.left_bumper) {
+//            parkSide = 1;
+//        } else if (gamepad1.dpad_right && gamepad1.right_bumper) {
+//            parkSide = -1;
+//        }
         telemetry.update();
         drive.setPoseEstimate(new Pose2d(-36,-60, Math.toRadians(90)));
         waitForStart();
@@ -142,114 +139,34 @@ public class noscorefar extends LinearOpMode {
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
     }
-
-    private void setupColorSensor() {
-        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
-        if (colorSensor instanceof SwitchableLight) {
-            ((SwitchableLight)colorSensor).enableLight(true);
-        }
-
-        colorSensor.setGain(40);
-    }
-
-    private void setupDistanceSensor() {
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
-    }
     private void opModeLoop() {
         switch(status) {
             case 0: runPieceDetector();
                 break;
             case 1: driveToLine();
                 break;
-            case 2: alignLine();
-                break;
-            case 3: dropPixel();
-                break;
-            case 4: crossField();
-                break;
-            case 5: telemetry.addData("Item Sector:", itemSector);
-                status++;
-                break;
-            case 6: fixDistance();
-                break;
-            case 7: scorePixel();
-                break;
-            case 8: park();
-                break;
         }
     }
     private void driveToLine() {
         TrajectorySequence traj1;
-        traj1 = drive.trajectorySequenceBuilder(new Pose2d(-36,-60, Math.toRadians(90)))
-                .lineToLinearHeading(new Pose2d(-36, -28, Math.toRadians(180-(itemSector*90))))
-//                .forward(36)
-//                .turn(Math.toRadians((itemSector-2)*90))
-                .build();
+        if (isBlue == 1) {
+            traj1 = drive.trajectorySequenceBuilder(new Pose2d(-36, -60, Math.toRadians(90)))
+                    .forward(24)
+                    .strafeLeft(96)
+                    .build();
+        } else {
+            traj1 = drive.trajectorySequenceBuilder(new Pose2d(-36, -60, Math.toRadians(90)))
+                    .forward(24)
+                    .strafeRight(96)
+                    .build();
+        }
         drive.followTrajectorySequence(traj1);
-        pose2 = drive.getPoseEstimate();
+//        pose2 = drive.getPoseEstimate();
         status++;
     }
     //    }
-    private void alignLine() { // get pose estimate, add second one
-        double redValue =  colorSensor.getNormalizedColors().red;
-        double blueValue = colorSensor.getNormalizedColors().blue;
 
-        teleData("Red Value (0 to 1)", "%4.2f", redValue);
-        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
-        telemetry.update();
 
-        if (redValue > 0.4 || blueValue > 0.5) {
-            // We found a line (either red or blue)
-            drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
-            status++;
-            if (redValue > 0.4){
-                isBlue = 0;
-                pose3 = drive.getPoseEstimate();
-            }
-            else if (blueValue > 0.5){
-                isBlue = 1;
-                Pose2d thing = drive.getPoseEstimate();
-                pose3 = new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180));
-            }
-        } else {
-            // Continue moving forward if no line is detected
-            Trajectory myTrajectory = drive.trajectoryBuilder(pose2)
-                    .forward(1)
-                    .build();
-            drive.followTrajectory(myTrajectory);
-            pose2 = drive.getPoseEstimate();
-        }
-    }
-    private void crossField() {
-        if (itemSector !=2) {
-            trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(-36, Math.signum(pose3.getY())*28, Math.toRadians(180 * isBlue)))
-                    .forward(82)
-                    .strafeRight((itemSector - 2) * 5.25)
-                    .build();
-        } else {
-            trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(-36, Math.signum(pose3.getY())*28, Math.toRadians(180 * isBlue)))
-                    .forward(82)
-                    .build();
-        }
-        drive.followTrajectorySequence(trajCross);
-
-        status++;
-    }
-    private void park() {
-        TrajectorySequence park = drive.trajectorySequenceBuilder(parkPose)
-                .strafeTo(new Vector2d(parkPose.getX(), parkPose.getY()+(18*parkSide)))
-                .build();
-    }
-    private void dropPixel() {
-        status++;
-    }
-    private void scorePixel() {
-        // almost there :D
-        pixel.setPosition(0.5);
-        status++;
-    }
 
     private void runPieceDetector() {
         // R is 0, M is 1, L is 2
@@ -265,54 +182,9 @@ public class noscorefar extends LinearOpMode {
             }
         }
     }
-    private void fixDistance() {
-        if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
-            distForward = sensorDistance.getDistance(DistanceUnit.INCH);
-        } else {
-            distForward = 12.75;
-        }
-        if (distForward != 12.75) {
-            double i = (12.75-distForward)/12.75;
-            drive.setMotorPowers(i, i, i, i);
-        }
-        status++;
-        scorePoseYellow = drive.getPoseEstimate();
-        // put dist sense stuff here
-    }
-
-    private void outputTelemetry() {
-        // TODO: Also output to .log file.
-//        teleLogging("---------April Tag Data----------");
-//        aprilTagTelemetry();
-        teleLogging(String.valueOf(itemSector));
-        teleData("status: ", status);
-        teleLogging("---------IMU Data----------");
-        IMUTelemetry();
-        teleLogging("---------Pose Data----------");
-//        TODO: Add beysian estimate. Kalman filter.
-        poseTelemetry();
-        teleLogging("---------Color Data----------");
-        colorSensorTelemetry();
-        teleLogging("---------Distance Sensor----------");
-        distanceSensorTelemetry();
-        teleData("parkSide", parkSide);
-    }
-
     @SuppressLint("DefaultLocale")
     private void distanceSensorTelemetry() {
         teleData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));
-    }
-
-    private void colorSensorTelemetry() {
-        NormalizedRGBA colors = colorSensor.getNormalizedColors();
-        teleData("Red", "%.3f", colors.red);
-        teleData("Green", "%.3f", colors.green);
-        teleData("Blue", "%.3f", colors.blue);
-
-    }
-
-    private void poseTelemetry() {
-        teleLogging(String.format("Estimated Pose: %s", drive.getPoseEstimate()));
     }
 
     @SuppressLint("DefaultLocale")
