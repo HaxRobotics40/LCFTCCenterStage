@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.SwitchableLight;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -33,45 +34,36 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Autonomous(group = "comp")
 public class Far2Plus0NoColorSensor extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
     AprilTagProcessor aprilTagProcessor;
-    AprilTagProcessor.Builder aprilTagProcessorBuilder;
     testEOCVpipeline detector = new testEOCVpipeline();
-    //    TODO: Use dead wheels
     SampleMecanumDrive drive;
-    //TODO: Update Constants to be 100% accurate (ex. wheel radius)
     IMU imu;
     DistanceSensor sensorDistance;
     InputOutput arm;
+
+    int lastTime;
+    int thisTime;
     int status;
     int itemSector;
     Pose2d startPose = new Pose2d(-36,-60, Math.toRadians(270));
-    double detX;
     double distForward;
     int isBlue = -1;
     Pose2d pose2;
     Pose2d pose3;
     TrajectorySequence trajCross;
-    double detBearing;
     Pose2d boardPose;
-    private final double kP = 0;
-    private final double kI = 0;
-    private final double kD = 0 ;
-    PIDController pid = new PIDController(kP, kI, kD);
-    Servo pixel;
-    Pose2d parkPose;
     Pose2d scorePoseYellow;
+    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
     @Override
     public void runOpMode() throws InterruptedException {
         arm = new InputOutput(hardwareMap, true, .5, .5);
-        aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
-//        pixel = hardwareMap.get(Servo.class, "pixel");
-//        pixel.setPosition(0.9);
         arm.rest();
 
         setupIMU();
@@ -80,28 +72,11 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
         setupDistanceSensor();
 
         drive = new SampleMecanumDrive(hardwareMap);
-        // TODO: Fix Drive Constants physical measurements!!!
-//        TODO: Move Reverse to here.
 
-//        Thread telemetryThread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                while (!Thread.currentThread().isInterrupted() && opModeIsActive()) {
-//                    outputTelemetry();
-//
-//                    try {
-//                        Thread.sleep(10); // Introducing a small delay to prevent excessive updates
-//                    } catch (InterruptedException e) {
-//                        Thread.currentThread().interrupt();
-//                    }
-//                }
-//            }
-//        });
         telemetry.update();
-        drive.setPoseEstimate(new Pose2d(-36,-60, Math.toRadians(90)));
+        drive.setPoseEstimate(new Pose2d(-36,-60, Math.toRadians(270)));
         waitForStart();
-
-//        telemetryThread.start(); // Starting telemetry thread
+        timer.startTime();
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
@@ -109,23 +84,12 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
             }
         }
 
-
-
-//        telemetryThread.interrupt(); // Make sure to interrupt the telemetry thread when opMode is no longer active
-    }
-
-    private AprilTagProcessor initAprilTag() {
-        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
-        aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
-        aprilTagProcessorBuilder.setLensIntrinsics(957.381,957.381,924.159,537.109);
-
-        return aprilTagProcessorBuilder.build();
     }
     //
     private VisionPortal initVisionPortal() {
         vPortalBuilder = new VisionPortal.Builder();
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
-        vPortalBuilder.addProcessors(detector, aprilTagProcessor);
+        vPortalBuilder.addProcessor(detector);
         vPortalBuilder.setCameraResolution(new Size (1920,1080));
 
         return vPortalBuilder.build();
@@ -143,7 +107,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     private void setupDistanceSensor() {
         sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
     }
-    private void opModeLoop() {
+    private void opModeLop() {
         switch(status) {
             case 0: runPieceDetector();
                 break;
@@ -166,12 +130,63 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
                 break;
         }
     }
+    private void opModeLoop() {
+        TrajectorySequence wholeAutoMode;
+        wholeAutoMode = drive.trajectorySequenceBuilder(startPose)
+                .addDisplacementMarker(() -> {
+                    vPortal.setProcessorEnabled(detector, true);
+                    boolean stop = false;
+                    while (!stop) {
+                        if (detector.locationInt() != -1) {
+                            itemSector = detector.locationInt();
+                            //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
+                            vPortal.stopStreaming();
+                            stop = true;
+                        }
+                        drive.update();
+                    }
+                })
+                .lineToLinearHeading(new Pose2d(-36, -43, Math.toRadians(90+((itemSector-1)*-39.4))))
+                .addDisplacementMarker(() -> {
+                    lastTime = (int) timer.time(TimeUnit.SECONDS);
+                    arm.ground();
+                    arm.releaseLeft();
+                })
+                .addTemporalMarker(lastTime+.25, () -> {
+                    arm.rest();
+                    arm.grab();
+                })
+                .addDisplacementMarker(() -> {
+                    if (detector.getColor() == "RED") {
+                        isBlue = -1;
+                        pose3 = drive.getPoseEstimate();
+                    } else if (detector.getColor() == "BLUE") {
+                        isBlue = 1;
+                        Pose2d thing = drive.getPoseEstimate();
+                        drive.setPoseEstimate(new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180)));
+                    }
+                })
+                .lineToLinearHeading(new Pose2d(-36, 36*isBlue, Math.toRadians(0)))
+                .lineTo(new Vector2d(48, 36*isBlue))
+                .strafeRight(((itemSector-1)*5.25)-2)
+                .addDisplacementMarker(() -> {
+                    arm.board();
+                    arm.release();
+                    thisTime = (int) timer.time(TimeUnit.SECONDS);
+                })
+                .addTemporalMarker(thisTime+.25, () -> {
+                    arm.rest();
+                    arm.grab();
+                })
+                .turn(isBlue*90)
+                .splineToLinearHeading(new Pose2d(64, isBlue*64, Math.toRadians(180)), 0)
+                .build();
+        drive.followTrajectorySequence(wholeAutoMode);
+    }
     private void driveToLine() {
         TrajectorySequence traj1;
         traj1 = drive.trajectorySequenceBuilder(startPose)
                 .lineToLinearHeading(new Pose2d(-36, -43, Math.toRadians(90+((itemSector-1)*-39.4))))
-//                .forward(36)
-//                .turn(Math.toRadians((itemSector-2)*90))
                 .build();
         drive.followTrajectorySequence(traj1);
         pose2 = drive.getPoseEstimate();
@@ -269,16 +284,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
         }
     }
     private void colorProcess() { // get pose estimate, add second one
-//        double redValue =  colorSensor.getNormalizedColors().red;
-//        double blueValue = colorSensor.getNormalizedColors().blue;
-//
-//        teleData("Red Value (0 to 1)", "%4.2f", redValue);
-//        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
-//        telemetry.update();
 
-//        if (redValue > 0.4 || blueValue > 0.5) {
-        // We found a line (either red or blue)
-//            drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
         status++;
         if (detector.getColor() == "RED") {
             isBlue = 0;
@@ -288,14 +294,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
             Pose2d thing = drive.getPoseEstimate();
             pose3 = new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180));
         }
-//        } else {
-        // Continue moving forward if no line is detected
-//            Trajectory myTrajectory = drive.trajectoryBuilder(pose2)
-//                    .forward(1)
-//                    .build();
-//            drive.followTrajectory(myTrajectory);
-//            pose2 = drive.getPoseEstimate();
-//        }
+//
     }
 
     private void outputTelemetry() {
