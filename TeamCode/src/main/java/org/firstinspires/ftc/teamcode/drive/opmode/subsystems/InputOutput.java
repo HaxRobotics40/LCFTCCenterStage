@@ -28,7 +28,7 @@ public class InputOutput {
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-    private final int[] levelsPivot = {0, 65, 177};
+    private final int[] levelsPivot = {0, 144, 177};
     public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot) {
         pivot = hw.get(DcMotor.class, "pivot");
         // startup position is 0
@@ -45,6 +45,7 @@ public class InputOutput {
         clawL = hw.get(Servo.class, "clawL");
         clawR = hw.get(Servo.class, "clawR");
         wrist = hw.get(Servo.class, "wrist");
+        slide.setDirection(DcMotor.Direction.REVERSE);
 
         levels = new ArrayList<>();
         
@@ -62,7 +63,7 @@ public class InputOutput {
         return this;
     }
     public void fillLevels() {
-        this.addLevel(0).addLevel(-580).addLevel(-1160).addLevel(-1740);
+        this.addLevel(0).addLevel(638).addLevel(1276).addLevel(1914);
     }
     // erase all levels
     public void clearLevels() {
@@ -114,10 +115,10 @@ public class InputOutput {
     }
     public void ground() {
         setAngle(0);
-        wrist.setPosition(.85);
+        wrist.setPosition(.47);
     }
     public void setup () {
-        wrist.setPosition(.85);
+        wrist.setPosition(.47);
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -132,17 +133,18 @@ public class InputOutput {
 //    }
     public void over() {
         setAngle(45);
-        wrist.setPosition(1); // idk if we need this? are our slides long enough?
+        wrist.setPosition(.77); // idk if we need this? are our slides long enough?
         // TODO: det if this is necessary; if so find deg
     }
     public void rest() {
         setAngle(1);
         goTo(0);
-        wrist.setPosition(.5);
+        wrist.setPosition(0);
     }
     public void board() { // 60 deg
         setAngle(2);
-        wrist.setPosition(.85);
+        wrist.setPosition(.47);
+
     }
 
     public void grab() {

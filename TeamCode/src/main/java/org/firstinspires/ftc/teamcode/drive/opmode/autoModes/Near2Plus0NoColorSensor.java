@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.SwitchableLight;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -32,6 +33,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 @Autonomous(group = "comp")
@@ -52,24 +54,20 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
     int status;
     int itemSector;
     Pose2d startPose = new Pose2d(12,-66, Math.toRadians(270));
-    double detX;
     double distForward;
     int isBlue = -1;
-    Pose2d pose2;
     Pose2d pose3;
     Pose2d boardPose;
     TrajectorySequence trajCross;
-//    double detBearing;
-//    private final double kP = 0;
-//    private final double kI = 0;
-//    private final double kD = 0 ;
-//    PIDController pid = new PIDController(kP, kI, kD);
     Pose2d scorePoseYellow;
     int parkSide = 0;
+    ElapsedTime timer;
+    int lastTime;
+    double output;
+    int thisTime;
     @Override
     public void runOpMode() throws InterruptedException {
         arm = new InputOutput(hardwareMap, true, .5, .5);
-        aprilTagProcessor = initAprilTag();
         vPortal = initVisionPortal();
         arm.rest();
 
@@ -78,14 +76,17 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
 
         drive = new SampleMecanumDrive(hardwareMap);
 
-        if (gamepad1.dpad_left) {
-            parkSide = 1;
-        } else if (gamepad1.dpad_right) {
-            parkSide = -1;
+        if (opModeInInit()) {
+            while (opModeInInit()) {
+                if (gamepad1.dpad_left) {
+                    parkSide = 1;
+                } else if (gamepad1.dpad_right) {
+                    parkSide = -1;
+                }
+                telemetry.addData("Parking side", parkSide);
+                telemetry.update();
+            }
         }
-        telemetry.addData("Parking side", parkSide);
-        telemetry.update();
-        waitForStart();
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
@@ -93,18 +94,10 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
             }
         }
     }
-
-    private AprilTagProcessor initAprilTag() {
-        aprilTagProcessorBuilder = new AprilTagProcessor.Builder();
-        aprilTagProcessorBuilder.setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary());
-        aprilTagProcessorBuilder.setLensIntrinsics(957.381,957.381,924.159,537.109);
-
-        return aprilTagProcessorBuilder.build();
-    }
     private VisionPortal initVisionPortal() {
         vPortalBuilder = new VisionPortal.Builder();
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
-        vPortalBuilder.addProcessors(detector, aprilTagProcessor);
+        vPortalBuilder.addProcessor(detector);
 
         return vPortalBuilder.build();
     }
@@ -125,176 +118,219 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
         sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_distance");
     }
     private void opModeLoop() {
-        switch(status) {
-            case 0: runPieceDetector();
-                break;
-            case 1: driveToLine(); // assume red side until alignLine()
-                break;
-            case 2:
-                colorProcess();
-                status++;
-                break;
-            case 3: dropPixel();
-                break;
-            case 4: crossField();
-                break;
-            case 5: status++;
-                break;
-            case 6: fixDistance();
-                break;
-            case 7: scorePixel();
-                break;
-            case 8: park();
-                break;
-        }
-        telemetry.update();
-    }
-    private void driveToLine() {
-        TrajectorySequence traj1;
-        traj1 = drive.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(12, -43, Math.toRadians(90+((itemSector-1)*-39.4))))
+        TrajectorySequence wholeAutoMode;
+        wholeAutoMode = drive.trajectorySequenceBuilder(startPose)
+                .addDisplacementMarker(() -> {
+                    vPortal.setProcessorEnabled(detector, true);
+                    boolean stop = false;
+                    while (!stop) {
+                        if (detector.locationInt() != -1) {
+                            itemSector = detector.locationInt();
+                            //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
+                            vPortal.stopStreaming();
+                            stop = true;
+                        }
+                        drive.update();
+                    }
+                })
+                .lineToLinearHeading(new Pose2d(-36, -43, Math.toRadians(90+((itemSector-1)*-39.4))))
+                .addDisplacementMarker(() -> {
+                    lastTime = (int) timer.time(TimeUnit.SECONDS);
+                    arm.ground();
+                    arm.releaseLeft();
+                })
+                .addTemporalMarker(lastTime+.25, () -> {
+                    arm.rest();
+                    arm.grab();
+                })
+                .addDisplacementMarker(() -> {
+                    if (detector.getColor() == "RED") {
+                        isBlue = -1;
+                        pose3 = drive.getPoseEstimate();
+                    } else if (detector.getColor() == "BLUE") {
+                        isBlue = 1;
+                        Pose2d thing = drive.getPoseEstimate();
+                        drive.setPoseEstimate(new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180)));
+                    }
+                })
+                .lineToLinearHeading(new Pose2d(-36, 36*isBlue, Math.toRadians(0)))
+                .lineTo(new Vector2d(48, 36*isBlue))
+                .strafeRight(((itemSector-1)*5.25)-2)
+                .addDisplacementMarker(() -> {
+                    double wantedDistance = 12.75; // how far away you want the robot to go
+                    double thresholdDistanceInches = 0.1;
+
+                    distForward = sensorDistance.getDistance(DistanceUnit.INCH);
+
+                    if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) { distForward = sensorDistance.getDistance(DistanceUnit.INCH); }
+                    if (Math.abs(distForward-wantedDistance) > thresholdDistanceInches) {
+                        output = wantedDistance - distForward;
+                    } else {
+                        output = 0;
+                    }
+
+                })
+                .forward(output)
+                .addDisplacementMarker(() -> {
+                    arm.board();
+                    arm.release();
+                    thisTime = (int) timer.time(TimeUnit.SECONDS);
+                })
+                .addTemporalMarker(thisTime+.25, () -> {
+                    arm.rest();
+                    arm.grab();
+                })
+                .turn(parkSide*90)
+                .splineToLinearHeading(new Pose2d(64, isBlue*64, Math.toRadians(180)), 0)
                 .build();
-        drive.followTrajectorySequence(traj1);
-        status++;
+        drive.followTrajectorySequence(wholeAutoMode);
     }
-    //    }
-    private void colorProcess() { // get pose estimate, add second one
-//        double redValue =  colorSensor.getNormalizedColors().red;
-//        double blueValue = colorSensor.getNormalizedColors().blue;
+//    private void driveToLine() {
+//        TrajectorySequence traj1;
+//        traj1 = drive.trajectorySequenceBuilder(startPose)
+//                .lineToLinearHeading(new Pose2d(12, -43, Math.toRadians(90+((itemSector-1)*-39.4))))
+//                .build();
+//        drive.followTrajectorySequence(traj1);
+//        status++;
+//    }
+//    //    }
+//    private void colorProcess() { // get pose estimate, add second one
+////        double redValue =  colorSensor.getNormalizedColors().red;
+////        double blueValue = colorSensor.getNormalizedColors().blue;
+////
+////        teleData("Red Value (0 to 1)", "%4.2f", redValue);
+////        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
+////        telemetry.update();
 //
-//        teleData("Red Value (0 to 1)", "%4.2f", redValue);
-//        teleData("Blue Value (0 to 1)", "%4.2f", blueValue);
-//        telemetry.update();
-
-//        if (redValue > 0.4 || blueValue > 0.5) {
-            // We found a line (either red or blue)
-//            drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
-            status++;
-        if (detector.getColor() == "RED") {
-            isBlue = 0;
-            pose3 = drive.getPoseEstimate();
-        } else if (detector.getColor() == "BLUE") {
-            isBlue = 1;
-            Pose2d thing = drive.getPoseEstimate();
-            pose3 = new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180));
-        }
-//        } else {
-            // Continue moving forward if no line is detected
-//            Trajectory myTrajectory = drive.trajectoryBuilder(pose2)
-//                    .forward(1)
-//                    .build();
-//            drive.followTrajectory(myTrajectory);
-//            pose2 = drive.getPoseEstimate();
+////        if (redValue > 0.4 || blueValue > 0.5) {
+//            // We found a line (either red or blue)
+////            drive.setMotorPowers(0, 0, 0, 0); // Stop the robot
+//            status++;
+//        if (detector.getColor() == "RED") {
+//            isBlue = 0;
+//            pose3 = drive.getPoseEstimate();
+//        } else if (detector.getColor() == "BLUE") {
+//            isBlue = 1;
+//            Pose2d thing = drive.getPoseEstimate();
+//            pose3 = new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180));
 //        }
-    }
-    private void crossField() {
-        if (itemSector !=2) {
-            trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(12, Math.signum(pose3.getY())*36, 0))
-                    .forward(36)
-                    .strafeRight((itemSector - 2) * 5.25)
-                    .build();
-        } else {
-            trajCross = drive.trajectorySequenceBuilder(pose3)
-                    .lineToLinearHeading(new Pose2d(12, Math.signum(pose3.getY())*36, 0))
-                    .forward(36)
-                    .build();
-        }
-        drive.followTrajectorySequence(trajCross);
-        boardPose = drive.getPoseEstimate();
-        status++;
-    }
-    private void park() {
-        if (isBlue == 1) {
-            TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
-                    .strafeLeft(24)
-                    .build();
-            drive.followTrajectorySequence(park);
-        } else {
-            TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
-                    .strafeRight(24)
-                    .build();
-            drive.followTrajectorySequence(park);
-        }
-        
-    }
-    private void dropPixel() {
-        arm.ground();
-        arm.releaseLeft();
-        arm.rest();
-        status++;
-    }
-    private void scorePixel() {
-        arm.board();
-        arm.releaseRight();
-        arm.rest();
-    }
-
-    private void runPieceDetector() {
-        // R is 0, M is 1, L is 2
-        vPortal.setProcessorEnabled(detector, true);
-        boolean stop = false;
-        while (!stop) {
-            if (detector.locationInt() != -1) {
-                itemSector = detector.locationInt();
-                //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
-                stop = true;
-                status++;
-                vPortal.stopStreaming();
-            }
-        }
-    }
-    private void fixDistance() {
-        double wantedDistance = 12.75; // how far away you want the robot to go
-
-        double thresholdDistanceInches = 0.1;
-
-        distForward = sensorDistance.getDistance(DistanceUnit.INCH);
-
-        if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
-            distForward = sensorDistance.getDistance(DistanceUnit.INCH);
-        } else {
-            distForward = wantedDistance;
-            teleLogging("Infinity Distance detected");
-            scorePoseYellow = drive.getPoseEstimate();
-        }
-        if (distForward != wantedDistance) {
-            double output = wantedDistance - distForward;
-            Trajectory Disttraj = drive.trajectoryBuilder(boardPose)
-                    .forward(output)
-                    .build();
-
-
-            String StrMotorPower = String.valueOf(output);
-            teleLogging("wanted Motor Power:" + StrMotorPower);
-            drive.followTrajectory(Disttraj);
-        }
-        if ((distForward >= wantedDistance - thresholdDistanceInches) &&
-                (distForward <= wantedDistance + thresholdDistanceInches)) {
-            teleLogging("Achieved location");
-            drive.setMotorPowers(0,0,0,0);
-            status++;
-//            Pose2d scorePoseYellow = drive.getPoseEstimate();
-        }
-    }
-
-    private void outputTelemetry() {
-        // TODO: Also output to .log file.
-//        teleLogging("---------April Tag Data----------");
-//        aprilTagTelemetry();
-        teleLogging(String.valueOf(itemSector));
-        teleData("status: ", status);
-        teleLogging("---------IMU Data----------");
-        IMUTelemetry();
-        teleLogging("---------Pose Data----------");
-//        TODO: Add beysian estimate. Kalman filter.
-        poseTelemetry();
-        teleLogging("---------Color Data----------");
-        colorSensorTelemetry();
-        teleLogging("---------Distance Sensor----------");
-        distanceSensorTelemetry();
-        teleData("parkSide", parkSide);
-    }
+////        } else {
+//            // Continue moving forward if no line is detected
+////            Trajectory myTrajectory = drive.trajectoryBuilder(pose2)
+////                    .forward(1)
+////                    .build();
+////            drive.followTrajectory(myTrajectory);
+////            pose2 = drive.getPoseEstimate();
+////        }
+//    }
+//    private void crossField() {
+//        if (itemSector !=2) {
+//            trajCross = drive.trajectorySequenceBuilder(pose3)
+//                    .lineToLinearHeading(new Pose2d(12, Math.signum(pose3.getY())*36, 0))
+//                    .forward(36)
+//                    .strafeRight((itemSector - 2) * 5.25)
+//                    .build();
+//        } else {
+//            trajCross = drive.trajectorySequenceBuilder(pose3)
+//                    .lineToLinearHeading(new Pose2d(12, Math.signum(pose3.getY())*36, 0))
+//                    .forward(36)
+//                    .build();
+//        }
+//        drive.followTrajectorySequence(trajCross);
+//        boardPose = drive.getPoseEstimate();
+//        status++;
+//    }
+//    private void park() {
+//        if (isBlue == 1) {
+//            TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
+//                    .strafeLeft(24)
+//                    .build();
+//            drive.followTrajectorySequence(park);
+//        } else {
+//            TrajectorySequence park = drive.trajectorySequenceBuilder(scorePoseYellow)
+//                    .strafeRight(24)
+//                    .build();
+//            drive.followTrajectorySequence(park);
+//        }
+//
+//    }
+//    private void dropPixel() {
+//        arm.ground();
+//        arm.releaseLeft();
+//        arm.rest();
+//        status++;
+//    }
+//    private void scorePixel() {
+//        arm.board();
+//        arm.releaseRight();
+//        arm.rest();
+//    }
+//
+//    private void runPieceDetector() {
+//        // R is 0, M is 1, L is 2
+//        vPortal.setProcessorEnabled(detector, true);
+//        boolean stop = false;
+//        while (!stop) {
+//            if (detector.locationInt() != -1) {
+//                itemSector = detector.locationInt();
+//                //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
+//                stop = true;
+//                status++;
+//                vPortal.stopStreaming();
+//            }
+//        }
+//    }
+//    private void fixDistance() {
+//        double wantedDistance = 12.75; // how far away you want the robot to go
+//
+//        double thresholdDistanceInches = 0.1;
+//
+//        distForward = sensorDistance.getDistance(DistanceUnit.INCH);
+//
+//        if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
+//            distForward = sensorDistance.getDistance(DistanceUnit.INCH);
+//        } else {
+//            distForward = wantedDistance;
+//            teleLogging("Infinity Distance detected");
+//            scorePoseYellow = drive.getPoseEstimate();
+//        }
+//        if (distForward != wantedDistance) {
+//            double output = wantedDistance - distForward;
+//            Trajectory Disttraj = drive.trajectoryBuilder(boardPose)
+//                    .forward(output)
+//                    .build();
+//
+//
+//            String StrMotorPower = String.valueOf(output);
+//            teleLogging("wanted Motor Power:" + StrMotorPower);
+//            drive.followTrajectory(Disttraj);
+//        }
+//        if ((distForward >= wantedDistance - thresholdDistanceInches) &&
+//                (distForward <= wantedDistance + thresholdDistanceInches)) {
+//            teleLogging("Achieved location");
+//            drive.setMotorPowers(0,0,0,0);
+//            status++;
+////            Pose2d scorePoseYellow = drive.getPoseEstimate();
+//        }
+//    }
+//
+//    private void outputTelemetry() {
+//        // TODO: Also output to .log file.
+////        teleLogging("---------April Tag Data----------");
+////        aprilTagTelemetry();
+//        teleLogging(String.valueOf(itemSector));
+//        teleData("status: ", status);
+//        teleLogging("---------IMU Data----------");
+//        IMUTelemetry();
+//        teleLogging("---------Pose Data----------");
+////        TODO: Add beysian estimate. Kalman filter.
+//        poseTelemetry();
+//        teleLogging("---------Color Data----------");
+//        colorSensorTelemetry();
+//        teleLogging("---------Distance Sensor----------");
+//        distanceSensorTelemetry();
+//        teleData("parkSide", parkSide);
+//    }
     @SuppressLint("DefaultLocale")
     private void distanceSensorTelemetry() {
         teleData("range", String.format("%.01f mm", sensorDistance.getDistance(DistanceUnit.MM)));

@@ -46,7 +46,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     IMU imu;
     DistanceSensor sensorDistance;
     InputOutput arm;
-
+    double output;
     int lastTime;
     int thisTime;
     int status;
@@ -60,6 +60,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     Pose2d boardPose;
     Pose2d scorePoseYellow;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+    int parkSide;
     @Override
     public void runOpMode() throws InterruptedException {
         arm = new InputOutput(hardwareMap, true, .5, .5);
@@ -71,10 +72,22 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
 
         setupDistanceSensor();
 
+
         drive = new SampleMecanumDrive(hardwareMap);
 
         telemetry.update();
         drive.setPoseEstimate(new Pose2d(-36,-60, Math.toRadians(270)));
+        if (opModeInInit()) {
+            while (opModeInInit()) {
+                if (gamepad1.dpad_left) {
+                    parkSide = 1;
+                } else if (gamepad1.dpad_right) {
+                    parkSide = -1;
+                }
+                telemetry.addData("Parking side", parkSide);
+                telemetry.update();
+            }
+        }
         waitForStart();
         timer.startTime();
 
@@ -170,6 +183,21 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
                 .lineTo(new Vector2d(48, 36*isBlue))
                 .strafeRight(((itemSector-1)*5.25)-2)
                 .addDisplacementMarker(() -> {
+                    double wantedDistance = 12.75; // how far away you want the robot to go
+                    double thresholdDistanceInches = 0.1;
+
+                    distForward = sensorDistance.getDistance(DistanceUnit.INCH);
+
+                    if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) { distForward = sensorDistance.getDistance(DistanceUnit.INCH); }
+                    if (Math.abs(distForward-wantedDistance) > thresholdDistanceInches) {
+                        output = wantedDistance - distForward;
+                    } else {
+                        output = 0;
+                    }
+
+                })
+                .forward(output)
+                .addDisplacementMarker(() -> {
                     arm.board();
                     arm.release();
                     thisTime = (int) timer.time(TimeUnit.SECONDS);
@@ -178,7 +206,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
                     arm.rest();
                     arm.grab();
                 })
-                .turn(isBlue*90)
+                .turn(parkSide*90)
                 .splineToLinearHeading(new Pose2d(64, isBlue*64, Math.toRadians(180)), 0)
                 .build();
         drive.followTrajectorySequence(wholeAutoMode);
