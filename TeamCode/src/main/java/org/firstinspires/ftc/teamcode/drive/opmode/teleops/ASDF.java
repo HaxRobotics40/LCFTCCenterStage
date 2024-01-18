@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.drive.opmode.teleops;
 
 //import android.renderscript.ScriptGroup;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -21,6 +22,7 @@ import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
  * encoder localizer heading may be significantly off if the track width has not been tuned).
  */
 @TeleOp(group = "drive")
+@Config
 public class ASDF extends LinearOpMode {
     boolean isDepressedUp = false;
     boolean isDepressedDown = false;
@@ -28,10 +30,14 @@ public class ASDF extends LinearOpMode {
     boolean wasUpPressed;
     boolean wasDownPressed;
     boolean wasBackPressed;
+    public static double kP = .0000001;
+    public static double kI = 0;
+    public static double kD = 0;
+    ElapsedTime timer = new ElapsedTime();
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        InputOutput arm = new InputOutput(hardwareMap, true, .25, .1);
+        InputOutput arm = new InputOutput(hardwareMap, true, .25, .1, kP, kI, kD);
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
         Servo droneRelease = hardwareMap.get(Servo.class, "droneRelease");
         DcMotor winch = hardwareMap.get(DcMotor.class, "winch");
@@ -40,7 +46,7 @@ public class ASDF extends LinearOpMode {
         Servo hook = hardwareMap.get(Servo.class, "hook");
         Servo wrist = hardwareMap.get(Servo.class, "wrist");
         DcMotor slide = hardwareMap.get(DcMotor.class, "slide");
-        DcMotor pivot = hardwareMap.get(DcMotor.class, "pivot");
+//        DcMotor pivot = hardwareMap.get(DcMotor.class, "pivot");
         Servo clawL = hardwareMap.get(Servo.class, "clawL");
         Servo clawR = hardwareMap.get(Servo.class, "clawR");
         slide.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -48,6 +54,8 @@ public class ASDF extends LinearOpMode {
         clawL.setPosition(.85); // open
         clawR.setPosition(.75); // open 1, close .56
         wrist.setPosition(.85);
+//        pivot.setTargetPosition(0);
+//        pivot.setDirection(DcMotorSimple.Direction.REVERSE);
 
         arm.setup();
         waitForStart();
@@ -101,9 +109,9 @@ public class ASDF extends LinearOpMode {
 //                pivot.setTargetPosition(0);
 //                pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 //                if (pivot.getCurrentPosition() < -5) {
-//                    pivot.setPower(0.1);
+//                    pivot.setPower(0.05);
 //                } else if (pivot.getCurrentPosition() > 5){
-//                    pivot.setPower(-0.1);
+//                    pivot.setPower(-0.05);
 //                }
 //                else {
 //                    pivot.setPower(0); }
@@ -111,9 +119,9 @@ public class ASDF extends LinearOpMode {
 //                pivot.setTargetPosition(65);
 //                pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 //                if (pivot.getCurrentPosition() < 60) {
-//                    pivot.setPower(0.1);
+//                    pivot.setPower(0.05);
 //                } else if (pivot.getCurrentPosition() > 70){
-//                    pivot.setPower(-0.1);
+//                    pivot.setPower(-0.05);
 //                }
 //                else {
 //                    pivot.setPower(0); }
@@ -121,13 +129,15 @@ public class ASDF extends LinearOpMode {
 //                pivot.setTargetPosition(177);
 //                pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 //                if (pivot.getCurrentPosition() < 172) {
-//                    pivot.setPower(0.1);
+//                    pivot.setPower(0.05);
 //                } else if (pivot.getCurrentPosition() > 182){
-//                    pivot.setPower(-0.1);
+//                    pivot.setPower(-0.05);
 //                }
 //                else {
 //                pivot.setPower(0); }
 //            }
+
+
 
 
 
@@ -194,7 +204,7 @@ public class ASDF extends LinearOpMode {
 //
 //
 //            drive.update();
-//            arm.update();
+            arm.update();
 
             Pose2d poseEstimate = drive.getPoseEstimate();
 //            telemetry.addData("x", poseEstimate.getX());
@@ -203,7 +213,8 @@ public class ASDF extends LinearOpMode {
             telemetry.addData("pos", drive.getWheelPositions());
             telemetry.addData("Velocities", drive.getWheelVelocities());
             telemetry.addData("Elevator Position", slide.getCurrentPosition());
-            telemetry.addData("Arm Position", pivot.getCurrentPosition());
+            telemetry.addData("Arm Position", arm.getPivotPos());
+            telemetry.addData("Desired Arm Position", arm.getTargetPivotPos());
             telemetry.addData("Wrist Position", wrist.getPosition());
 //            telemetry.addData()''
 //            telemetry.addData("Wrist Pos", wrist.getPosition());

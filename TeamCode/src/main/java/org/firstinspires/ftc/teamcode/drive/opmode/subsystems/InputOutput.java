@@ -3,8 +3,10 @@ package org.firstinspires.ftc.teamcode.drive.opmode.subsystems;
 import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.util.ArrayList;
 import java.util.function.IntSupplier;
@@ -16,26 +18,36 @@ public class InputOutput {
     Servo hook;
     Servo wrist;
     int posInt;
+    int targetPosition;
     // positions of arm
     private final ArrayList<Integer> levels;
     // tolerance for encoder values
     private int tolerance = 25;
     // most recent target level
     private int targetLevel = 0;
-    private final int tolerancePivot = 15;
+    private final int tolerancePivot = 4;
     private int degAngle = 0;
+    int currentPos;
     private final double ticksPerDeg = 3.9581;
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
     private final int[] levelsPivot = {0, 144, 177};
-    public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot) {
+    private final double kP;
+    private final double kI;
+    private final double kD;
+    ElapsedTime timer;
+    double integralSum;
+    int lastError;
+    public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot, double kP, double kI, double kD) {
         pivot = hw.get(DcMotor.class, "pivot");
+        timer = new ElapsedTime();
         // startup position is 0
-        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        pivot.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         // make sure it can hold itself up
         pivot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        pivot.setDirection(DcMotorSimple.Direction.REVERSE);
 
         slide = hw.get(DcMotor.class, "slide");
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -54,6 +66,12 @@ public class InputOutput {
         }
         this.maxPowerSlide = maxPowerSlide;
         this.maxPowerPivot = maxPowerPivot;
+        this.kP = kP;
+        this.kI = kI;
+        this.kD = kD;
+    }
+    public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot) {
+        this(hw, autoFillLevels, maxPowerSlide, maxPowerPivot, 0.1, 0, 0);
     }
 
     // Adds new level with associated encoder position
@@ -105,13 +123,13 @@ public class InputOutput {
     }
 
     private void setAngle(int levelPivot) { // can change if 0 ticks isn't 0 deg actually
-        pivot.setTargetPosition(levelsPivot[levelPivot]);
-        pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        if (Math.abs(pivot.getCurrentPosition() - pivot.getTargetPosition()) > 4) {
-            pivot.setPower(maxPowerPivot * Math.signum((double) levelsPivot[levelPivot] - pivot.getCurrentPosition()));
-        } else {
-            pivot.setPower(0);
-        }
+        targetPosition = (levelsPivot[levelPivot]);
+//        pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        if (Math.abs(pivot.getCurrentPosition() - pivot.getTargetPosition()) > 4) {
+//            pivot.setPower(maxPowerPivot * Math.signum((double) levelsPivot[levelPivot] - pivot.getCurrentPosition()));
+//        } else {
+//            pivot.setPower(0);
+//        }
     }
     public void ground() {
         setAngle(0);
@@ -124,13 +142,8 @@ public class InputOutput {
         pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         slide.setTargetPosition(0);
-        pivot.setTargetPosition((144));
+        pivot.setTargetPosition((203));
     }
-//    public void extendo() {
-//        setAngle(0);
-//        wrist.setPosition(.85);
-//        goTo(levels.size());
-//    }
     public void over() {
         setAngle(45);
         wrist.setPosition(.77); // idk if we need this? are our slides long enough?
@@ -169,19 +182,35 @@ public class InputOutput {
     }
     // check if arm is at target, stopping it if it is
     public void update() {
+
         if (atLevel(targetLevel)) {
             slide.setPower(0);
         }
 
-        if (atAngle()) {
+        if (!atAngle()) {
+            currentPos = pivot.getCurrentPosition();
+            int error = targetPosition - currentPos;
+
+            double derivative = (error - lastError) / timer.seconds();
+            
+            integralSum = integralSum + (error * timer.seconds());
+
+            double output = (kP*error) + (kI*integralSum) + (kD*derivative);
+
+            pivot.setPower(output);
+
+            lastError = error;
+            timer.reset();
+        } else {
             pivot.setPower(0);
         }
+
         if (targetLevel == -1) {
             return;
         }
     }
     public boolean atAngle() {
-        return Math.abs(pivot.getCurrentPosition() - posInt) < tolerancePivot;
+        return Math.abs(pivot.getCurrentPosition() - targetPosition) < tolerancePivot;
     }
 
     // whether we are withing the tolerance for a given level
@@ -195,7 +224,9 @@ public class InputOutput {
         return degAngle;
     }
     public int getSlidePos() { return slide.getCurrentPosition(); }
-    public int getPivotPos() { return pivot.getCurrentPosition(); }
+    public int getPivotPos() { return currentPos; }
+    public int getTargetPivotPos() { return targetPosition; }
+
     public double getRightPos() { return clawR.getPosition(); }
     public double getLeftPos() { return clawL.getPosition(); }
     public void setTolerance(int newTolerance) {
