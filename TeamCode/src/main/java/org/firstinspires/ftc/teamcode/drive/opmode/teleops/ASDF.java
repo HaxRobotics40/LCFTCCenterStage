@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.drive.opmode.teleops;
 
 //import android.renderscript.ScriptGroup;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -24,13 +25,14 @@ import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 @TeleOp(group = "drive")
 @Config
 public class ASDF extends LinearOpMode {
+    FtcDashboard dashboard;
     boolean isDepressedUp = false;
     boolean isDepressedDown = false;
     boolean isDepressedBack = false;
     boolean wasUpPressed;
     boolean wasDownPressed;
     boolean wasBackPressed;
-    public static double kP = .0000001;
+    public static double kP = .0003;
     public static double kI = 0;
     public static double kD = 0;
     ElapsedTime timer = new ElapsedTime();
@@ -58,6 +60,8 @@ public class ASDF extends LinearOpMode {
 //        pivot.setDirection(DcMotorSimple.Direction.REVERSE);
 
         arm.setup();
+        dashboard = FtcDashboard.getInstance();
+        telemetry = dashboard.getTelemetry();
         waitForStart();
 
         while (!isStopRequested()) {
@@ -166,13 +170,6 @@ public class ASDF extends LinearOpMode {
 
 
 
-
-//            slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//            slide.setPower(0.75);
-
-
-
-
             // preset positions: requires tuning/position determing and making sure directions are right
 
             buttonPressedDown();
@@ -210,15 +207,15 @@ public class ASDF extends LinearOpMode {
 //            telemetry.addData("x", poseEstimate.getX());
 //            telemetry.addData("y", poseEstimate.getY());
 //            telemetry.addData("heading", poseEstimate.getHeading());
-            telemetry.addData("pos", drive.getWheelPositions());
-            telemetry.addData("Velocities", drive.getWheelVelocities());
-            telemetry.addData("Elevator Position", slide.getCurrentPosition());
+//            telemetry.addData("pos", drive.getWheelPositions());
+//            telemetry.addData("Velocities", drive.getWheelVelocities());
+//            telemetry.addData("Elevator Position", slide.getCurrentPosition());
             telemetry.addData("Arm Position", arm.getPivotPos());
             telemetry.addData("Desired Arm Position", arm.getTargetPivotPos());
-            telemetry.addData("Wrist Position", wrist.getPosition());
-//            telemetry.addData()''
+//            telemetry.addData("Wrist Position", wrist.getPosition());
+//            telemetry.addData()
 //            telemetry.addData("Wrist Pos", wrist.getPosition());
-            telemetry.addData("Claw L & R Pos", arm.getLeftPos() + " "  + arm.getRightPos());
+//            telemetry.addData("Claw L & R Pos", arm.getLeftPos() + " "  + arm.getRightPos());
             telemetry.update();
 
         }

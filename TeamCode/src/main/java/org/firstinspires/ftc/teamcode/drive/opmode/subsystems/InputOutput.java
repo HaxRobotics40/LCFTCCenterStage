@@ -25,14 +25,14 @@ public class InputOutput {
     private int tolerance = 25;
     // most recent target level
     private int targetLevel = 0;
-    private final int tolerancePivot = 4;
+    private final int tolerancePivot = 2;
     private int degAngle = 0;
     int currentPos;
     private final double ticksPerDeg = 3.9581;
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-    private final int[] levelsPivot = {0, 144, 177};
+    private final int[] levelsPivot = {0, 64, 170};
     private final double kP;
     private final double kI;
     private final double kD;
@@ -187,23 +187,20 @@ public class InputOutput {
             slide.setPower(0);
         }
 
-        if (!atAngle()) {
-            currentPos = pivot.getCurrentPosition();
-            int error = targetPosition - currentPos;
+        currentPos = pivot.getCurrentPosition();
+        int error = targetPosition - currentPos;
 
-            double derivative = (error - lastError) / timer.seconds();
-            
-            integralSum = integralSum + (error * timer.seconds());
+        double derivative = (error - lastError) / timer.seconds();
 
-            double output = (kP*error) + (kI*integralSum) + (kD*derivative);
+        integralSum = integralSum + (error * timer.seconds());
 
-            pivot.setPower(output);
+        double output = (kP*error) + (kI*integralSum) + (kD*derivative);
 
-            lastError = error;
-            timer.reset();
-        } else {
-            pivot.setPower(0);
-        }
+        pivot.setPower(output);
+
+        lastError = error;
+        timer.reset();
+
 
         if (targetLevel == -1) {
             return;
