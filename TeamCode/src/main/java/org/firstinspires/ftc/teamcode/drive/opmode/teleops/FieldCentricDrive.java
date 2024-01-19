@@ -18,6 +18,15 @@ public class FieldCentricDrive extends LinearOpMode {
     boolean isDepressedDown = false;
     boolean wasUpPressed;
     boolean wasDownPressed;
+    boolean runningPID;
+    double Kp = 0;
+    double Ki = 0;
+    double Kd = 0;
+    double tolerance = 0;
+    double error;
+    double integralSum=0;
+    double lastError = 0;
+    double derivative;
     public void buttonPressedUp() {
         if (gamepad2.dpad_up && !isDepressedUp) {
             isDepressedUp = true;
@@ -79,18 +88,37 @@ public class FieldCentricDrive extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+            double y = -gamepad1.left_stick_y; // Y stick value is reversed
             double x = gamepad1.left_stick_x;
             double rx = -gamepad1.right_stick_x;
 
             // This button choice was made so that it is hard to hit on accident,
-            // it can be freely changed based on preference.
-            // The equivalent button is start on Xbox-style controllers.
+            // it can be freely changed based on preference..
             if (gamepad1.options) {
                 imu.resetYaw();
             }
 
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+
+            if(gamepad1.back) {
+                runningPID = true;
+            }
+            //PID controller
+            if (runningPID) {
+                if (Math.abs(botHeading) < tolerance){
+                    error = -botHeading;
+                    integralSum = integralSum + (error * timer.seconds());
+                    derivative = (error - lastError)/timer.seconds();
+
+                    rx = (Kp * error) + (Ki * integralSum) + (Kd * derivative);
+
+                    lastError = error;
+
+                    timer.reset();
+
+
+                }
+            }
 
             // Rotate the movement direction counter to the bots rotation
             double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
@@ -156,7 +184,9 @@ public class FieldCentricDrive extends LinearOpMode {
                 winch.setPower(0);
             }
             arm.update();
+            // PID Controller for Heading
+            // Constants need to be tuned
 
-        }
     }
+}
 }
