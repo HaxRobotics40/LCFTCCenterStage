@@ -22,11 +22,18 @@ public class FieldCentricDrive extends LinearOpMode {
     double Kp = 0;
     double Ki = 0;
     double Kd = 0;
-    double tolerance = 0;
+    double tolerance = Math.toRadians(3);
     double error;
     double integralSum=0;
     double lastError = 0;
     double derivative;
+
+    //Sets value of Kp, Ki and Kd for PID controller
+    public void setTunings(double kp, double ki, double kd) {
+        Kp = kp;
+        Ki = ki;
+        Kd = kd;
+    }
     public void buttonPressedUp() {
         if (gamepad2.dpad_up && !isDepressedUp) {
             isDepressedUp = true;
@@ -103,9 +110,12 @@ public class FieldCentricDrive extends LinearOpMode {
             if(gamepad1.back) {
                 runningPID = true;
             }
-            //PID controller
+            //PID controller for heading
             if (runningPID) {
                 if (Math.abs(botHeading) < tolerance){
+                    runningPID =  false;
+                }
+                else {
                     error = -botHeading;
                     integralSum = integralSum + (error * timer.seconds());
                     derivative = (error - lastError)/timer.seconds();
@@ -115,8 +125,6 @@ public class FieldCentricDrive extends LinearOpMode {
                     lastError = error;
 
                     timer.reset();
-
-
                 }
             }
 
