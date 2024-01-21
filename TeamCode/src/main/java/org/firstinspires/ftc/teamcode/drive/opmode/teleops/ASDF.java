@@ -32,14 +32,15 @@ public class ASDF extends LinearOpMode {
     boolean wasUpPressed;
     boolean wasDownPressed;
     boolean wasBackPressed;
-    public static double kP = .0003;
+    public static double kP = .001;
     public static double kI = 0;
     public static double kD = 0;
+    public static double kCos = 0;
     ElapsedTime timer = new ElapsedTime();
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        InputOutput arm = new InputOutput(hardwareMap, true, .25, .1, kP, kI, kD);
+        InputOutput arm = new InputOutput(hardwareMap, true, .25, .1, kP, kI, kD, kCos);
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
         Servo droneRelease = hardwareMap.get(Servo.class, "droneRelease");
         DcMotor winch = hardwareMap.get(DcMotor.class, "winch");
@@ -109,6 +110,8 @@ public class ASDF extends LinearOpMode {
             } else if (gamepad1.b) {
                 arm.board();
             }
+
+            arm.getNewPIDF(kP, kI, kD, kCos);
 //            if (gamepad1.x) {
 //                pivot.setTargetPosition(0);
 //                pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -212,6 +215,7 @@ public class ASDF extends LinearOpMode {
 //            telemetry.addData("Elevator Position", slide.getCurrentPosition());
             telemetry.addData("Arm Position", arm.getPivotPos());
             telemetry.addData("Desired Arm Position", arm.getTargetPivotPos());
+            telemetry.addData("Motor Power", arm.getPivotPower());
 //            telemetry.addData("Wrist Position", wrist.getPosition());
 //            telemetry.addData()
 //            telemetry.addData("Wrist Pos", wrist.getPosition());

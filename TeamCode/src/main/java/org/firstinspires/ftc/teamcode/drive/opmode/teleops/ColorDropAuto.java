@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
  * encoder localizer heading may be significantly off if the track width has not been tuned).
  */
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-@Disabled
+//@Disabled
 @TeleOp(group = "drive")
 public class ColorDropAuto extends LinearOpMode {
     @Override
@@ -24,8 +24,9 @@ public class ColorDropAuto extends LinearOpMode {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        Servo pixel = hardwareMap.get(Servo.class, "pixel");
-        pixel.setPosition(1);
+//        Servo pixel = hardwareMap.get(Servo.class, "pixel");
+//        pixel.setPosition(1);
+        DcMotor pivot = hardwareMap.get(DcMotor.class, "pivot");
 
         waitForStart();
 
@@ -38,19 +39,12 @@ public class ColorDropAuto extends LinearOpMode {
                     )
             );
 
-            if (gamepad1.dpad_up) {
-                pixel.setPosition(1);
-            } else if (gamepad1.dpad_down) {
-                pixel.setPosition(0.2);
-            } else if (gamepad1.x) {
-                drive.setMotorPowers(1,0,0,0);
-            } else if (gamepad1.y) {
-                drive.setMotorPowers(0,1,0,0);
-            } else if (gamepad1.a) {
-                drive.setMotorPowers(0,0,1,0);
-            } else if (gamepad1.b) {
-                drive.setMotorPowers(0,0,0,1);
-            }
+
+            if (gamepad1.x) {
+                pivot.setPower(1); }else if (gamepad1.y) {
+                pivot.setPower(-1); }
+
+
 
 
 
@@ -60,7 +54,7 @@ public class ColorDropAuto extends LinearOpMode {
                 telemetry.addData("x", poseEstimate.getX());
                 telemetry.addData("y", poseEstimate.getY());
                 telemetry.addData("heading", poseEstimate.getHeading());
-                telemetry.addData("Servo Position: ", pixel.getPosition());
+//                telemetry.addData("Servo Position: ", pixel.getPosition());
                 telemetry.addData("pos", drive.getWheelPositions());
                 telemetry.addData("Velocities", drive.getWheelVelocities());
                 telemetry.update();

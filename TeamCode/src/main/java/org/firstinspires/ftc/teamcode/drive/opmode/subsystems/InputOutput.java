@@ -32,14 +32,17 @@ public class InputOutput {
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-    private final int[] levelsPivot = {0, 64, 170};
-    private final double kP;
-    private final double kI;
-    private final double kD;
+    private final int[] levelsPivot = {0, 140, 440};
+    private final int[] anggleLevels = {90, 45, 120};
+    double targetAngle;
+    private double kP;
+    private double kI;
+    private double kD;
+    private double kCos;
     ElapsedTime timer;
     double integralSum;
     int lastError;
-    public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot, double kP, double kI, double kD) {
+    public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot, double kP, double kI, double kD, double kCos) {
         pivot = hw.get(DcMotor.class, "pivot");
         timer = new ElapsedTime();
         // startup position is 0
@@ -47,7 +50,7 @@ public class InputOutput {
         pivot.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         // make sure it can hold itself up
         pivot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        pivot.setDirection(DcMotorSimple.Direction.REVERSE);
+//        pivot.setDirection(DcMotorSimple.Direction.REVERSE);
 
         slide = hw.get(DcMotor.class, "slide");
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -69,9 +72,10 @@ public class InputOutput {
         this.kP = kP;
         this.kI = kI;
         this.kD = kD;
+        this.kCos = kCos;
     }
     public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot) {
-        this(hw, autoFillLevels, maxPowerSlide, maxPowerPivot, 0.1, 0, 0);
+        this(hw, autoFillLevels, maxPowerSlide, maxPowerPivot, 0.00095, 0.0002, 0.0000025,0.000425);
     }
 
     // Adds new level with associated encoder position
@@ -86,6 +90,13 @@ public class InputOutput {
     // erase all levels
     public void clearLevels() {
         levels.clear();
+    }
+    public void runFullPivotPower() { pivot.setPower(1);}
+    public void getNewPIDF(double P, double I, double D, double F) {
+        kP = P;
+        kI = I;
+        kD = D;
+        kCos = F;
     }
 
     // internal stuff, faster to use levels
@@ -123,6 +134,7 @@ public class InputOutput {
     }
 
     private void setAngle(int levelPivot) { // can change if 0 ticks isn't 0 deg actually
+        targetAngle = Math.toRadians(anggleLevels[levelPivot]);
         targetPosition = (levelsPivot[levelPivot]);
 //        pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 //        if (Math.abs(pivot.getCurrentPosition() - pivot.getTargetPosition()) > 4) {
@@ -142,12 +154,7 @@ public class InputOutput {
         pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         slide.setTargetPosition(0);
-        pivot.setTargetPosition((203));
-    }
-    public void over() {
-        setAngle(45);
-        wrist.setPosition(.77); // idk if we need this? are our slides long enough?
-        // TODO: det if this is necessary; if so find deg
+        this.setAngle(0);
     }
     public void rest() {
         setAngle(1);
@@ -187,6 +194,14 @@ public class InputOutput {
             slide.setPower(0);
         }
 
+//        pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        if (Math.abs(pivot.getCurrentPosition() - pivot.getTargetPosition()) > 4) {
+//            pivot.setPower(maxPowerPivot * Math.signum((double) targetPosition - pivot.getCurrentPosition()));
+//        } else {
+//            pivot.setPower(0);
+//        }
+        double output = kCos * Math.cos(targetAngle);
+
         currentPos = pivot.getCurrentPosition();
         int error = targetPosition - currentPos;
 
@@ -194,7 +209,7 @@ public class InputOutput {
 
         integralSum = integralSum + (error * timer.seconds());
 
-        double output = (kP*error) + (kI*integralSum) + (kD*derivative);
+        output += (kP*error) + (kI*integralSum) + (kD*derivative);
 
         pivot.setPower(output);
 
@@ -223,6 +238,7 @@ public class InputOutput {
     public int getSlidePos() { return slide.getCurrentPosition(); }
     public int getPivotPos() { return currentPos; }
     public int getTargetPivotPos() { return targetPosition; }
+    public double getPivotPower() { return pivot.getPower(); }
 
     public double getRightPos() { return clawR.getPosition(); }
     public double getLeftPos() { return clawL.getPosition(); }
