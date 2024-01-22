@@ -23,9 +23,9 @@ public class FieldCentricDrive extends LinearOpMode {
     boolean wasUpPressed;
     boolean wasDownPressed;
     boolean runningPID;
-    public static double Kp = 0.625;
+    public static double Kp = 0.6;
     public static double Ki = 0;
-    public static double Kd = 0;
+    public static double Kd = 0.048;
     double tolerance = Math.toRadians(3);
     double error;
     double integralSum=0;
