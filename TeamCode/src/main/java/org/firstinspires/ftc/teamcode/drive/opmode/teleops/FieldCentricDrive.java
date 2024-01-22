@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.drive.opmode.teleops;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -13,20 +15,23 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 
 @TeleOp
+@Config
 public class FieldCentricDrive extends LinearOpMode {
     boolean isDepressedUp = false;
+    FtcDashboard dashboard;
     boolean isDepressedDown = false;
     boolean wasUpPressed;
     boolean wasDownPressed;
     boolean runningPID;
-    double Kp = 0;
-    double Ki = 0;
-    double Kd = 0;
+    public static double Kp = 0.625;
+    public static double Ki = 0;
+    public static double Kd = 0;
     double tolerance = Math.toRadians(3);
     double error;
     double integralSum=0;
     double lastError = 0;
     double derivative;
+    double rx;
 
     //Sets value of Kp, Ki and Kd for PID controller
     public void setTunings(double kp, double ki, double kd) {
@@ -59,6 +64,8 @@ public class FieldCentricDrive extends LinearOpMode {
         InputOutput arm = new InputOutput(hardwareMap, true, .25, .15);
         // Declare our motors
         // Make sure your ID's match your configuration
+        dashboard = FtcDashboard.getInstance();
+        telemetry = dashboard.getTelemetry();
         DcMotor frontLeftMotor = hardwareMap.dcMotor.get("leftFront");
         DcMotor backLeftMotor = hardwareMap.dcMotor.get("leftRear");
         DcMotor frontRightMotor = hardwareMap.dcMotor.get("rightFront");
@@ -97,7 +104,7 @@ public class FieldCentricDrive extends LinearOpMode {
         while (opModeIsActive()) {
             double y = -gamepad1.left_stick_y; // Y stick value is reversed
             double x = gamepad1.left_stick_x;
-            double rx = -gamepad1.right_stick_x;
+            if (!runningPID) { rx = -gamepad1.right_stick_x; }
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference..
@@ -192,6 +199,9 @@ public class FieldCentricDrive extends LinearOpMode {
                 winch.setPower(0);
             }
             arm.update();
+            telemetry.addData("botheading", botHeading);
+            telemetry.addData("rx", rx);
+            telemetry.update();
             // PID Controller for Heading
             // Constants need to be tuned
 

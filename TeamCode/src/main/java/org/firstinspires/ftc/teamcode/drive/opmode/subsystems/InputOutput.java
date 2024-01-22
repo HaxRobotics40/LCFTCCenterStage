@@ -32,8 +32,8 @@ public class InputOutput {
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-    private final int[] levelsPivot = {0, 140, 440};
-    private final int[] anggleLevels = {90, 45, 120};
+    private final int[] levelsPivot = {0, 140, 440, 464};
+    private final int[] anggleLevels = {90, 45, 120, 90};
     double targetAngle;
     private double kP;
     private double kI;
@@ -157,7 +157,7 @@ public class InputOutput {
         this.setAngle(0);
     }
     public void rest() {
-        setAngle(1);
+        setAngle(3);
         goTo(0);
         wrist.setPosition(0);
     }
@@ -166,7 +166,11 @@ public class InputOutput {
         wrist.setPosition(.47);
 
     }
-
+    public void out() {
+        setAngle(1);
+        goTo(0);
+        wrist.setPosition(0);
+    }
     public void grab() {
         clawL.setPosition(.15);
         clawR.setPosition(.56);
