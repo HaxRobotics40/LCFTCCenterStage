@@ -136,19 +136,19 @@ public class FieldCentricDrive extends LinearOpMode {
             }
 
             // Rotate the movement direction counter to the bots rotation
-            double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-            double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+            double fieldX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+            double fieldY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
 
-            rotX = rotX * 1.1;  // Counteract imperfect strafing
+            fieldX = fieldX * 1.1;  // Counteract imperfect strafing
 
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio,
             // but only if at least one is out of the range [-1, 1]
-            double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-            double frontLeftPower = (rotY + rotX + rx) / denominator;
-            double backLeftPower = (rotY - rotX + rx) / denominator;
-            double frontRightPower = (rotY - rotX - rx) / denominator;
-            double backRightPower = (rotY + rotX - rx) / denominator;
+            double denominator = Math.max(Math.abs(fieldY) + Math.abs(fieldX) + Math.abs(rx), 1);
+            double frontLeftPower = (fieldY + fieldX + rx);
+            double backLeftPower = (fieldY - fieldX + rx) ;
+            double frontRightPower = (fieldY - fieldX - rx) ;
+            double backRightPower = (fieldY + fieldX - rx) ;
 
             frontLeftMotor.setPower(frontLeftPower);
             backLeftMotor.setPower(backLeftPower);
@@ -202,8 +202,7 @@ public class FieldCentricDrive extends LinearOpMode {
             telemetry.addData("botheading", botHeading);
             telemetry.addData("rx", rx);
             telemetry.update();
-            // PID Controller for Heading
-            // Constants need to be tuned
+
 
     }
 }
