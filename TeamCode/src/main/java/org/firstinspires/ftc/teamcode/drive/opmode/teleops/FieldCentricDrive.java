@@ -119,11 +119,11 @@ public class FieldCentricDrive extends LinearOpMode {
             }
             //PID controller for heading
             if (runningPID) {
-                if (Math.abs(botHeading) < tolerance){
+                if (Math.abs(botHeading - Math.toRadians(-90)) < tolerance){
                     runningPID =  false;
                 }
                 else {
-                    error = -botHeading;
+                    error = Math.toRadians(-90)-botHeading;
                     integralSum = integralSum + (error * timer.seconds());
                     derivative = (error - lastError)/timer.seconds();
 
