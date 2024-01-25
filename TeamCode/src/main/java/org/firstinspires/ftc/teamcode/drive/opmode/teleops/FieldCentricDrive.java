@@ -97,6 +97,7 @@ public class FieldCentricDrive extends LinearOpMode {
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         arm.grab();
+        arm.setup();
         waitForStart();
 
         if (isStopRequested()) return;

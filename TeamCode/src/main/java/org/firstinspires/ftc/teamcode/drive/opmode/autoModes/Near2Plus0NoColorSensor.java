@@ -60,7 +60,7 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
     Pose2d boardPose;
     TrajectorySequence trajCross;
     Pose2d scorePoseYellow;
-    int parkSide = 0;
+    int parkSide = -1;
     ElapsedTime timer;
     int lastTime;
     double output;
@@ -138,8 +138,9 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
                     lastTime = (int) timer.time(TimeUnit.SECONDS);
                     arm.ground();
                     arm.releaseLeft();
-                })
-                .addTemporalMarker(lastTime+.25, () -> {
+                    while (timer.time(TimeUnit.SECONDS) - lastTime < .75) {
+                        drive.update();
+                    }
                     arm.rest();
                     arm.grab();
                 })
@@ -175,13 +176,14 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
                     arm.board();
                     arm.release();
                     thisTime = (int) timer.time(TimeUnit.SECONDS);
-                })
-                .addTemporalMarker(thisTime+.25, () -> {
+                    while(timer.time(TimeUnit.SECONDS) - thisTime < .75) {
+                        drive.update();
+                    }
                     arm.rest();
                     arm.grab();
                 })
-                .turn(parkSide*90)
-                .splineToLinearHeading(new Pose2d(64, isBlue*64, Math.toRadians(180)), 0)
+                .turn(isBlue*90)
+                .splineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)), 0)
                 .build();
         drive.followTrajectorySequence(wholeAutoMode);
     }

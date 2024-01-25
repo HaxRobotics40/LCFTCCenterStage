@@ -32,7 +32,7 @@ public class ASDF extends LinearOpMode {
     boolean wasUpPressed;
     boolean wasDownPressed;
     boolean wasBackPressed;
-    public static double kP = .001;
+    public static double kP = 0.0001;
     public static double kI = 0;
     public static double kD = 0;
     public static double kCos = 0;
@@ -40,7 +40,7 @@ public class ASDF extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        InputOutput arm = new InputOutput(hardwareMap, true, .25, .1, kP, kI, kD, kCos);
+        InputOutput arm = new InputOutput(hardwareMap, true, .25, .1);
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
         Servo droneRelease = hardwareMap.get(Servo.class, "droneRelease");
         DcMotor winch = hardwareMap.get(DcMotor.class, "winch");
@@ -111,7 +111,6 @@ public class ASDF extends LinearOpMode {
                 arm.board();
             }
 
-            arm.getNewPIDF(kP, kI, kD, kCos);
 //            if (gamepad1.x) {
 //                pivot.setTargetPosition(0);
 //                pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -186,7 +185,7 @@ public class ASDF extends LinearOpMode {
 //                    arm.goTo(arm.getLevel() - 1);
 //                    wasDownPressed = false; }
 //            }
-//
+                arm.getNewPIDF(kP, kI, kD, kCos);
 //            if (gamepad2.x) {
 //                arm.ground();
 //            } else if (gamepad2.y) {

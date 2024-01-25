@@ -6,16 +6,11 @@ import android.util.Size;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.SwitchableLight;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -30,10 +25,10 @@ import org.firstinspires.ftc.teamcode.drive.opmode.vision.testEOCVpipeline;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @Autonomous(group = "comp")
@@ -60,7 +55,7 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     Pose2d boardPose;
     Pose2d scorePoseYellow;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-    int parkSide;
+    int parkSide = -1;
     @Override
     public void runOpMode() throws InterruptedException {
         arm = new InputOutput(hardwareMap, true, .5, .5);
@@ -164,16 +159,17 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
                     lastTime = (int) timer.time(TimeUnit.SECONDS);
                     arm.ground();
                     arm.releaseLeft();
-                })
-                .addTemporalMarker(lastTime+.25, () -> {
+                    while (timer.time(TimeUnit.SECONDS) - lastTime < .75) {
+                        drive.update();
+                    }
                     arm.rest();
                     arm.grab();
                 })
                 .addDisplacementMarker(() -> {
-                    if (detector.getColor() == "RED") {
+                    if (Objects.equals(detector.getColor(), "RED")) {
                         isBlue = -1;
                         pose3 = drive.getPoseEstimate();
-                    } else if (detector.getColor() == "BLUE") {
+                    } else if (Objects.equals(detector.getColor(), "BLUE")) {
                         isBlue = 1;
                         Pose2d thing = drive.getPoseEstimate();
                         drive.setPoseEstimate(new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180)));
@@ -201,13 +197,14 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
                     arm.board();
                     arm.release();
                     thisTime = (int) timer.time(TimeUnit.SECONDS);
-                })
-                .addTemporalMarker(thisTime+.25, () -> {
+                    while(timer.time(TimeUnit.SECONDS) - thisTime < .75) {
+                        drive.update();
+                    }
                     arm.rest();
                     arm.grab();
                 })
-                .turn(parkSide*90)
-                .splineToLinearHeading(new Pose2d(64, isBlue*64, Math.toRadians(180)), 0)
+                .turn(isBlue*90)
+                .splineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)), 0)
                 .build();
         drive.followTrajectorySequence(wholeAutoMode);
     }
@@ -314,10 +311,10 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     private void colorProcess() { // get pose estimate, add second one
 
         status++;
-        if (detector.getColor() == "RED") {
+        if (Objects.equals(detector.getColor(), "RED")) {
             isBlue = 0;
             pose3 = drive.getPoseEstimate();
-        } else if (detector.getColor() == "BLUE") {
+        } else if (Objects.equals(detector.getColor(), "BLUE")) {
             isBlue = 1;
             Pose2d thing = drive.getPoseEstimate();
             pose3 = new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180));
@@ -327,8 +324,6 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
 
     private void outputTelemetry() {
         // TODO: Also output to .log file.
-//        teleLogging("---------April Tag Data----------");
-//        aprilTagTelemetry();
         teleLogging(String.valueOf(itemSector));
         teleData("status: ", status);
         teleLogging("---------IMU Data----------");

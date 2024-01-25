@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.drive.opmode.subsystems;
 import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -11,7 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.ArrayList;
 import java.util.function.IntSupplier;
 public class InputOutput {
-    DcMotor pivot;
+    DcMotorEx pivot;
     DcMotor slide;
     Servo clawL;
     Servo clawR;
@@ -32,25 +33,29 @@ public class InputOutput {
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-    private final int[] levelsPivot = {0, 140, 440, 464};
+    private final int[] levelsPivot = {480, 375, 0, 0}; // ground, outward, board, at rest.
     private final int[] anggleLevels = {90, 45, 120, 90};
     double targetAngle;
-    private double kP;
-    private double kI;
+    private double kP ;
+    private double kI ;
     private double kD;
-    private double kCos;
+    private double kCos ;
+//private double kP = 0;
+//    private double kI = 0;
+//    private double kD = 0;
+//    private double kCos = 0;
     ElapsedTime timer;
     double integralSum;
     int lastError;
-    public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot, double kP, double kI, double kD, double kCos) {
-        pivot = hw.get(DcMotor.class, "pivot");
+    public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot) {
+        pivot = hw.get(DcMotorEx.class, "pivot");
         timer = new ElapsedTime();
         // startup position is 0
 //        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         pivot.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         // make sure it can hold itself up
         pivot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        pivot.setDirection(DcMotorSimple.Direction.REVERSE);
+        pivot.setDirection(DcMotorSimple.Direction.REVERSE);
 
         slide = hw.get(DcMotor.class, "slide");
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -69,15 +74,8 @@ public class InputOutput {
         }
         this.maxPowerSlide = maxPowerSlide;
         this.maxPowerPivot = maxPowerPivot;
-        this.kP = kP;
-        this.kI = kI;
-        this.kD = kD;
-        this.kCos = kCos;
-    }
-    public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot) {
-        this(hw, autoFillLevels, maxPowerSlide, maxPowerPivot, 0.00095, 0.0002, 0.0000025,0.000425);
-    }
 
+    }
     // Adds new level with associated encoder position
     // returns object to enable method chaining
     public InputOutput addLevel(int encoderPos) {
@@ -143,10 +141,6 @@ public class InputOutput {
 //            pivot.setPower(0);
 //        }
     }
-    public void ground() {
-        setAngle(0);
-        wrist.setPosition(.47);
-    }
     public void setup () {
         wrist.setPosition(.47);
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -154,7 +148,11 @@ public class InputOutput {
         pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         slide.setTargetPosition(0);
-        this.setAngle(0);
+        this.setAngle(3);
+    }
+    public void ground() {
+        setAngle(0);
+        wrist.setPosition(.47);
     }
     public void rest() {
         setAngle(3);
