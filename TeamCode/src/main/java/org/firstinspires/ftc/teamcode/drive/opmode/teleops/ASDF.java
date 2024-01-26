@@ -9,10 +9,12 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 
@@ -27,6 +29,7 @@ import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 @Config
 public class ASDF extends LinearOpMode {
     FtcDashboard dashboard;
+    boolean runningPID;
     boolean isDepressedUp = false;
     boolean isDepressedDown = false;
     boolean isDepressedBack = false;
@@ -34,11 +37,22 @@ public class ASDF extends LinearOpMode {
     boolean wasDownPressed;
     Telemetry tm;
     boolean wasBackPressed;
+    public static double Kp = 0.6;
+    public static double Ki = 0;
+    public static double Kd = 0.048;
+
     public static double kP = 0.0004625;
     public static double kI = 0.000001;
     public static double kD = 0;
     public static double kCos = -0.00003;
     ElapsedTime timer = new ElapsedTime();
+    double botHeading;
+    double error;
+    double tolerance = 3;
+    double integralSum=0;
+    double lastError = 0;
+    double derivative;
+    double rx;
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
@@ -46,6 +60,7 @@ public class ASDF extends LinearOpMode {
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
         Servo droneRelease = hardwareMap.get(Servo.class, "droneRelease");
         DcMotor winch = hardwareMap.get(DcMotor.class, "winch");
+        IMU imu = hardwareMap.get(IMU.class, "imu");
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         Servo hook = hardwareMap.get(Servo.class, "hook");
@@ -68,13 +83,36 @@ public class ASDF extends LinearOpMode {
         waitForStart();
 
         while (!isStopRequested()) {
+            botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            if (gamepad1.back) {
+                runningPID = true;
+            }
+            if (!runningPID) {
+                rx = -gamepad1.right_stick_x;
+            } else {
+                if (Math.abs(botHeading - Math.toRadians(-90)) < tolerance){
+                    runningPID =  false;
+                }
+                else {
+                    error = Math.toRadians(-90)-botHeading;
+                    integralSum = integralSum + (error * timer.seconds());
+                    derivative = (error - lastError)/timer.seconds();
+
+                    rx = (Kp * error) + (Ki * integralSum) + (Kd * derivative);
+
+                    lastError = error;
+
+                    timer.reset();
+                }
+            }
             drive.setWeightedDrivePower(
                     new Pose2d(
                             -gamepad1.left_stick_y,
                             -gamepad1.left_stick_x,
-                            -gamepad1.right_stick_x
+                            rx
                     )
             );
+
             if (gamepad1.dpad_left) {
                 wrist.setPosition(0);
             } else if (gamepad1.dpad_right) {

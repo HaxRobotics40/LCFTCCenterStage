@@ -26,14 +26,14 @@ public class InputOutput {
     private int tolerance = 25;
     // most recent target level
     private int targetLevel = 0;
-    private final int tolerancePivot = 2;
+    private final int tolerancePivot = 8;
     private int degAngle = 0;
     int currentPos;
     private final double ticksPerDeg = 3.9581;
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-    private final int[] levelsPivot = {450, 350, 40, 0}; // ground, outward, board, at rest.
+    private final int[] levelsPivot = {450, 350, 0, 0}; // ground, outward, board, at rest.
     private final int[] anggleLevels = {90, 45, 90, 90};
     double targetAngle;
     private double kP ;
@@ -158,22 +158,22 @@ public class InputOutput {
     }
     public void ground() {
         setAngle(0);
-        wrist.setPosition(.89);
+        wrist.setPosition(1);
     }
     public void rest() {
         setAngle(3);
         goTo(0);
-        wrist.setPosition(0);
+        if (atAngle()) { wrist.setPosition(0); }
     }
     public void board() { // 60 deg
         setAngle(2);
-        wrist.setPosition(.89);
+        wrist.setPosition(1);
 
     }
     public void out() {
         setAngle(1);
         goTo(0);
-        wrist.setPosition(0);
+        if (atAngle()) { wrist.setPosition(0); }
     }
     public void grab() {
         clawL.setPosition(.6);
@@ -187,7 +187,7 @@ public class InputOutput {
 
     public void grabLeft() { clawL.setPosition(.6); }
     public void grabRight() {
-        clawR.setPosition(.8);
+        clawR.setPosition(1);
     }
     public void releaseLeft() {
         clawL.setPosition(.84);
@@ -208,25 +208,30 @@ public class InputOutput {
 //        } else {
 //            pivot.setPower(0);
 //        }
+        double output = kCos * Math.cos(targetAngle);
+
+        currentPos = pivot.getCurrentPosition();
+        int error = targetPosition - currentPos;
+
+        double derivative = (error - lastError) / timer.seconds();
+
+        integralSum = integralSum + (error * timer.seconds());
+
+        output += (kP * error) + (kI * integralSum) + (kD * derivative);
+
         if (!ground) {
-            double output = kCos * Math.cos(targetAngle);
-
-            currentPos = pivot.getCurrentPosition();
-            int error = targetPosition - currentPos;
-
-            double derivative = (error - lastError) / timer.seconds();
-
-            integralSum = integralSum + (error * timer.seconds());
-
-            output += (kP * error) + (kI * integralSum) + (kD * derivative);
-
             pivot.setPower(output);
-
-            lastError = error;
-            timer.reset();
-        } else {
+        } else if (ground && error > 20) {
+            pivot.setPower(output);
+        } else if (ground && error < 20) {
             pivot.setPower(0);
         }
+
+        lastError = error;
+        timer.reset();
+
+
+
 
 
         if (targetLevel == -1) {

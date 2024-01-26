@@ -49,7 +49,7 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
     InputOutput arm;
     int status;
     int itemSector;
-    Pose2d startPose = new Pose2d(12,-66, Math.toRadians(270));
+    Pose2d startPose;
     double distForward;
     int isBlue = -1;
     int parkSide = -1;
@@ -79,8 +79,12 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
 
                 if (detector.getColor() == "RED") {
                     isBlue = -1;
+                    startPose = new Pose2d(12,-66, Math.toRadians(270));
+                    drive.setPoseEstimate(startPose);
                 } else if (detector.getColor() == "BLUE") {
                     isBlue = 1;
+                    startPose = new Pose2d(12,66, Math.toRadians(90));
+                    drive.setPoseEstimate(startPose);
                 }
 
                 if (detector.locationInt() != -1) {
@@ -95,22 +99,6 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             wholeAutoMode = drive.trajectorySequenceBuilder(startPose)
-                    .addTemporalMarker(() -> {
-                        boolean stop = false;
-                        while (!stop) {
-                            if (detector.locationInt() != -1) {
-                                itemSector = detector.locationInt();
-                                //TODO: run a couple times, area of mask is sufficient, find most common of 20 or so frames
-                                vPortal.stopStreaming();
-                                stop = true;
-                            }
-                            if (isBlue == 1) {
-                                Pose2d thing = drive.getPoseEstimate();
-                                drive.setPoseEstimate(new Pose2d(thing.getX(), -1*thing.getY(), thing.getHeading()+Math.toRadians(180)));
-                            }
-                            drive.update();
-                        }
-                    })
                     .lineToLinearHeading(new Pose2d(12, isBlue*43, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
                     .addTemporalMarker(() -> {
                         arm.ground();
@@ -119,7 +107,7 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
                     .waitSeconds(0.75)
                     .addTemporalMarker(() -> {
                         arm.rest();
-                        arm.grab();
+//                        arm.grab();
                     })
                     .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(0)))
                     .lineTo(new Vector2d(48, 36*isBlue))
