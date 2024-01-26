@@ -18,7 +18,7 @@ public class InputOutput {
     Servo clawR;
     Servo hook;
     Servo wrist;
-    int posInt;
+    boolean ground;
     int targetPosition;
     // positions of arm
     private final ArrayList<Integer> levels;
@@ -33,8 +33,8 @@ public class InputOutput {
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-    private final int[] levelsPivot = {480, 375, 0, 0}; // ground, outward, board, at rest.
-    private final int[] anggleLevels = {90, 45, 120, 90};
+    private final int[] levelsPivot = {450, 350, 40, 0}; // ground, outward, board, at rest.
+    private final int[] anggleLevels = {90, 45, 90, 90};
     double targetAngle;
     private double kP ;
     private double kI ;
@@ -134,6 +134,11 @@ public class InputOutput {
     private void setAngle(int levelPivot) { // can change if 0 ticks isn't 0 deg actually
         targetAngle = Math.toRadians(anggleLevels[levelPivot]);
         targetPosition = (levelsPivot[levelPivot]);
+        if(levelPivot ==0) {
+            ground = true;
+        } else {
+            ground = false;
+        }
 //        pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 //        if (Math.abs(pivot.getCurrentPosition() - pivot.getTargetPosition()) > 4) {
 //            pivot.setPower(maxPowerPivot * Math.signum((double) levelsPivot[levelPivot] - pivot.getCurrentPosition()));
@@ -142,17 +147,18 @@ public class InputOutput {
 //        }
     }
     public void setup () {
-        wrist.setPosition(.47);
+        wrist.setPosition(0);
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         slide.setTargetPosition(0);
+        this.grab();
         this.setAngle(3);
     }
     public void ground() {
         setAngle(0);
-        wrist.setPosition(.47);
+        wrist.setPosition(.89);
     }
     public void rest() {
         setAngle(3);
@@ -161,7 +167,7 @@ public class InputOutput {
     }
     public void board() { // 60 deg
         setAngle(2);
-        wrist.setPosition(.47);
+        wrist.setPosition(.89);
 
     }
     public void out() {
@@ -170,24 +176,24 @@ public class InputOutput {
         wrist.setPosition(0);
     }
     public void grab() {
-        clawL.setPosition(.15);
-        clawR.setPosition(.56);
+        clawL.setPosition(.6);
+        clawR.setPosition(.8);
     }
 
     public void release() {
-        clawL.setPosition(.9);
-        clawR.setPosition(1);
+        clawL.setPosition(.84);
+        clawR.setPosition(.64);
     }
 
-    public void grabLeft() { clawL.setPosition(.75); }
+    public void grabLeft() { clawL.setPosition(.6); }
     public void grabRight() {
-        clawR.setPosition(.56);
+        clawR.setPosition(.8);
     }
     public void releaseLeft() {
-        clawL.setPosition(.9);
+        clawL.setPosition(.84);
     }
     public void releaseRight() {
-        clawR.setPosition(1);
+        clawR.setPosition(.64);
     }
     // check if arm is at target, stopping it if it is
     public void update() {
@@ -202,21 +208,25 @@ public class InputOutput {
 //        } else {
 //            pivot.setPower(0);
 //        }
-        double output = kCos * Math.cos(targetAngle);
+        if (!ground) {
+            double output = kCos * Math.cos(targetAngle);
 
-        currentPos = pivot.getCurrentPosition();
-        int error = targetPosition - currentPos;
+            currentPos = pivot.getCurrentPosition();
+            int error = targetPosition - currentPos;
 
-        double derivative = (error - lastError) / timer.seconds();
+            double derivative = (error - lastError) / timer.seconds();
 
-        integralSum = integralSum + (error * timer.seconds());
+            integralSum = integralSum + (error * timer.seconds());
 
-        output += (kP*error) + (kI*integralSum) + (kD*derivative);
+            output += (kP * error) + (kI * integralSum) + (kD * derivative);
 
-        pivot.setPower(output);
+            pivot.setPower(output);
 
-        lastError = error;
-        timer.reset();
+            lastError = error;
+            timer.reset();
+        } else {
+            pivot.setPower(0);
+        }
 
 
         if (targetLevel == -1) {

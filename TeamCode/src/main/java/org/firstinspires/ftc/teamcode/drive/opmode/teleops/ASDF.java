@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 
@@ -31,11 +32,12 @@ public class ASDF extends LinearOpMode {
     boolean isDepressedBack = false;
     boolean wasUpPressed;
     boolean wasDownPressed;
+    Telemetry tm;
     boolean wasBackPressed;
-    public static double kP = 0.0001;
-    public static double kI = 0;
+    public static double kP = 0.0004625;
+    public static double kI = 0.000001;
     public static double kD = 0;
-    public static double kCos = 0;
+    public static double kCos = -0.00003;
     ElapsedTime timer = new ElapsedTime();
     @Override
     public void runOpMode() throws InterruptedException {
@@ -72,23 +74,26 @@ public class ASDF extends LinearOpMode {
                             -gamepad1.left_stick_x,
                             -gamepad1.right_stick_x
                     )
-            );if (gamepad1.dpad_left) {
-                wrist.setPosition(wrist.getPosition()-.01);
+            );
+            if (gamepad1.dpad_left) {
+                wrist.setPosition(0);
             } else if (gamepad1.dpad_right) {
-                wrist.setPosition(wrist.getPosition()+.01);
+                wrist.setPosition(.89);
             }
             // analog up/down for pivot & arm & wrist
 
 
             if (gamepad1.left_bumper) {
-                clawL.setPosition(clawL.getPosition()+.01);
+//                clawL.setPosition(clawL.getPosition()+.01);
+                arm.grabLeft();
             } else if (gamepad1.left_trigger > .1) {
-                clawL.setPosition(clawL.getPosition()-.01);
+//                clawL.setPosition(clawL.getPosition()-.01);
+                arm.releaseLeft();
             }
             if (gamepad1.right_bumper) {
-                clawR.setPosition(clawR.getPosition()+.01);
+                arm.grabRight();
             } else if (gamepad1.right_trigger > .1) {
-                clawR.setPosition(clawR.getPosition()-.01);
+                arm.releaseRight();
             }
 
             if (gamepad1.dpad_up) {
@@ -106,42 +111,13 @@ public class ASDF extends LinearOpMode {
             if (gamepad1.x) {
                 arm.ground();
             } else if (gamepad1.y) {
-                arm.rest();
+                arm.out();
             } else if (gamepad1.b) {
                 arm.board();
+            } else if (gamepad1.a) {
+                arm.rest();
             }
 
-//            if (gamepad1.x) {
-//                pivot.setTargetPosition(0);
-//                pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//                if (pivot.getCurrentPosition() < -5) {
-//                    pivot.setPower(0.05);
-//                } else if (pivot.getCurrentPosition() > 5){
-//                    pivot.setPower(-0.05);
-//                }
-//                else {
-//                    pivot.setPower(0); }
-//            } else if (gamepad1.b) {
-//                pivot.setTargetPosition(65);
-//                pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//                if (pivot.getCurrentPosition() < 60) {
-//                    pivot.setPower(0.05);
-//                } else if (pivot.getCurrentPosition() > 70){
-//                    pivot.setPower(-0.05);
-//                }
-//                else {
-//                    pivot.setPower(0); }
-//            } else if (gamepad1.y) {
-//                pivot.setTargetPosition(177);
-//                pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//                if (pivot.getCurrentPosition() < 172) {
-//                    pivot.setPower(0.05);
-//                } else if (pivot.getCurrentPosition() > 182){
-//                    pivot.setPower(-0.05);
-//                }
-//                else {
-//                pivot.setPower(0); }
-//            }
 
 
 
@@ -156,9 +132,9 @@ public class ASDF extends LinearOpMode {
                 hook.setPosition(1);
             }
 
-            if (timer.time() > 90 && gamepad2.right_trigger > .5) {
+            if (gamepad2.right_trigger > .5) {
                 winch.setPower(1);
-            } else if (timer.time() > 90 && gamepad2.left_trigger > .5) {
+            } else if (gamepad2.left_trigger > .5) {
                 winch.setPower(-1);
             } else {
                 winch.setPower(0);
@@ -217,8 +193,8 @@ public class ASDF extends LinearOpMode {
             telemetry.addData("Motor Power", arm.getPivotPower());
 //            telemetry.addData("Wrist Position", wrist.getPosition());
 //            telemetry.addData()
-//            telemetry.addData("Wrist Pos", wrist.getPosition());
-//            telemetry.addData("Claw L & R Pos", arm.getLeftPos() + " "  + arm.getRightPos());
+            telemetry.addData("Wrist Pos", wrist.getPosition());
+            telemetry.addData("Claw L & R Pos", arm.getLeftPos() + " "  + arm.getRightPos());
             telemetry.update();
 
         }
