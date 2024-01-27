@@ -106,24 +106,18 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
                         arm.ground();
                         while (!arm.atAngle()) {
                             arm.update();
-                            drive.update();
                         }
-                        arm.releaseLeft();
                     })
-                    .waitSeconds(0.25)
+                    .waitSeconds(1)
                     .addDisplacementMarker(() -> {
-                        arm.rest();
-                        while (!arm.atAngle()) {
-                            arm.update();
-                            drive.update();
-                        }
-//                        arm.grab();
+                        arm.releaseLeft();
+                        arm.setAngle(1);
                     })
+                    .waitSeconds(1)
                     .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(180)))
                     .lineTo(new Vector2d(48, 36*isBlue))
                     .strafeLeft(((itemSector-1)*5.25)-2)
                     .build();
-            drive.followTrajectorySequence(wholeAutoMode);
 
             while (opModeIsActive()) {
                 opModeLoop();
@@ -143,22 +137,21 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
                 status++;
                 break;
             case 1:
-                    double wantedDistance = 3; // how far away you want the robot to go
-                    double thresholdDistanceInches = 0.1;
+                double wantedDistance = 3; // how far away you want the robot to go
+                double thresholdDistanceInches = 0.1;
 
+                distForward = sensorDistance.getDistance(DistanceUnit.INCH);
+
+                if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
                     distForward = sensorDistance.getDistance(DistanceUnit.INCH);
-
-                    if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
-                        distForward = sensorDistance.getDistance(DistanceUnit.INCH);
-                        if (Math.abs(distForward-wantedDistance) > thresholdDistanceInches) {
-                            output = wantedDistance - distForward;
-                        }
+                    if (Math.abs(distForward-wantedDistance) > thresholdDistanceInches) {
+                        output = wantedDistance - distForward;
                     }
-                    else{
-                        output = 0.1;
-                    }
-                    Pose2d lastPos = drive.getPoseEstimate();
-                    distanceSensePose = (new Pose2d(72-(distForward+16.52), lastPos.getY(), lastPos.getHeading()));
+                } else {
+                    output = 0.1;
+                }
+                Pose2d lastPos = drive.getPoseEstimate();
+                distanceSensePose = (new Pose2d(72-(distForward+16.52), lastPos.getY(), lastPos.getHeading()));
                 status++;
                 break;
             case 2:
@@ -166,29 +159,27 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
                         .forward(-output) // this is going to cause an error because when inited it will be an emptypathsegment
                         .addDisplacementMarker(() -> {
                             arm.board();
-                            while (!arm.atAngle()) {
-                                arm.update();
-                                drive.update();
-                            }
+                        })
+                        .waitSeconds(1)
+                        .addDisplacementMarker(() -> {
                             arm.release();
                         })
                         .waitSeconds(0.25)
                         .addDisplacementMarker(() -> {
                             arm.rest();
-                            while (!arm.atAngle()) {
-                                arm.update();
-                                drive.update();
-                            }
                             arm.grab();
                         })
-                        .turn(isBlue*90)
+                        .turn(Math.toRadians(isBlue*90))
                         .lineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)))
                         .build();
                 status++;
                 break;
             case 3:
                 drive.followTrajectorySequence(afterDistSense);
-
+                status++;
+                break;
+            case 4:
+                break;
         }
         arm.update();
         drive.update();

@@ -33,7 +33,7 @@ public class InputOutput {
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-    private final int[] levelsPivot = {450, 350, 270, 0}; // ground, outward, board, at rest.
+    private final int[] levelsPivot = {450, 350, 270, 0}; // ground, outward, fboard, at rest.
     private final int[] anggleLevels = {90, 45, 60, 90};
     double targetAngle;
     private double kP ;
@@ -131,7 +131,7 @@ public class InputOutput {
         goTo(supplier.getAsInt());
     }
 
-    private void setAngle(int levelPivot) { // can change if 0 ticks isn't 0 deg actually
+    public void setAngle(int levelPivot) { // can change if 0 ticks isn't 0 deg actually
         targetAngle = Math.toRadians(anggleLevels[levelPivot]);
         targetPosition = (levelsPivot[levelPivot]);
         if(levelPivot ==0) {
@@ -160,14 +160,18 @@ public class InputOutput {
         setAngle(0);
         wrist.setPosition(.95);
     }
+    public void frontBoard() {
+        setAngle(2);
+        wrist.setPosition(1);
+    }
     public void rest() {
         setAngle(3);
         goTo(0);
         if (atAngle()) { wrist.setPosition(0); }
     }
     public void board() { // 60 deg
-        setAngle(2);
-        wrist.setPosition(1);
+        setAngle(3);
+        wrist.setPosition(.95);
 
     }
     public void out() {
