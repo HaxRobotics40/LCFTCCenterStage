@@ -33,8 +33,8 @@ public class InputOutput {
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-    private final int[] levelsPivot = {450, 350, 0, 0}; // ground, outward, board, at rest.
-    private final int[] anggleLevels = {90, 45, 90, 90};
+    private final int[] levelsPivot = {450, 350, 270, 0}; // ground, outward, board, at rest.
+    private final int[] anggleLevels = {90, 45, 60, 90};
     double targetAngle;
     private double kP ;
     private double kI ;
@@ -158,7 +158,7 @@ public class InputOutput {
     }
     public void ground() {
         setAngle(0);
-        wrist.setPosition(1);
+        wrist.setPosition(.95);
     }
     public void rest() {
         setAngle(3);
@@ -176,24 +176,24 @@ public class InputOutput {
         if (atAngle()) { wrist.setPosition(0); }
     }
     public void grab() {
-        clawL.setPosition(.6);
-        clawR.setPosition(.8);
+        clawL.setPosition(.15);
+        clawR.setPosition(.4);
     }
 
     public void release() {
-        clawL.setPosition(.84);
-        clawR.setPosition(.64);
+        clawL.setPosition(.4);
+        clawR.setPosition(.2);
     }
 
-    public void grabLeft() { clawL.setPosition(.6); }
+    public void grabLeft() { clawL.setPosition(.15); }
     public void grabRight() {
-        clawR.setPosition(1);
+        clawR.setPosition(.4);
     }
     public void releaseLeft() {
-        clawL.setPosition(.84);
+        clawL.setPosition(.4);
     }
     public void releaseRight() {
-        clawR.setPosition(.64);
+        clawR.setPosition(.2);
     }
     // check if arm is at target, stopping it if it is
     public void update() {

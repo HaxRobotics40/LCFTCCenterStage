@@ -35,6 +35,7 @@ public class MeepMeepTesting {
                                 .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(0)))
                                 .lineTo(new Vector2d(48, 36*isBlue))
                                 .strafeRight(((itemSector-1)*5.25)-2)
+                                .splineToLinearHeading(new Pose2d(64, isBlue*(36+(-1*20)), Math.toRadians(isBlue*90)), 0)
                                 .build()
                 );
         meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_JUICE_DARK)

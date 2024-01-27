@@ -71,9 +71,8 @@ public class ASDF extends LinearOpMode {
         Servo clawR = hardwareMap.get(Servo.class, "clawR");
         slide.setDirection(DcMotorSimple.Direction.REVERSE);
  //finql
-        clawL.setPosition(.85); // open
-        clawR.setPosition(.75); // open 1, close .56
-        wrist.setPosition(.85);
+        arm.grab();
+        wrist.setPosition(0);
 //        pivot.setTargetPosition(0);
 //        pivot.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -116,33 +115,18 @@ public class ASDF extends LinearOpMode {
             if (gamepad1.dpad_left) {
                 wrist.setPosition(0);
             } else if (gamepad1.dpad_right) {
-                wrist.setPosition(.89);
+                wrist.setPosition(.95);
             }
             // analog up/down for pivot & arm & wrist
 
 
             if (gamepad1.left_bumper) {
-//                clawL.setPosition(clawL.getPosition()+.01);
-                arm.grabLeft();
-            } else if (gamepad1.left_trigger > .1) {
-//                clawL.setPosition(clawL.getPosition()-.01);
-                arm.releaseLeft();
-            }
+//                arm.grabLeft();
+                arm.grab(); }
             if (gamepad1.right_bumper) {
-                arm.grabRight();
-            } else if (gamepad1.right_trigger > .1) {
-                arm.releaseRight();
+                arm.release();
             }
 
-            if (gamepad1.dpad_up) {
-                slide.setTargetPosition(slide.getCurrentPosition()+5);
-                slide.setPower(.75);
-            } else if (gamepad1.dpad_down) {
-                slide.setTargetPosition(slide.getCurrentPosition()-5);
-                slide.setPower(-.75);
-            } else {
-                slide.setPower(0);
-            }
 //
 //
 
@@ -190,23 +174,17 @@ public class ASDF extends LinearOpMode {
 
             buttonPressedDown();
             buttonPressedUp();
-//            if (wasUpPressed) {
-//                if (arm.getLevel() < 3) {
-//                    arm.goTo(arm.getLevel() + 1);
-//                    wasUpPressed = false; }
-//            } else if (wasDownPressed) {
-//                if (arm.getLevel() > 0) {
-//                    arm.goTo(arm.getLevel() - 1);
-//                    wasDownPressed = false; }
-//            }
+            if (wasUpPressed) {
+                if (arm.getLevel() < 3) {
+                    arm.goTo(arm.getLevel() + 1);
+                    wasUpPressed = false; }
+            } else if (wasDownPressed) {
+                if (arm.getLevel() > 0) {
+                    arm.goTo(arm.getLevel() - 1);
+                    wasDownPressed = false; }
+            }
                 arm.getNewPIDF(kP, kI, kD, kCos);
-//            if (gamepad2.x) {
-//                arm.ground();
-//            } else if (gamepad2.y) {
-//                arm.board();
-//            } else if (gamepad2.b) {
-//                arm.rest();
-//            }
+//
 //
 //            if (gamepad2.left_bumper) {
 //                arm.release();
@@ -216,7 +194,7 @@ public class ASDF extends LinearOpMode {
 //
 //
 //
-//            drive.update();
+            drive.update();
             arm.update();
 
             Pose2d poseEstimate = drive.getPoseEstimate();

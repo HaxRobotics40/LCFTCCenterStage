@@ -37,12 +37,12 @@ public class testEOCVpipeline implements VisionProcessor {
         Scalar[] lower_RB = {
                 new Scalar(0, 90, 70),
                 new Scalar(70, 70, 50),
-                new Scalar(160,140,145)
+                new Scalar(170,20,110)
         };
         Scalar[] upper_RB = {
                 new Scalar(7, 205, 225),
-                new Scalar(150, 220, 170),
-                new Scalar(190,190,205)
+                new Scalar(150, 220, 220),
+                new Scalar(180,130,180)
         };
 
 
@@ -149,16 +149,6 @@ public class testEOCVpipeline implements VisionProcessor {
         double midline = 0.5 * width;
 
         return edges;
-    }
-    public enum obtainedLocation {
-        ERROR(-1),
-        START(0),
-        LEFT(1),
-        MIDDLE(2),
-        RIGHT(3);
-        int val;
-        obtainedLocation(int i) {int val = i;}
-        public int val() {return val;}
     }
     public String getColor() { return color; }
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight,float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {}

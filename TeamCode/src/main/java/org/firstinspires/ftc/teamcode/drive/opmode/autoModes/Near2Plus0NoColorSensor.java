@@ -53,15 +53,16 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
     double distForward;
     int isBlue = -1;
     int parkSide = -1;
-    double output;
+    double output = 0.1;
     Pose2d distanceSensePose;
     TrajectorySequence afterDistSense;
     TrajectorySequence wholeAutoMode;
+    TrajectorySequence distSense;
     @Override
     public void runOpMode() throws InterruptedException {
         arm = new InputOutput(hardwareMap, true, .5, .5);
         vPortal = initVisionPortal();
-        arm.rest();
+        arm.setup();
         setupIMU();
         setupDistanceSensor();
         vPortal.setProcessorEnabled(detector, true);
@@ -93,6 +94,7 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
                 telemetry.addData("Parking side", parkSide);
                 telemetry.addData("Location", detector.locationInt());
                 telemetry.addData("Color", detector.getColor());
+                telemetry.addData("Pose estimate", drive.getPoseEstimate().toString());
                 telemetry.update();
             }
         }
@@ -100,34 +102,28 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
         if (opModeIsActive()) {
             wholeAutoMode = drive.trajectorySequenceBuilder(startPose)
                     .lineToLinearHeading(new Pose2d(12, isBlue*43, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
-                    .addTemporalMarker(() -> {
+                    .addDisplacementMarker(() -> {
                         arm.ground();
+                        while (!arm.atAngle()) {
+                            arm.update();
+                            drive.update();
+                        }
                         arm.releaseLeft();
                     })
-                    .waitSeconds(0.75)
-                    .addTemporalMarker(() -> {
+                    .waitSeconds(0.25)
+                    .addDisplacementMarker(() -> {
                         arm.rest();
+                        while (!arm.atAngle()) {
+                            arm.update();
+                            drive.update();
+                        }
 //                        arm.grab();
                     })
-                    .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(0)))
+                    .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(180)))
                     .lineTo(new Vector2d(48, 36*isBlue))
-                    .strafeRight(((itemSector-1)*5.25)-2)
-                    .addDisplacementMarker(() -> {
-                        double wantedDistance = 3; // how far away you want the robot to go
-                        double thresholdDistanceInches = 0.1;
-
-                        distForward = sensorDistance.getDistance(DistanceUnit.INCH);
-
-                        if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) { distForward = sensorDistance.getDistance(DistanceUnit.INCH); }
-                        if (Math.abs(distForward-wantedDistance) > thresholdDistanceInches) {
-                            output = wantedDistance - distForward;
-                        } else {
-                            output = 0.1;
-                        }
-                        status++;
-                        distanceSensePose = (new Pose2d(drive.getPoseEstimate().getX(), 72-(distForward+16.52), drive.getPoseEstimate().getHeading()));
-                    })
+                    .strafeLeft(((itemSector-1)*5.25)-2)
                     .build();
+            drive.followTrajectorySequence(wholeAutoMode);
 
             while (opModeIsActive()) {
                 opModeLoop();
@@ -144,27 +140,58 @@ public class Near2Plus0NoColorSensor extends LinearOpMode {
     private void opModeLoop() {
         switch (status) {
             case 0: drive.followTrajectorySequence(wholeAutoMode);
+                status++;
                 break;
             case 1:
-                afterDistSense = drive.trajectorySequenceBuilder(distanceSensePose)
-                        .forward(output) // this is going to cause an error because when inited it will be an emptypathsegment
-                        .addTemporalMarker(() -> {
-                            arm.board();
-                            arm.release();
-                        })
-                        .waitSeconds(0.75)
-                        .addTemporalMarker(() -> {
-                            arm.rest();
-                            arm.grab();
-                        })
-                        .turn(isBlue*90)
-                        .splineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)), 0)
-                        .build();
+                    double wantedDistance = 3; // how far away you want the robot to go
+                    double thresholdDistanceInches = 0.1;
+
+                    distForward = sensorDistance.getDistance(DistanceUnit.INCH);
+
+                    if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
+                        distForward = sensorDistance.getDistance(DistanceUnit.INCH);
+                        if (Math.abs(distForward-wantedDistance) > thresholdDistanceInches) {
+                            output = wantedDistance - distForward;
+                        }
+                    }
+                    else{
+                        output = 0.1;
+                    }
+                    Pose2d lastPos = drive.getPoseEstimate();
+                    distanceSensePose = (new Pose2d(72-(distForward+16.52), lastPos.getY(), lastPos.getHeading()));
                 status++;
                 break;
             case 2:
+                afterDistSense = drive.trajectorySequenceBuilder(distanceSensePose)
+                        .forward(-output) // this is going to cause an error because when inited it will be an emptypathsegment
+                        .addDisplacementMarker(() -> {
+                            arm.board();
+                            while (!arm.atAngle()) {
+                                arm.update();
+                                drive.update();
+                            }
+                            arm.release();
+                        })
+                        .waitSeconds(0.25)
+                        .addDisplacementMarker(() -> {
+                            arm.rest();
+                            while (!arm.atAngle()) {
+                                arm.update();
+                                drive.update();
+                            }
+                            arm.grab();
+                        })
+                        .turn(isBlue*90)
+                        .lineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)))
+                        .build();
+                status++;
+                break;
+            case 3:
                 drive.followTrajectorySequence(afterDistSense);
+
         }
+        arm.update();
+        drive.update();
     }
 
     private void setupIMU() {
