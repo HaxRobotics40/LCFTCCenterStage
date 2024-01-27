@@ -112,31 +112,31 @@ public class ASDF extends LinearOpMode {
                     )
             );
 
-            if (gamepad1.dpad_left) {
+            if (gamepad2.dpad_left) {
                 wrist.setPosition(0);
-            } else if (gamepad1.dpad_right) {
+            } else if (gamepad2.dpad_right) {
                 wrist.setPosition(.95);
             }
             // analog up/down for pivot & arm & wrist
 
 
-            if (gamepad1.left_bumper) {
+            if (gamepad2.left_bumper) {
 //                arm.grabLeft();
                 arm.grab(); }
-            if (gamepad1.right_bumper) {
+            if (gamepad2.right_bumper) {
                 arm.release();
             }
 
 //
 //
 
-            if (gamepad1.x) {
+            if (gamepad2.x) {
                 arm.ground();
-            } else if (gamepad1.y) {
+            } else if (gamepad2.y) {
                 arm.out();
-            } else if (gamepad1.b) {
+            } else if (gamepad2.b) {
                 arm.board();
-            } else if (gamepad1.a) {
+            } else if (gamepad2.a) {
                 arm.rest();
             }
 
