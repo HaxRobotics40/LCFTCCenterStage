@@ -147,7 +147,6 @@ public class ASDF extends LinearOpMode {
 
 
 
-
             if (gamepad2.a) {
                 hook.setPosition(0);
             }
