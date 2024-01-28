@@ -27,7 +27,7 @@ import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
  */
 @TeleOp(group = "drive")
 @Config
-public class ASDF extends LinearOpMode {
+public class testingTeleop extends LinearOpMode {
     FtcDashboard dashboard;
     boolean runningPID;
     boolean isDepressedUp = false;
@@ -79,7 +79,6 @@ public class ASDF extends LinearOpMode {
         arm.setup();
         dashboard = FtcDashboard.getInstance();
         telemetry = dashboard.getTelemetry();
-        droneRelease.setPosition(1);
         waitForStart();
 
         while (!isStopRequested()) {
@@ -114,18 +113,24 @@ public class ASDF extends LinearOpMode {
             );
 
             if (gamepad2.dpad_left) {
-                wrist.setPosition(0);
+                wrist.setPosition(wrist.getPosition() - .01);
             } else if (gamepad2.dpad_right) {
-                wrist.setPosition(.95);
+                wrist.setPosition(wrist.getPosition() + 0.01);
             }
             // analog up/down for pivot & arm & wrist
 
 
             if (gamepad2.left_bumper) {
-//                arm.grabLeft();
-                arm.grab(); }
+//
+                clawL.setPosition(clawL.getPosition()+0.01);
+
+            } else if (gamepad2.left_trigger > 0.1) {
+                clawL.setPosition(clawL.getPosition()-0.01);
+            }
             if (gamepad2.right_bumper) {
-                arm.release();
+                clawR.setPosition(clawR.getPosition()+0.01);
+            }else if (gamepad2.right_trigger > 0.1) {
+                clawR.setPosition(clawR.getPosition()-0.01);
             }
 
 //
@@ -155,15 +160,15 @@ public class ASDF extends LinearOpMode {
                 hook.setPosition(1);
             }
 
-//            if (gamepad2.right_trigger > .5) {
-//                winch.setPower(1);
-//            } else if (gamepad2.left_trigger > .5) {
-//                winch.setPower(-1);
-//            } else {
-//                winch.setPower(0);
-//            }
+            if (gamepad2.right_trigger > .5) {
+                winch.setPower(1);
+            } else if (gamepad2.left_trigger > .5) {
+                winch.setPower(-1);
+            } else {
+                winch.setPower(0);
+            }
 
-            if (gamepad2.left_trigger > 0.1 && gamepad2.right_trigger > 0.1) {
+            if (gamepad2.back) {
                 droneRelease.setPosition(0);
             } else if (gamepad2.start) {
                 droneRelease.setPosition(1);

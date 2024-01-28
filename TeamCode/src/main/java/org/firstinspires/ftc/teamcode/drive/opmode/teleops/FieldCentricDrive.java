@@ -105,7 +105,7 @@ public class FieldCentricDrive extends LinearOpMode {
         while (opModeIsActive()) {
             double y = -gamepad1.left_stick_y; // Y stick value is reversed
             double x = gamepad1.left_stick_x;
-            if (!runningPID) { rx = -gamepad1.right_stick_x; }
+            double rx = gamepad1.right_stick_x;
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference..

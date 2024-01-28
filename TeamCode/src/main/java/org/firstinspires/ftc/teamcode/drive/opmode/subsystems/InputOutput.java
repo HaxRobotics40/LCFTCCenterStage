@@ -158,7 +158,7 @@ public class InputOutput {
     }
     public void ground() {
         setAngle(0);
-        wrist.setPosition(.95);
+        wrist.setPosition(1);
     }
     public void frontBoard() {
         setAngle(2);
@@ -171,7 +171,7 @@ public class InputOutput {
     }
     public void board() { // 60 deg
         setAngle(3);
-        wrist.setPosition(.95);
+        wrist.setPosition(1);
 
     }
     public void out() {
@@ -181,7 +181,7 @@ public class InputOutput {
     }
     public void grab() {
         clawL.setPosition(.15);
-        clawR.setPosition(.4);
+        clawR.setPosition(.45);
     }
 
     public void release() {
@@ -253,6 +253,7 @@ public class InputOutput {
     public int getLevel() {
         return targetLevel;
     }
+    public void setWrist(double position) { wrist.setPosition(position); }
     public int getAngle() {
         return degAngle;
     }
