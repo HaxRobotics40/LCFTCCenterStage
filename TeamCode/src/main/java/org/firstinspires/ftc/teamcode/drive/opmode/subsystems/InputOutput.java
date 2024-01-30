@@ -150,11 +150,11 @@ public class InputOutput {
         wrist.setPosition(0);
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        pivot.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        pivot.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         slide.setTargetPosition(0);
         this.grab();
-        this.setAngle(3);
+        this.rest();
     }
     public void ground() {
         setAngle(0);

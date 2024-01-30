@@ -91,6 +91,10 @@ public class testEOCVpipeline implements VisionProcessor {
         int width = mask.cols(); // Get the width of the mask
         int sectorWidth = width / 3; // Divide it by 3 to get each sector's width
 
+        int height = mask.rows(); // total horizontal rows of pixels, halve it to ignore the background better
+        int targetRegion = height/3;
+        mask = mask.submat(targetRegion, height, 0, mask.cols());
+
 // Define Regions of Interest (ROI) for each sector
         Rect leftSector = new Rect(0, 0, sectorWidth, mask.rows());
         Rect middleSector = new Rect(sectorWidth, 0, sectorWidth, mask.rows());
