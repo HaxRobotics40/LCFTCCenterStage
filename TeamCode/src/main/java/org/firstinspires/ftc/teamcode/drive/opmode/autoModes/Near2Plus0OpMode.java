@@ -4,7 +4,6 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -20,7 +19,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 
 
 @Autonomous(group = "comp")
-public class try2 extends OpMode {
+public class Near2Plus0OpMode extends OpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
     testEOCVpipeline detector = new testEOCVpipeline();

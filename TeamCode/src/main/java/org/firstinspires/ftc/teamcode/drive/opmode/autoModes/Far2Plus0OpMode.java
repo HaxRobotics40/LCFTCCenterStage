@@ -3,7 +3,6 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -17,7 +16,7 @@ import org.firstinspires.ftc.teamcode.drive.opmode.vision.testEOCVpipeline;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
 @Autonomous (group= "comp")
-public class try3 extends OpMode {
+public class Far2Plus0OpMode extends OpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
     testEOCVpipeline detector = new testEOCVpipeline();
@@ -59,11 +58,11 @@ public class try3 extends OpMode {
 
         if (detector.getColor() == "RED") {
             isBlue = -1;
-            startPose = new Pose2d(12,-66, Math.toRadians(270));
+            startPose = new Pose2d(-36,-66, Math.toRadians(270));
             drive.setPoseEstimate(startPose);
         } else if (detector.getColor() == "BLUE") {
             isBlue = 1;
-            startPose = new Pose2d(12,66, Math.toRadians(90));
+            startPose = new Pose2d(-36,66, Math.toRadians(90));
             drive.setPoseEstimate(startPose);
         }
 
