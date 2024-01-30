@@ -1,13 +1,9 @@
 package org.firstinspires.ftc.teamcode.drive.opmode.autoModes;
 
-import static java.lang.Thread.sleep;
-
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -15,7 +11,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 import org.firstinspires.ftc.teamcode.drive.opmode.vision.testEOCVpipeline;
@@ -24,8 +19,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 
 
 @Autonomous(group = "comp")
-@Disabled
-public class nearDropBackstage extends OpMode {
+public class newNearDropBackstage extends OpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
     testEOCVpipeline detector = new testEOCVpipeline();
@@ -69,20 +63,6 @@ public class nearDropBackstage extends OpMode {
     }
 
     public void init_loop() {
-
-        if (gamepad2.dpad_left) {
-            isBlue = -1;
-            startPose = new Pose2d(12,-66, Math.toRadians(270));
-            drive.setPoseEstimate(startPose);
-        } else if (gamepad2.dpad_right) {
-            isBlue = 1;
-            startPose = new Pose2d(12,66, Math.toRadians(90));
-            drive.setPoseEstimate(startPose);
-        }
-
-        if (detector.locationInt() != -1) {
-            itemSector = detector.locationInt();
-        }
         telemetry.addData("Parking side", parkSide);
         telemetry.addData("Location", detector.locationInt());
         telemetry.addData("is it blue?", isBlue);
@@ -159,9 +139,6 @@ public class nearDropBackstage extends OpMode {
 //                break;
 //            case 4:
 //                break;
-
-        arm.update();
-        drive.update();
         telemetry.addData("power", arm.getPivotPower());
         telemetry.addData("target", arm.getTargetPivotPos());
         telemetry.addData("pose", arm.getPivotPos());
