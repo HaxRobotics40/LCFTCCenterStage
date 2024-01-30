@@ -180,25 +180,19 @@ public class InputOutput {
         if (atAngle()) { wrist.setPosition(0); }
     }
     public void grab() {
-        clawL.setPosition(.15);
-        clawR.setPosition(.45);
+        clawL.setPosition(0);
+        clawR.setPosition(.759);
     }
 
     public void release() {
-        clawL.setPosition(.4);
-        clawR.setPosition(.2);
+        clawL.setPosition(.33);
+        clawR.setPosition(.48);
     }
 
-    public void grabLeft() { clawL.setPosition(.15); }
-    public void grabRight() {
-        clawR.setPosition(.4);
-    }
-    public void releaseLeft() {
-        clawL.setPosition(.4);
-    }
-    public void releaseRight() {
-        clawR.setPosition(.2);
-    }
+    public void grabLeft() { clawL.setPosition(0); }
+    public void grabRight() { clawR.setPosition(.759); }
+    public void releaseLeft() {clawL.setPosition(.33);}
+    public void releaseRight() {clawR.setPosition(.48);}
     // check if arm is at target, stopping it if it is
     public void update() {
 
