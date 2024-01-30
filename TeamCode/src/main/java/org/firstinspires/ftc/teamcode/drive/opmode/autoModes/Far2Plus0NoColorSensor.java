@@ -1,7 +1,25 @@
 package org.firstinspires.ftc.teamcode.drive.opmode.autoModes;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.util.RobotLog;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
+import org.firstinspires.ftc.teamcode.drive.opmode.vision.testEOCVpipeline;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
+import org.firstinspires.ftc.vision.VisionPortal;
 
 import android.annotation.SuppressLint;
 import android.util.Size;
+
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
@@ -13,6 +31,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
+
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -27,12 +46,14 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
+
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
+
+
 
 @Autonomous(group = "comp")
-public class Far2Plus0NoColorSensor extends LinearOpMode {
+public class Far2Plus0NoColorSensor extends OpMode {
+
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
     AprilTagProcessor aprilTagProcessor;
@@ -54,8 +75,9 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
     Pose2d distanceSensePose;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
     int parkSide = -1;
+
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void init(){
         arm = new InputOutput(hardwareMap, true, .5, .5);
         vPortal = initVisionPortal();
         arm.rest();
@@ -67,62 +89,56 @@ public class Far2Plus0NoColorSensor extends LinearOpMode {
 
 
         drive = new SampleMecanumDrive(hardwareMap);
-
-//        drive.setPoseEstimate(new Pose2d(-36,-60, Math.toRadians(270)));
-        if (opModeInInit()) {
-            while (opModeInInit()) {
-                if (gamepad1.dpad_left) {
-                    parkSide = 1;
-                } else if (gamepad1.dpad_right) {
-                    parkSide = -1;
-                }
-
-                if (detector.getColor() == "RED") {
-                    isBlue = -1;
-                    startPose = new Pose2d(-36,-66, Math.toRadians(270));
-                    drive.setPoseEstimate(startPose);
-                } else if (detector.getColor() == "BLUE") {
-                    isBlue = 1;
-                    startPose = new Pose2d(-36,66, Math.toRadians(90));
-                    drive.setPoseEstimate(startPose);
-                }
-
-                if (detector.locationInt() != -1) {
-                    itemSector = detector.locationInt();
-                }
-                telemetry.addData("Parking side", parkSide);
-                telemetry.addData("Location", detector.locationInt());
-                telemetry.addData("Color", detector.getColor());
-                telemetry.addData("Pose estimate", drive.getPoseEstimate().toString());
-                telemetry.update();
             }
-        }
-        waitForStart();
-        if (opModeIsActive()) {
-            wholeAutoMode = drive.trajectorySequenceBuilder(startPose)
-                    .lineToLinearHeading(new Pose2d(-36, isBlue*43, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
-                    .addDisplacementMarker(() -> {
-                        arm.ground();
-                    })
-                    .waitSeconds(0.5)
-                    .addDisplacementMarker(() -> {
-                        arm.releaseLeft();
-                        arm.setAngle(1);
-//                        arm.grab();
-                    })
-                    .lineToLinearHeading(new Pose2d(-36, 36*isBlue, Math.toRadians(180)))
-                    .lineTo(new Vector2d(48, 36*isBlue))
-                    .strafeLeft(((itemSector-1)*5.25)-2)
-                    .build();
 
-
-            while (opModeIsActive()) {
-                opModeLoop();
-            }
+    public void init_loop() {
+        if (gamepad1.dpad_left) {
+            parkSide = 1;
+        } else if (gamepad1.dpad_right) {
+            parkSide = -1;
         }
 
+        if (detector.getColor() == "RED") {
+            isBlue = -1;
+            startPose = new Pose2d(-36,-66, Math.toRadians(270));
+            drive.setPoseEstimate(startPose);
+        } else if (detector.getColor() == "BLUE") {
+            isBlue = 1;
+            startPose = new Pose2d(-36,66, Math.toRadians(90));
+            drive.setPoseEstimate(startPose);
+        }
+
+        if (detector.locationInt() != -1) {
+            itemSector = detector.locationInt();
+        }
+        telemetry.addData("Parking side", parkSide);
+        telemetry.addData("Location", detector.locationInt());
+        telemetry.addData("Color", detector.getColor());
+        telemetry.addData("Pose estimate", drive.getPoseEstimate().toString());
+        telemetry.update();
     }
-    //
+
+    public void start() {
+        wholeAutoMode = drive.trajectorySequenceBuilder(startPose)
+                .lineToLinearHeading(new Pose2d(-36, isBlue * 43, Math.toRadians((-isBlue * 90) + ((itemSector - 1) * -39.4))))
+                .addDisplacementMarker(() -> {
+                    arm.ground();
+                })
+                .waitSeconds(0.5)
+                .addDisplacementMarker(() -> {
+                    arm.releaseLeft();
+                    arm.setAngle(1);
+//                        arm.grab();
+                })
+                .lineToLinearHeading(new Pose2d(-36, 36 * isBlue, Math.toRadians(180)))
+                .lineTo(new Vector2d(48, 36 * isBlue))
+                .strafeLeft(((itemSector - 1) * 5.25) - 2)
+                .build();
+    }
+    public void loop(){
+            opModeLoop();
+        }
+
     private VisionPortal initVisionPortal() {
         vPortalBuilder = new VisionPortal.Builder();
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
