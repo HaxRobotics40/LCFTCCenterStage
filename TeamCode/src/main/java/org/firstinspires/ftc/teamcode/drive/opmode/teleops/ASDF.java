@@ -154,13 +154,13 @@ public class ASDF extends LinearOpMode {
                 hook.setPosition(1);
             }
 
-//            if (gamepad2.right_trigger > .5) {
-//                winch.setPower(1);
-//            } else if (gamepad2.left_trigger > .5) {
-//                winch.setPower(-1);
-//            } else {
-//                winch.setPower(0);
-//            }
+            if (gamepad2.right_trigger > .5) {
+                winch.setPower(1);
+            } else if (gamepad2.left_trigger > .5) {
+                winch.setPower(-1);
+            } else {
+                winch.setPower(0);
+            }
 
             if (gamepad2.left_trigger > 0.1 && gamepad2.right_trigger > 0.1) {
                 droneRelease.setPosition(0);
