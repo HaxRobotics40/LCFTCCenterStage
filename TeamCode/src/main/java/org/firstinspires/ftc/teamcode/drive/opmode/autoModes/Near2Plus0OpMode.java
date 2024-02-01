@@ -84,10 +84,6 @@ public class Near2Plus0OpMode extends OpMode {
                 .lineToLinearHeading(new Pose2d(12, isBlue*43, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
                 .addDisplacementMarker(() -> {
                     arm.ground();
-                    while (!arm.atAngle()) {
-                        arm.ground();
-                        arm.update();
-                    }
                 })
                 .waitSeconds(1)
                 .addDisplacementMarker(() -> {
@@ -99,7 +95,8 @@ public class Near2Plus0OpMode extends OpMode {
                 .lineTo(new Vector2d(48, 36*isBlue))
                 .strafeLeft(((itemSector-1)*5.25)-2)
                 .build();
-        drive.followTrajectorySequenceAsync(wholeAutoMode);
+        drive.followTrajectorySequence(wholeAutoMode);
+
         double wantedDistance = 3; // how far away you want the robot to go
         double thresholdDistanceInches = 0.1;
 
@@ -116,6 +113,7 @@ public class Near2Plus0OpMode extends OpMode {
 
         Pose2d lastPos = drive.getPoseEstimate();
         distanceSensePose = (new Pose2d(72-(distForward+16.52), lastPos.getY(), lastPos.getHeading()));
+
         afterDistSense = drive.trajectorySequenceBuilder(distanceSensePose)
                 .forward(-output) // this is going to cause an error because when inited it will be an emptypathsegment
                 .addDisplacementMarker(() -> {
@@ -133,7 +131,7 @@ public class Near2Plus0OpMode extends OpMode {
                 .turn(Math.toRadians(isBlue*90))
                 .lineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)))
                 .build();
-        drive.followTrajectorySequenceAsync(afterDistSense);
+        drive.followTrajectorySequence(afterDistSense);
     }
     public void loop() {
         opModeLoop();

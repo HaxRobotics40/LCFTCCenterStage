@@ -65,8 +65,13 @@ public class newNearDropBackstage extends OpMode {
     public void init_loop() {
         telemetry.addData("Parking side", parkSide);
         telemetry.addData("Location", detector.locationInt());
-        telemetry.addData("is it blue?", isBlue);
+        telemetry.addData("is it blue?", detector.getColor());
         telemetry.addData("Pose estimate", drive.getPoseEstimate().toString());
+        if (detector.getColor() == "BLUE") {
+            isBlue = 1;
+        } else {
+            isBlue = -1;
+        }
         telemetry.update();
     }
 

@@ -92,8 +92,12 @@ public class testEOCVpipeline implements VisionProcessor {
         int sectorWidth = width / 3; // Divide it by 3 to get each sector's width
 
         int height = mask.rows(); // total horizontal rows of pixels, halve it to ignore the background better
-        int targetRegion = height/3;
-        mask = mask.submat(targetRegion, height, 0, mask.cols());
+        int targetRegion = (int) height/3;
+
+        int cutoffWidthLeft = mask.cols()/6;
+        int cutoffWidthRight = mask.cols() - cutoffWidthLeft;
+        mask = mask.submat(targetRegion, height, cutoffWidthLeft, cutoffWidthRight);
+        Mat returning = input.submat(targetRegion, height, cutoffWidthLeft, cutoffWidthRight);
 
 // Define Regions of Interest (ROI) for each sector
         Rect leftSector = new Rect(0, 0, sectorWidth, mask.rows());
@@ -123,36 +127,11 @@ public class testEOCVpipeline implements VisionProcessor {
 
 
 
-        // Imgproc.Canny(mask, edges, 100, 300);
-//        Photo.fastNlMeansDenoising(mask, edges, 1, 7, 21); // fix h, keeps crashing
-
-         edges = mask.clone();
-
-        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-        Mat hierarchy = new Mat();
-        Imgproc.findContours(edges, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        for (int i=0; i<contours.size(); i++) {
-            //Convert contours(i) from MatOfPoint to MatOfPoint2f
-            MatOfPoint2f contour2f = new MatOfPoint2f(contours.get(i).toArray());
-            //Processing on mMOP2f1 which is in type MatOfPoint2f
-            double approxDistance = Imgproc.arcLength(contour2f, true)*0.02;
-            Imgproc.approxPolyDP(contour2f, contour2f, approxDistance, true);
-
-            //Convert back to MatOfPoint
-            MatOfPoint points = new MatOfPoint( contour2f.toArray() );
-
-            // Get bounding rect of contour
-            Rect rect = Imgproc.boundingRect(points);
-
-            // draw enclosing rectangle (all same color, but you could use variable i to make them unique)
-            Imgproc.rectangle(edges, new Point(rect.x,rect.y), new Point(rect.x+rect.width,rect.y+rect.height), new Scalar(225,0,225));
-
-        }
-
-        double midline = 0.5 * width;
-
-        return edges;
+//
+//        return edges;
+        Imgproc.rectangle(returning, leftSector, new Scalar(255, 0, 255));
+        Imgproc.rectangle(returning, rightSector, new Scalar(255, 0, 255));
+        return returning;
     }
     public String getColor() { return color; }
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight,float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {}

@@ -24,7 +24,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 
 
 @Autonomous(group = "comp")
-@Disabled
+//@Disabled
 public class nearDropBackstage extends OpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
@@ -70,11 +70,11 @@ public class nearDropBackstage extends OpMode {
 
     public void init_loop() {
 
-        if (gamepad2.dpad_left) {
+        if (detector.getColor() == "RED") {
             isBlue = -1;
             startPose = new Pose2d(12,-66, Math.toRadians(270));
             drive.setPoseEstimate(startPose);
-        } else if (gamepad2.dpad_right) {
+        } else if (detector.getColor() == "BLUE") {
             isBlue = 1;
             startPose = new Pose2d(12,66, Math.toRadians(90));
             drive.setPoseEstimate(startPose);
@@ -82,6 +82,12 @@ public class nearDropBackstage extends OpMode {
 
         if (detector.locationInt() != -1) {
             itemSector = detector.locationInt();
+        }
+
+        if (detector.getColor() == "BLUE") {
+            isBlue = 1;
+        } else {
+            isBlue = -1;
         }
         telemetry.addData("Parking side", parkSide);
         telemetry.addData("Location", detector.locationInt());
@@ -91,15 +97,14 @@ public class nearDropBackstage extends OpMode {
     }
 
     public void start() {
+        wrist.setPosition(1);
         wholeAutoMode = drive.trajectorySequenceBuilder(startPose)
                 .forward(-4)
                 .lineToConstantHeading(new Vector2d(66, isBlue*62))
                 .build();
         drive.followTrajectorySequence(wholeAutoMode);
-        wrist.setPosition(1);
 
-        clawL.setPosition(.4);
-        clawR.setPosition(.2);
+        arm.release();
     }
     public void loop() {
         drive.update();

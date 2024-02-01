@@ -33,13 +33,13 @@ public class InputOutput {
 //    private int lastLevel;
     private final double maxPowerSlide;
     private final double maxPowerPivot;
-    private final int[] levelsPivot = {450, 350, 270, 0}; // ground, outward, fboard, at rest.
+    private final int[] levelsPivot = {500, 350, 270, 0}; // ground, outward, fboard, at rest.
     private final int[] anggleLevels = {90, 45, 60, 90};
     double targetAngle;
-    private double kP ;
-    private double kI ;
-    private double kD;
-    private double kCos ;
+    private double  kP = 0.000465;
+    public static double kI = 0.000001;
+    public static double kD = 0;
+    private double kCos = -0.00003;
 //private double kP = 0;
 //    private double kI = 0;
 //    private double kD = 0;
