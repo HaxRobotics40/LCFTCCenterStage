@@ -219,9 +219,9 @@ public class InputOutput {
 
         if (!ground) {
             pivot.setPower(output);
-        } else if (ground && error > 20) {
+        } else if (ground && error > 75) {
             pivot.setPower(output);
-        } else if (ground && error < 20) {
+        } else if (ground && error < 75) {
             pivot.setPower(0);
         }
 

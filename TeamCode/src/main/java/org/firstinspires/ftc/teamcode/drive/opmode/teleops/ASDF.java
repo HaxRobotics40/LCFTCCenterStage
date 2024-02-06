@@ -41,10 +41,10 @@ public class ASDF extends LinearOpMode {
     public static double Ki = 0;
     public static double Kd = 0.048;
 
-    public static double kP = 0.0004625;
-    public static double kI = 0.000001;
+    public static double kP = 0.00085;
+    public static double kI = 0.00001;
     public static double kD = 0;
-    public static double kCos = -0.00003;
+    public static double kCos = -0.00005;
     ElapsedTime timer = new ElapsedTime();
     double botHeading;
     double error;
