@@ -36,8 +36,8 @@ public class InputOutput {
     private final int[] levelsPivot = {500, 350, 270, 0}; // ground, outward, fboard, at rest.
     private final int[] anggleLevels = {90, 45, 60, 90};
     double targetAngle;
-    private double  kP = 0.0006;
-    public static double kI = 0.000001;
+    private double  kP = .00085;
+    public static double kI = 0.00001;
     public static double kD = 0;
     private double kCos = -0.00005;
 //private double kP = 0;
