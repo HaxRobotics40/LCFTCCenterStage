@@ -51,7 +51,7 @@ public class InputOutput {
         pivot = hw.get(DcMotorEx.class, "pivot");
         timer = new ElapsedTime();
         // startup position is 0
-//        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         pivot.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         // make sure it can hold itself up
         pivot.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

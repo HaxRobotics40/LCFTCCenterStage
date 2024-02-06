@@ -95,9 +95,9 @@ public class testEOCVpipeline implements VisionProcessor {
         int targetRegion = (int) height/3;
 
         int cutoffWidthLeft = mask.cols()/6;
-        int cutoffWidthRight = mask.cols() - cutoffWidthLeft;
+        int cutoffWidthRight = (5*mask.cols())/6;
         mask = mask.submat(targetRegion, height, cutoffWidthLeft, cutoffWidthRight);
-        Mat returning = input.submat(targetRegion, height, cutoffWidthLeft, cutoffWidthRight);
+//        Mat returning = input.submat(targetRegion, height, cutoffWidthLeft, cutoffWidthRight);
 
 // Define Regions of Interest (ROI) for each sector
         Rect leftSector = new Rect(0, 0, sectorWidth, mask.rows());
@@ -129,9 +129,9 @@ public class testEOCVpipeline implements VisionProcessor {
 
 //
 //        return edges;
-        Imgproc.rectangle(returning, leftSector, new Scalar(255, 0, 255));
-        Imgproc.rectangle(returning, rightSector, new Scalar(255, 0, 255));
-        return returning;
+//        Imgproc.rectangle(returning, leftSector, new Scalar(255, 0, 255));
+//        Imgproc.rectangle(returning, rightSector, new Scalar(255, 0, 255));
+        return input;
     }
     public String getColor() { return color; }
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight,float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {}
