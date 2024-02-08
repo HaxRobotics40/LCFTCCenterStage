@@ -43,6 +43,7 @@ public class Near2Plus0FSM extends LinearOpMode {
     int parkSide = -1;
     double output = 0.1;
     public static double delayTime;
+    boolean isTimerStarted = false;
     Pose2d distanceSensePose;
     Trajectory driveToLine;
     TrajectorySequence driveToBoard;
@@ -158,8 +159,9 @@ public class Near2Plus0FSM extends LinearOpMode {
                     arm.ground();
 
                     // it never gets here because it only runs once, idk how to fix this. multithreading?
-
-                    previousState = STATES.SCORE_PURPLE;
+                    if (arm.atAngle()) {
+                        previousState = STATES.SCORE_PURPLE;
+                    }
                 } else {
                     currentState = STATES.DROP;
                 }
@@ -167,7 +169,12 @@ public class Near2Plus0FSM extends LinearOpMode {
             case DROP:
                 if (previousState!=currentState) {
                     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-                    if (timer.time() > 0.5) {
+                    if (!isTimerStarted) {
+                        timer.reset();
+                        isTimerStarted = true;
+                    }
+                    telemetry.addData("timer",timer.seconds());
+                    if (timer.seconds() > 0.5) {
                         arm.releaseLeft();
                         arm.out();
                         if (arm.atAngle()){
@@ -276,6 +283,8 @@ public class Near2Plus0FSM extends LinearOpMode {
         telemetry.addData("power", arm.getPivotPower());
         telemetry.addData("target", arm.getTargetPivotPos());
         telemetry.addData("pose", arm.getPivotPos());
+        telemetry.addData("State", currentState);
+        telemetry.addData("is started?", isTimerStarted);
         telemetry.update();
     }
 
