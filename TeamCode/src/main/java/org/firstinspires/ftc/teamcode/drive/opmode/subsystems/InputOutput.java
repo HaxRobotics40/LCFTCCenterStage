@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.ArrayList;
 import java.util.function.IntSupplier;
 public class InputOutput {
-    DcMotorEx pivot;
+    DcMotor pivot;
     DcMotor slide;
     Servo clawL;
     Servo clawR;
@@ -26,7 +26,7 @@ public class InputOutput {
     private int tolerance = 25;
     // most recent target level
     private int targetLevel = 0;
-    private final int tolerancePivot = 8;
+    private final int tolerancePivot = 25;
     private int degAngle = 0;
     int currentPos;
     private final double ticksPerDeg = 3.9581;
@@ -48,7 +48,7 @@ public class InputOutput {
     double integralSum;
     int lastError;
     public InputOutput(@NonNull HardwareMap hw, boolean autoFillLevels, double maxPowerSlide, double maxPowerPivot) {
-        pivot = hw.get(DcMotorEx.class, "pivot");
+        pivot = hw.get(DcMotor.class, "pivot");
         timer = new ElapsedTime();
         // startup position is 0
         pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -181,18 +181,21 @@ public class InputOutput {
     }
     public void grab() {
         clawL.setPosition(0);
-        clawR.setPosition(.759);
+        clawR.setPosition(0.36);
     }
 
     public void release() {
         clawL.setPosition(.33);
-        clawR.setPosition(.48);
+        clawR.setPosition(0.05);
     }
 
     public void grabLeft() { clawL.setPosition(0); }
-    public void grabRight() { clawR.setPosition(.759); }
+    public void grabRight() { clawR.setPosition(0.36); }
     public void releaseLeft() {clawL.setPosition(.33);}
-    public void releaseRight() {clawR.setPosition(.48);}
+    public void releaseRight() {clawR.setPosition(0.05);}
+    public void wristIn() { wrist.setPosition(0); }
+    public void wristOut() { wrist.setPosition(1); }
+
     // check if arm is at target, stopping it if it is
     public void update() {
 
