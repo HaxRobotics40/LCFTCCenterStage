@@ -174,15 +174,15 @@ public class ASDF extends LinearOpMode {
 
             buttonPressedDown();
             buttonPressedUp();
-            if (wasUpPressed) {
-                if (arm.getLevel() < 3) {
-                    arm.goTo(arm.getLevel() + 1);
-                    wasUpPressed = false; }
-            } else if (wasDownPressed) {
-                if (arm.getLevel() > 0) {
-                    arm.goTo(arm.getLevel() - 1);
-                    wasDownPressed = false; }
-            }
+//            if (wasUpPressed) {
+//                if (arm.getLevel() < 3) {
+//                    arm.goTo(arm.getLevel() + 1);
+//                    wasUpPressed = false; }
+//            } else if (wasDownPressed) {
+//                if (arm.getLevel() > 0) {
+//                    arm.goTo(arm.getLevel() - 1);
+//                    wasDownPressed = false; }
+//            }
                 arm.getNewPIDF(kP, kI, kD, kCos);
 //
 //

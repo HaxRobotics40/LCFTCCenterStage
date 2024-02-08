@@ -167,20 +167,13 @@ public class Near2Plus0FSM extends LinearOpMode {
             case DROP:
                 if (previousState!=currentState) {
                     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-                    while (timer.time() < 0.5) {
+                    if (timer.time() > 0.5) {
                         arm.releaseLeft();
-                    }
                         arm.out();
-                    previousState = STATES.DROP;
-                } else {
-                    currentState = STATES.REST;
-                }
-                break;
-            case REST:
-                if (previousState!=currentState) {
-                    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-                    while (!arm.atAngle()) {}
-                    previousState = STATES.REST;
+                        if (arm.atAngle()){
+                            previousState = STATES.DROP;
+                        }
+                    }
                 } else {
                     currentState = STATES.DELAY;
                 }
@@ -237,17 +230,23 @@ public class Near2Plus0FSM extends LinearOpMode {
                 if (previousState != currentState) {
                     arm.wristOut();
                     arm.frontBoard();
+                    previousState = STATES.SCORE_YELLOW;
                 } else {
-                    currentState = STATES.PARK;
+                    currentState = STATES.DROP_YELLOW;
                 }
                 break;
             case DROP_YELLOW:
                 if (previousState != currentState) {
                     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-                    while (timer.time() < 0.25) {}
-                    arm.release();
-                    while (timer.time() < 0.75) {}
-                    arm.rest();
+                    if (timer.time() > 0.25) {
+                        arm.release();
+                    }
+                    if (timer.time() > 0.75) {
+                        arm.rest();
+                    }
+                    if (timer.time() > 1) {
+                        previousState = STATES.DROP_YELLOW;
+                    }
                 } else {
                     currentState = STATES.PARK;
                 }
