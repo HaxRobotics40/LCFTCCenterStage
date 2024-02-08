@@ -32,7 +32,7 @@ public class justArmAuto extends OpMode {
     InputOutput arm;
     int status= 0;
     int itemSector;
-    Pose2d startPose;
+    Pose2d startPose = new Pose2d(-36, -60, Math.toRadians(90));
     double distForward;
     int isBlue = -1;
     int parkSide = -1;
@@ -48,11 +48,11 @@ public class justArmAuto extends OpMode {
     @Override
     public void init() {
         arm = new InputOutput(hardwareMap, true, .5, .5);
-        vPortal = initVisionPortal();
+//        vPortal = initVisionPortal();
         arm.setup();
         setupIMU();
         setupDistanceSensor();
-        vPortal.setProcessorEnabled(detector, true);
+//        vPortal.setProcessorEnabled(detector, true);
 
         clawL = hardwareMap.get(Servo.class, "clawL");
         clawR = hardwareMap.get(Servo.class, "clawR");
@@ -65,28 +65,28 @@ public class justArmAuto extends OpMode {
 
     public void init_loop() {
 
-        if (detector.getColor() == "RED") {
-            isBlue = -1;
-            startPose = new Pose2d(12,-66, Math.toRadians(270));
-            drive.setPoseEstimate(startPose);
-        } else if (detector.getColor() == "BLUE") {
-            isBlue = 1;
-            startPose = new Pose2d(12,66, Math.toRadians(90));
-            drive.setPoseEstimate(startPose);
-        }
-
-        if (detector.locationInt() != -1) {
-            itemSector = detector.locationInt();
-        }
-
-        if (detector.getColor() == "BLUE") {
-            isBlue = 1;
-        } else {
-            isBlue = -1;
-        }
-        telemetry.addData("Parking side", parkSide);
-        telemetry.addData("Location", detector.locationInt());
-        telemetry.addData("is it blue?", isBlue);
+//        if (detector.getColor() == "RED") {
+//            isBlue = -1;
+//            startPose = new Pose2d(12,-66, Math.toRadians(270));
+//            drive.setPoseEstimate(startPose);
+//        } else if (detector.getColor() == "BLUE") {
+//            isBlue = 1;
+//            startPose = new Pose2d(12,66, Math.toRadians(90));
+//            drive.setPoseEstimate(startPose);
+//        }
+//
+//        if (detector.locationInt() != -1) {
+//            itemSector = detector.locationInt();
+//        }
+//
+//        if (detector.getColor() == "BLUE") {
+//            isBlue = 1;
+//        } else {
+//            isBlue = -1;
+//        }
+//        telemetry.addData("Parking side", parkSide);
+//        telemetry.addData("Location", detector.locationInt());
+//        telemetry.addData("is it blue?", isBlue);
         telemetry.addData("Pose estimate", drive.getPoseEstimate().toString());
         telemetry.update();
     }
@@ -96,15 +96,11 @@ public class justArmAuto extends OpMode {
                 .forward(-4)
                 .addDisplacementMarker(() -> {
                     arm.ground();
-                    while (!arm.atAngle()) {
-                        arm.ground();
-                    }
-                    arm.release();
                 })
                 .build();
         drive.followTrajectorySequence(wholeAutoMode);
 
-//        arm.release();
+        arm.release();
     }
     public void loop() {
         drive.update();

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.drive.opmode.autoModes;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
@@ -35,8 +37,8 @@ public class Near2Plus0FSM extends LinearOpMode {
     InputOutput arm;
     int status= 0;
     int itemSector;
-    Pose2d startPose;
-    double distForward;
+    Pose2d startPose = new Pose2d(0,0,0);
+    double distForward = 0;
     int isBlue = -1;
     int parkSide = -1;
     double output = 0.1;
@@ -52,10 +54,14 @@ public class Near2Plus0FSM extends LinearOpMode {
         INIT,
         ALIGN_LINE,
         SCORE_PURPLE,
+        DROP,
+        REST,
         ALIGN_BOARD,
         DELAY,
         DISTANCE_SENSE,
         SCORE_YELLOW,
+        DROP_YELLOW,
+        RESET,
         PARK,
         STOP;
     }
@@ -106,25 +112,6 @@ public class Near2Plus0FSM extends LinearOpMode {
                         .build();
 
 
-//                wholeAutoMode = drive.trajectorySequenceBuilder(startPose)
-//                        .lineToLinearHeading(new Pose2d(12, isBlue*43, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
-//                        .addDisplacementMarker(() -> {
-//                            arm.ground();
-//                            while (!arm.atAngle()) {
-//                                arm.ground();
-//                                arm.update();
-//                            }
-//                        })
-//                        .waitSeconds(1)
-//                        .addDisplacementMarker(() -> {
-//                            arm.releaseLeft();
-//                            arm.setAngle(1);
-//                        })
-//                        .waitSeconds(1)
-//                        .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(180)))
-//                        .lineTo(new Vector2d(48, 36*isBlue))
-//                        .strafeLeft(((itemSector-1)*5.25)-2)
-//                        .build();
 
 
                 telemetry.addData("Parking side", parkSide);
@@ -137,28 +124,7 @@ public class Near2Plus0FSM extends LinearOpMode {
 
         waitForStart();
         if (opModeIsActive()) {
-
-
-//            drive.followTrajectorySequenceAsync(wholeAutoMode);
-
-//            afterDistSense = drive.trajectorySequenceBuilder(distanceSensePose)
-//                    .forward(-output) // this is going to cause an error because when inited it will be an emptypathsegment
-//                    .addDisplacementMarker(() -> {
-//                        arm.board();
-//                    })
-//                    .waitSeconds(1)
-//                    .addDisplacementMarker(() -> {
-//                        arm.release();
-//                    })
-//                    .waitSeconds(0.25)
-//                    .addDisplacementMarker(() -> {
-//                        arm.rest();
-//                        arm.grab();
-//                    })
-//                    .turn(Math.toRadians(isBlue*90))
-//                    .lineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)))
-//                    .build();
-//            drive.followTrajectorySequenceAsync(afterDistSense);
+            currentState = STATES.ALIGN_LINE;
             while (opModeIsActive()) {
                 opModeLoop();
             }
@@ -188,24 +154,33 @@ public class Near2Plus0FSM extends LinearOpMode {
             case SCORE_PURPLE:
                 if (previousState != currentState) {
                     double groundTime = 0;
-                    boolean hitGround = false;
                     // everything in here will run once when the state switches
-                    ElapsedTime timerPurple = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-                    timerPurple.startTime();
                     arm.ground();
-                    if (arm.atAngle()) {
-                        arm.releaseLeft();
-                        hitGround = true;
-                        groundTime = timerPurple.time();
-                    }
-                    if (hitGround && timerPurple.time() - groundTime > 2) {
-                        arm.out();
-                    }
-                    if (arm.atAngle()) {
-                        arm.wristIn();
-                    }
+
+                    // it never gets here because it only runs once, idk how to fix this. multithreading?
 
                     previousState = STATES.SCORE_PURPLE;
+                } else {
+                    currentState = STATES.DROP;
+                }
+                break;
+            case DROP:
+                if (previousState!=currentState) {
+                    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+                    while (timer.time() < 0.5) {
+                        arm.releaseLeft();
+                    }
+                        arm.out();
+                    previousState = STATES.DROP;
+                } else {
+                    currentState = STATES.REST;
+                }
+                break;
+            case REST:
+                if (previousState!=currentState) {
+                    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+                    while (!arm.atAngle()) {}
+                    previousState = STATES.REST;
                 } else {
                     currentState = STATES.DELAY;
                 }
@@ -226,7 +201,7 @@ public class Near2Plus0FSM extends LinearOpMode {
                     drive.followTrajectorySequenceAsync(driveToBoard);
                     previousState = STATES.ALIGN_BOARD;
                 } else if (!drive.isBusy()) {
-                    currentState = STATES.DISTANCE_SENSE;
+                    currentState = STATES.SCORE_YELLOW;
                 }
                 break;
             case DISTANCE_SENSE:
@@ -236,7 +211,7 @@ public class Near2Plus0FSM extends LinearOpMode {
 
                     distForward = sensorDistance.getDistance(DistanceUnit.INCH);
 
-                    if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity) {
+                    if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity && sensorDistance.getDistance(DistanceUnit.INCH) != 0) {
                         distForward = sensorDistance.getDistance(DistanceUnit.INCH);
                         if (Math.abs(distForward - wantedDistance) > thresholdDistanceInches) {
                             output = wantedDistance - distForward;
@@ -247,7 +222,7 @@ public class Near2Plus0FSM extends LinearOpMode {
 
                     Pose2d lastPos = drive.getPoseEstimate();
                     distanceSensePose = (new Pose2d(72 - (distForward + 16.52), lastPos.getY(), lastPos.getHeading()));
-                    e = drive.trajectoryBuilder(distanceSensePose)
+                    e = drive.trajectoryBuilder(driveToBoard.end()) // TODO change this back
                             .forward(output)
                             .build();
                     drive.followTrajectoryAsync(e);
@@ -257,29 +232,22 @@ public class Near2Plus0FSM extends LinearOpMode {
 
                     currentState = STATES.SCORE_YELLOW;
                 }
-            break;
+                break;
             case SCORE_YELLOW:
                 if (previousState != currentState) {
-                    boolean isBoardAngle = false;
-                    boolean droppedYellow = false;
-                    boolean readyToPark = false;
                     arm.wristOut();
                     arm.frontBoard();
-                    ElapsedTime beenUpSince = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-                    if (!isBoardAngle && arm.atAngle()) {
-                        isBoardAngle = true;
-                    }
-                    if (isBoardAngle && !droppedYellow &&  beenUpSince.time() > 0.5) {
-                        arm.release();
-                        droppedYellow = true;
-                    }
-                    if (droppedYellow && beenUpSince.time() > 1) {
-                        arm.rest();
-                        readyToPark = true;
-                    }
-                    if (readyToPark) {
-                        previousState = STATES.SCORE_YELLOW;
-                    }
+                } else {
+                    currentState = STATES.PARK;
+                }
+                break;
+            case DROP_YELLOW:
+                if (previousState != currentState) {
+                    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+                    while (timer.time() < 0.25) {}
+                    arm.release();
+                    while (timer.time() < 0.75) {}
+                    arm.rest();
                 } else {
                     currentState = STATES.PARK;
                 }

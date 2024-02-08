@@ -95,8 +95,7 @@ public class testEOCVpipeline implements VisionProcessor {
         int targetRegion = (int) height/3;
 
         int cutoffWidthLeft = mask.cols()/6;
-        int cutoffWidthRight = (int) (5*mask.cols())/6;
-        mask = mask.submat(targetRegion, height, cutoffWidthLeft, cutoffWidthRight);
+        mask.submat(targetRegion, height, cutoffWidthLeft, mask.cols()-cutoffWidthLeft);
 //        Mat returning = input.submat(targetRegion, height, cutoffWidthLeft, cutoffWidthRight);
 
 // Define Regions of Interest (ROI) for each sector

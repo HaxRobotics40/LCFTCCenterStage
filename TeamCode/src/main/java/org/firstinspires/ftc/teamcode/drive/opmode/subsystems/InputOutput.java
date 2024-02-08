@@ -26,7 +26,7 @@ public class InputOutput {
     private int tolerance = 25;
     // most recent target level
     private int targetLevel = 0;
-    private final int tolerancePivot = 25;
+    private final int tolerancePivot = 20;
     private int degAngle = 0;
     int currentPos;
     private final double ticksPerDeg = 3.9581;
@@ -36,10 +36,10 @@ public class InputOutput {
     private final int[] levelsPivot = {500, 350, 270, 0}; // ground, outward, fboard, at rest.
     private final int[] anggleLevels = {90, 45, 60, 90};
     double targetAngle;
-    private double  kP = .00085;
-    public static double kI = 0.00001;
-    public static double kD = 0;
-    private double kCos = -0.00005;
+    private static double  kP = 0.0011;
+    public static double kI = 0.0001; // probably needs to be greater
+    public static double kD = 0.0000015; // also probably needs to be greater
+    private static double kCos = -0.00015; // unsure
 //private double kP = 0;
 //    private double kI = 0;
 //    private double kD = 0;
@@ -134,6 +134,7 @@ public class InputOutput {
     public void setAngle(int levelPivot) { // can change if 0 ticks isn't 0 deg actually
         targetAngle = Math.toRadians(anggleLevels[levelPivot]);
         targetPosition = (levelsPivot[levelPivot]);
+        pivot.setTargetPosition(targetPosition);
         if(levelPivot ==0) {
             ground = true;
         } else {
@@ -150,8 +151,9 @@ public class InputOutput {
         wrist.setPosition(0);
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slide.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        pivot.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        pivot.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        pivot.setTargetPosition(0);
         slide.setTargetPosition(0);
         this.grab();
         this.rest();
@@ -202,34 +204,33 @@ public class InputOutput {
         if (atLevel(targetLevel)) {
             slide.setPower(0);
         }
-
-//        pivot.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        if (Math.abs(pivot.getCurrentPosition() - pivot.getTargetPosition()) > 4) {
-//            pivot.setPower(maxPowerPivot * Math.signum((double) targetPosition - pivot.getCurrentPosition()));
-//        } else {
-//            pivot.setPower(0);
-//        }
-        double output = kCos * Math.cos(targetAngle);
-
-        currentPos = pivot.getCurrentPosition();
-        int error = targetPosition - currentPos;
-
-        double derivative = (error - lastError) / timer.seconds();
-
-        integralSum = integralSum + (error * timer.seconds());
-
-        output += (kP * error) + (kI * integralSum) + (kD * derivative);
-
-        if (!ground) {
-            pivot.setPower(output);
-        } else if (ground && error > 75) {
-            pivot.setPower(output);
-        } else if (ground && error < 75) {
+        // TODO: does this work better or worse than our pidf? is it worth tuning for ctrl?
+        if (Math.abs(pivot.getCurrentPosition() - targetPosition) > 20) {
+            pivot.setPower(0.1 - kCos*targetAngle);
+        } else {
             pivot.setPower(0);
         }
-
-        lastError = error;
-        timer.reset();
+//        double output = kCos * Math.cos(targetAngle);
+//
+        currentPos = pivot.getCurrentPosition();
+//        int error = targetPosition - currentPos;
+//
+//        double derivative = (error - lastError) / timer.seconds();
+//
+//        integralSum = integralSum + (error * timer.seconds());
+//
+//        output += (kP * error) + (kI * integralSum) + (kD * derivative);
+//
+//        if (!ground) {
+//            pivot.setPower(output);
+//        } else if (ground && error > 50) {
+//            pivot.setPower(output);
+//        } else if (ground && error < 50) {
+//            pivot.setPower(0);
+//        }
+//
+//        lastError = error;
+//        timer.reset();
 
 
 
