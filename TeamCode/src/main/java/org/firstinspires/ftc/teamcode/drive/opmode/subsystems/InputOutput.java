@@ -182,19 +182,19 @@ public class InputOutput {
         if (atAngle()) { wrist.setPosition(0); }
     }
     public void grab() {
-        clawL.setPosition(0);
-        clawR.setPosition(0.36);
+        clawL.setPosition(0.48);
+        clawR.setPosition(1);
     }
 
     public void release() {
-        clawL.setPosition(.33);
-        clawR.setPosition(0.05);
+        clawL.setPosition(.7);
+        clawR.setPosition(0.84);
     }
 
     public void grabLeft() { clawL.setPosition(0); }
     public void grabRight() { clawR.setPosition(0.36); }
-    public void releaseLeft() {clawL.setPosition(.33);}
-    public void releaseRight() {clawR.setPosition(0.05);}
+    public void releaseLeft() {clawL.setPosition(.48);}
+    public void releaseRight() {clawR.setPosition(1);}
     public void wristIn() { wrist.setPosition(0); }
     public void wristOut() { wrist.setPosition(1); }
 
@@ -206,7 +206,7 @@ public class InputOutput {
         }
         // TODO: does this work better or worse than our pidf? is it worth tuning for ctrl?
         if (Math.abs(pivot.getCurrentPosition() - targetPosition) > 20) {
-            pivot.setPower(0.1 - kCos*targetAngle);
+            pivot.setPower(0.1 - 0*kCos*targetAngle);
         } else {
             pivot.setPower(0);
         }

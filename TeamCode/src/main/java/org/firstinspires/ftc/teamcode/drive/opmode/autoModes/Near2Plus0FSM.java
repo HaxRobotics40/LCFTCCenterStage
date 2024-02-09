@@ -28,6 +28,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 public class Near2Plus0FSM extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
+    ElapsedTime timer;
     testEOCVpipeline detector = new testEOCVpipeline();
     //    TODO: Use dead wheels
     SampleMecanumDrive drive;
@@ -82,6 +83,7 @@ public class Near2Plus0FSM extends LinearOpMode {
             status = 0;
 
             drive = new SampleMecanumDrive(hardwareMap);
+            // sets up devices once & vportal
             while (opModeInInit()) {
                 if (gamepad1.dpad_left) {
                     parkSide = 1;
@@ -98,6 +100,8 @@ public class Near2Plus0FSM extends LinearOpMode {
                     startPose = new Pose2d(12,66, Math.toRadians(90));
                     drive.setPoseEstimate(startPose);
                 }
+                // controls - use the gamepad while init is running to change things like parkside
+                // wait until the "LOCATION" "COLOR" things say things until starting - all the camera processing happens here
 
                 if (detector.locationInt() != -1) {
                     itemSector = detector.locationInt();
@@ -107,11 +111,14 @@ public class Near2Plus0FSM extends LinearOpMode {
                         .build();
 
                 driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
-                        .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(180)))
-                        .lineTo(new Vector2d(48, 36*isBlue))
-                        .strafeLeft(((itemSector-1)*5.25)-2)
+                        .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(180))) // go to center of the tape
+                        .lineTo(new Vector2d(48, 36*isBlue)) // cross the field (go under truss if this is far)
+                        .strafeLeft(((itemSector-1)*5.25)-2) // strafes in front of appropriate AprilTag
                         .build();
 
+                // set up the pre-runnable auto paths
+                // driveToLine moves forward and angles the robot to drop on the purple pixel
+                // driveToBoard moves it from this position after the pixel dropping part to the board
 
 
 
@@ -125,9 +132,9 @@ public class Near2Plus0FSM extends LinearOpMode {
 
         waitForStart();
         if (opModeIsActive()) {
-            currentState = STATES.ALIGN_LINE;
+            currentState = STATES.ALIGN_LINE; // when it starts, change the state to an active one
             while (opModeIsActive()) {
-                opModeLoop();
+                opModeLoop(); // this possesses the FSM
             }
         }
     }
@@ -146,7 +153,7 @@ public class Near2Plus0FSM extends LinearOpMode {
                 if (previousState != currentState) {
                     // everything in here will run once when the state switches
 
-                    drive.followTrajectoryAsync(driveToLine);
+                    drive.followTrajectoryAsync(driveToLine); // drives to the line to prepare to drop
                     previousState = STATES.ALIGN_LINE;
                 } else if (!drive.isBusy()) {
                     currentState = STATES.SCORE_PURPLE;
@@ -154,24 +161,25 @@ public class Near2Plus0FSM extends LinearOpMode {
                 break;
             case SCORE_PURPLE:
                 if (previousState != currentState) {
-                    double groundTime = 0;
                     // everything in here will run once when the state switches
-                    arm.ground();
+                    arm.ground(); // sets the target position of the arm to the ground level
 
-                    // it never gets here because it only runs once, idk how to fix this. multithreading?
+
+                    // this if statement makes it run arm.ground() in the while loop until its within enough ticks
                     if (arm.atAngle()) {
                         previousState = STATES.SCORE_PURPLE;
                     }
-                } else {
+                } else { // this else statement isn't an elif because rr isn't running
                     currentState = STATES.DROP;
                 }
                 break;
             case DROP:
                 if (previousState!=currentState) {
-                    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+                    // isTimerStarted is a class variable set as false. when run the first time it
                     if (!isTimerStarted) {
-                        timer.reset();
-                        isTimerStarted = true;
+                        timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+                        timer.reset(); // starts timer
+                        isTimerStarted = true; // stops this block from running again
                     }
                     telemetry.addData("timer",timer.seconds());
                     if (timer.seconds() > 0.5) {
