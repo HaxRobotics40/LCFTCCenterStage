@@ -265,10 +265,10 @@ public class Near2Plus0FSM extends LinearOpMode {
                     if (timer.time() > 0.5) {
                         arm.release();
                     }
-                    if (timer.time() > 1) {
+                    if (timer.time() > 1.25) {
                         arm.rest();
                     }
-                    if (arm.atAngle() & timer.time() > 1) {
+                    if (arm.atAngle() & timer.time() > 1.25) {
                         previousState = STATES.DROP_YELLOW;
                     }
                 } else {
@@ -277,7 +277,7 @@ public class Near2Plus0FSM extends LinearOpMode {
                 break;
             case PARK:
                 if (previousState != currentState) {
-                    park = drive.trajectorySequenceBuilder(boardCorrection.end())
+                    park = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
                             .turn(Math.toRadians(isBlue*90))
                             .lineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)))
                             .build();

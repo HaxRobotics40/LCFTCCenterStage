@@ -206,7 +206,7 @@ public class InputOutput {
         }
         // TODO: does this work better or worse than our pidf? is it worth tuning for ctrl?
         if (Math.abs(pivot.getCurrentPosition() - targetPosition) > 20) {
-            pivot.setPower(0.1 - 0*kCos*targetAngle);
+            pivot.setPower(0.1 - kCos*targetAngle);
         } else {
             pivot.setPower(0);
         }
