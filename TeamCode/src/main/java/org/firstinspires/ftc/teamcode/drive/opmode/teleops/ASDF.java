@@ -88,7 +88,7 @@ public class ASDF extends LinearOpMode {
                 runningPID = true;
             }
             if (!runningPID) {
-                rx = -gamepad1.right_stick_x;
+                rx = -gamepad1.right_stick_x/2;
             } else {
                 if (Math.abs(botHeading - Math.toRadians(-90)) < tolerance){
                     runningPID =  false;
