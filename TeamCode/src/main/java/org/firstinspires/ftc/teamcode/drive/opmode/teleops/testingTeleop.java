@@ -209,7 +209,7 @@ public class testingTeleop extends LinearOpMode {
 //            telemetry.addData("heading", poseEstimate.getHeading());
 //            telemetry.addData("pos", drive.getWheelPositions());
 //            telemetry.addData("Velocities", drive.getWheelVelocities());
-//            telemetry.addData("Elevator Position", slide.getCurrentPosition());
+            telemetry.addData("Elevator Position", arm.getSlidePos());
             telemetry.addData("Arm Position", arm.getPivotPos());
             telemetry.addData("Desired Arm Position", arm.getTargetPivotPos());
             telemetry.addData("Motor Power", arm.getPivotPower());

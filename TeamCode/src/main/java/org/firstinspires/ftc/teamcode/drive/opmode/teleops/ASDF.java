@@ -19,11 +19,40 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 
 /**
- * This is a simple teleop routine for testing localization. Drive the robot around like a normal
- * teleop routine and make sure the robot's estimated pose matches the robot's actual pose (slight
- * errors are not out of the ordinary, especially with sudden drive motions). The goal of this
- * exercise is to ascertain whether the localizer has been configured properly (note: the pure
- * encoder localizer heading may be significantly off if the track width has not been tuned).
+ *
+ * --------------------------------------------------------------------------
+ *
+ * DRIVER CONTROLS
+ *
+ * Left Stick Up/Down/Left/Right                    Forward/Backward/Strafe
+ * Right Stick Left/Right                           Turning
+ * Back                                             Spin to face board
+ * Y                                                Reset IMU - Turn to face Alliance Station before doing this
+ *
+ * Right Trigger & Left Trigger Together            Launch Drone
+ *
+ * Press Start Once                                 Move Hook servo 180 degrees
+ * D-Pad Up                                         Spin winch motor
+ *
+ * --------------------------------------------------------------------------
+ *
+ * OPERATOR CONTROLS
+ *
+ * Left Bumper                                      Grab
+ * Right Bumper                                     Release
+ *
+ * X                                                Pivot to Ground
+ * Y                                                Pivot to go Under Trusses
+ * B                                                Pivot to Board Angle
+ * A                                                Pivot to Back Position
+ *
+ * D-Pad Left                                       Fold Wrist
+ * D-Pad Right                                      Extend Wrist
+ *
+ * Press Right Trigger Once                         Move Slide Up
+ * Press Left Trigger Once                          Move Slide Down
+ *
+ * --------------------------------------------------------------------------
  */
 @TeleOp(group = "drive")
 @Config
@@ -32,11 +61,11 @@ public class ASDF extends LinearOpMode {
     boolean runningPID;
     boolean isDepressedUp = false;
     boolean isDepressedDown = false;
-    boolean isDepressedBack = false;
+    boolean isDepressedStart= false;
     boolean wasUpPressed;
     boolean wasDownPressed;
-    Telemetry tm;
-    boolean wasBackPressed;
+    int hookStatus = 0;
+    boolean wasStartPressed;
     public static double Kp = 0.6;
     public static double Ki = 0;
     public static double Kd = 0.048;
@@ -45,13 +74,13 @@ public class ASDF extends LinearOpMode {
     public static double kI = 0.00001;
     public static double kD = 0;
     public static double kCos = -0.00005;
-    ElapsedTime timer = new ElapsedTime();
     double botHeading;
     double error;
     double tolerance = 3;
     double integralSum=0;
     double lastError = 0;
     double derivative;
+    double targetAngle = -90;
     double rx;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -65,21 +94,20 @@ public class ASDF extends LinearOpMode {
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         Servo hook = hardwareMap.get(Servo.class, "hook");
         Servo wrist = hardwareMap.get(Servo.class, "wrist");
-        DcMotor slide = hardwareMap.get(DcMotor.class, "slide");
-//        DcMotor pivot = hardwareMap.get(DcMotor.class, "pivot");
-        Servo clawL = hardwareMap.get(Servo.class, "clawL");
-        Servo clawR = hardwareMap.get(Servo.class, "clawR");
-        slide.setDirection(DcMotorSimple.Direction.REVERSE);
- //finql
-        arm.grab();
         wrist.setPosition(0);
-//        pivot.setTargetPosition(0);
-//        pivot.setDirection(DcMotorSimple.Direction.REVERSE);
 
         arm.setup();
         dashboard = FtcDashboard.getInstance();
         telemetry = dashboard.getTelemetry();
         droneRelease.setPosition(1);
+
+        while (opModeInInit()) {
+            if (gamepad1.b) {
+                targetAngle = 90;
+            } else if (gamepad1.x) {
+                targetAngle = -90;
+            }
+        }
         waitForStart();
 
         while (!isStopRequested()) {
@@ -88,15 +116,14 @@ public class ASDF extends LinearOpMode {
                 runningPID = true;
             }
             if (!runningPID) {
-                rx = -gamepad1.right_stick_x/2;
+                rx = -gamepad1.right_stick_x / 2;
             } else {
-                if (Math.abs(botHeading - Math.toRadians(-90)) < tolerance){
-                    runningPID =  false;
-                }
-                else {
-                    error = Math.toRadians(-90)-botHeading;
+                if (Math.abs(botHeading - Math.toRadians(targetAngle)) < tolerance) {
+                    runningPID = false;
+                } else {
+                    error = Math.toRadians(targetAngle) - botHeading;
                     integralSum = integralSum + (error * timer.seconds());
-                    derivative = (error - lastError)/timer.seconds();
+                    derivative = (error - lastError) / timer.seconds();
 
                     rx = (Kp * error) + (Ki * integralSum) + (Kd * derivative);
 
@@ -105,6 +132,9 @@ public class ASDF extends LinearOpMode {
                     timer.reset();
                 }
             }
+            if (gamepad1.y) {
+                imu.resetYaw();
+            }
             drive.setWeightedDrivePower(
                     new Pose2d(
                             -gamepad1.left_stick_y,
@@ -112,24 +142,24 @@ public class ASDF extends LinearOpMode {
                             rx
                     )
             );
+            buttonPressedDown();
+            buttonPressedUp();
+            buttonPressedStart();
 
             if (gamepad2.dpad_left) {
                 wrist.setPosition(0);
             } else if (gamepad2.dpad_right) {
                 wrist.setPosition(.95);
             }
-            // analog up/down for pivot & arm & wrist
 
 
             if (gamepad2.left_bumper) {
-//                arm.grabLeft();
-                arm.grab(); }
+                arm.grab();
+            }
             if (gamepad2.right_bumper) {
                 arm.release();
             }
 
-//
-//
 
             if (gamepad2.x) {
                 arm.ground();
@@ -142,48 +172,37 @@ public class ASDF extends LinearOpMode {
             }
 
 
-
-
-
-
-
-            if (gamepad2.a) {
+            if (wasStartPressed & hookStatus == 1) {
                 hook.setPosition(0);
-            }
-            else if (gamepad2.dpad_left) {
+            } else if (wasStartPressed & hookStatus == 0) {
                 hook.setPosition(1);
             }
 
-            if (gamepad2.right_trigger > .5) {
+            if (gamepad1.dpad_up) {
                 winch.setPower(1);
-            } else if (gamepad2.left_trigger > .5) {
-                winch.setPower(-1);
-            } else {
+            } else
                 winch.setPower(0);
             }
 
-            if (gamepad2.left_trigger > 0.1 && gamepad2.right_trigger > 0.1) {
+            if (gamepad1.left_trigger > 0.1 && gamepad1.right_trigger > 0.1) {
                 droneRelease.setPosition(0);
-            } else if (gamepad2.start) {
-                droneRelease.setPosition(1);
             }
-
 
 
             // preset positions: requires tuning/position determing and making sure directions are right
 
-            buttonPressedDown();
-            buttonPressedUp();
-//            if (wasUpPressed) {
-//                if (arm.getLevel() < 3) {
-//                    arm.goTo(arm.getLevel() + 1);
-//                    wasUpPressed = false; }
-//            } else if (wasDownPressed) {
-//                if (arm.getLevel() > 0) {
-//                    arm.goTo(arm.getLevel() - 1);
-//                    wasDownPressed = false; }
-//            }
-                arm.getNewPIDF(kP, kI, kD, kCos);
+            if (wasUpPressed) {
+                if (arm.getLevel() < 3) {
+                    arm.goTo(arm.getLevel() + 1);
+                    wasUpPressed = false;
+                }
+            } else if (wasDownPressed) {
+                if (arm.getLevel() > 0) {
+                    arm.goTo(arm.getLevel() - 1);
+                    wasDownPressed = false;
+                }
+            }
+            arm.getNewPIDF(kP, kI, kD, kCos);
 //
 //
 //            if (gamepad2.left_bumper) {
@@ -207,42 +226,43 @@ public class ASDF extends LinearOpMode {
             telemetry.addData("Arm Position", arm.getPivotPos());
             telemetry.addData("Desired Arm Position", arm.getTargetPivotPos());
             telemetry.addData("Motor Power", arm.getPivotPower());
+            telemetry.addData("Slide tick", arm.getSlidePos());
 //            telemetry.addData("Wrist Position", wrist.getPosition());
 //            telemetry.addData()
             telemetry.addData("Wrist Pos", wrist.getPosition());
-            telemetry.addData("Claw L & R Pos", arm.getLeftPos() + " "  + arm.getRightPos());
+            telemetry.addData("Claw L & R Pos", arm.getLeftPos() + " " + arm.getRightPos());
             telemetry.update();
 
         }
-    }
+
     public void buttonPressedUp() {
-        if (gamepad2.dpad_up && !isDepressedUp) {
+        if (gamepad2.right_trigger > 0.5 && !isDepressedUp) {
             isDepressedUp = true;
             wasUpPressed = false;
         }
-        if (!gamepad2.dpad_up && isDepressedUp) {
-            isDepressedUp = false;
-            wasUpPressed = true;
-        }
-    }
-    public void buttonPressedback() {
-        if (gamepad2.back && !isDepressedBack) {
-            isDepressedUp = true;
-            wasUpPressed = false;
-        }
-        if (!gamepad2.back && isDepressedBack) {
+        if (gamepad2.right_trigger < 0.5 && isDepressedUp) {
             isDepressedUp = false;
             wasUpPressed = true;
         }
     }
     public void buttonPressedDown() {
-        if (gamepad2.dpad_down && !isDepressedDown) {
+        if (gamepad2.left_trigger > 0.5 && !isDepressedDown) {
             isDepressedDown = true;
             wasDownPressed = false;
         }
-        if (!gamepad2.dpad_down && isDepressedDown) {
+        if (gamepad2.left_trigger < 0.5 && isDepressedDown) {
             isDepressedDown = false;
             wasDownPressed = true;
+        }
+    }
+    public void buttonPressedStart() {
+        if (gamepad1.start && !isDepressedStart) {
+            isDepressedStart = true;
+            wasStartPressed = false;
+        }
+        if (!gamepad1.start && isDepressedStart) {
+            isDepressedStart = false;
+            wasStartPressed = true;
         }
     }
 }

@@ -83,7 +83,7 @@ public class InputOutput {
         return this;
     }
     public void fillLevels() {
-        this.addLevel(0).addLevel(638).addLevel(1276).addLevel(1914);
+        this.addLevel(0).addLevel(1080).addLevel(2048);
     }
     // erase all levels
     public void clearLevels() {
