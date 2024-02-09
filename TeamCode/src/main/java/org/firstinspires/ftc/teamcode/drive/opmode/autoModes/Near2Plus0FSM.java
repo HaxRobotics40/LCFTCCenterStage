@@ -40,6 +40,7 @@ public class Near2Plus0FSM extends LinearOpMode {
     int itemSector;
     Pose2d startPose = new Pose2d(0,0,0);
     double distForward = 0;
+    boolean isTimer2Started = false;
     int isBlue = -1;
     int parkSide = -1;
     double output = 0.1;
@@ -48,7 +49,7 @@ public class Near2Plus0FSM extends LinearOpMode {
     Pose2d distanceSensePose;
     Trajectory driveToLine;
     TrajectorySequence driveToBoard;
-    Trajectory e;
+    Trajectory boardCorrection;
     TrajectorySequence park;
 //    TrajectorySequence afterDistSense;
 //    TrajectorySequence wholeAutoMode;
@@ -184,8 +185,10 @@ public class Near2Plus0FSM extends LinearOpMode {
                     telemetry.addData("timer",timer.seconds());
                     if (timer.seconds() > 0.5) {
                         arm.releaseLeft();
+                    }
+                    if (timer.seconds() > 1.25) {
                         arm.out();
-                        if (arm.atAngle()){
+                        if (arm.atAngle()) {
                             previousState = STATES.DROP;
                         }
                     }
@@ -219,6 +222,10 @@ public class Near2Plus0FSM extends LinearOpMode {
 
                     distForward = sensorDistance.getDistance(DistanceUnit.INCH);
 
+                    /*
+                    checks if it's a valid value, returns the difference
+
+                     */
                     if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity && sensorDistance.getDistance(DistanceUnit.INCH) != 0) {
                         distForward = sensorDistance.getDistance(DistanceUnit.INCH);
                         if (Math.abs(distForward - wantedDistance) > thresholdDistanceInches) {
@@ -230,36 +237,38 @@ public class Near2Plus0FSM extends LinearOpMode {
 
                     Pose2d lastPos = drive.getPoseEstimate();
                     distanceSensePose = (new Pose2d(72 - (distForward + 16.52), lastPos.getY(), lastPos.getHeading()));
-                    e = drive.trajectoryBuilder(driveToBoard.end()) // TODO change this back
+                    boardCorrection = drive.trajectoryBuilder(driveToBoard.end()) // TODO change this back
                             .forward(output)
                             .build();
-                    drive.followTrajectoryAsync(e);
+                    drive.followTrajectoryAsync(boardCorrection);
+                    // moves forward the distance and continues
                     previousState = STATES.DISTANCE_SENSE;
-                }
-                if (!drive.isBusy()) {
-
+                } else {
                     currentState = STATES.SCORE_YELLOW;
                 }
                 break;
             case SCORE_YELLOW:
                 if (previousState != currentState) {
                     arm.wristOut();
-                    arm.frontBoard();
-                    previousState = STATES.SCORE_YELLOW;
+                    arm.board();
+                    if (arm.atAngle()) { previousState = STATES.SCORE_YELLOW; }
                 } else {
                     currentState = STATES.DROP_YELLOW;
                 }
                 break;
             case DROP_YELLOW:
                 if (previousState != currentState) {
-                    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-                    if (timer.time() > 0.25) {
+                    if (!isTimer2Started) {
+                        timer.reset(); // starts timer
+                        isTimer2Started = true; // stops this block from running again
+                    }
+                    if (timer.time() > 0.5) {
                         arm.release();
                     }
-                    if (timer.time() > 0.75) {
+                    if (timer.time() > 1) {
                         arm.rest();
                     }
-                    if (timer.time() > 1) {
+                    if (arm.atAngle() & timer.time() > 1) {
                         previousState = STATES.DROP_YELLOW;
                     }
                 } else {
@@ -268,7 +277,7 @@ public class Near2Plus0FSM extends LinearOpMode {
                 break;
             case PARK:
                 if (previousState != currentState) {
-                    park = drive.trajectorySequenceBuilder(e.end())
+                    park = drive.trajectorySequenceBuilder(boardCorrection.end())
                             .turn(Math.toRadians(isBlue*90))
                             .lineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)))
                             .build();
