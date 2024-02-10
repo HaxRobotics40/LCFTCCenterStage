@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
 
 
-@Autonomous(group = "comp")
+@Autonomous(group = "comp", preselectTeleOp = "ASDF")
 @Config
 public class Far2Plus0FSM extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
@@ -47,7 +47,7 @@ public class Far2Plus0FSM extends LinearOpMode {
     Pose2d distanceSensePose;
     Trajectory driveToLine;
     TrajectorySequence driveToBoard;
-    Trajectory boardCorrection;
+    TrajectorySequence boardCorrection;
     TrajectorySequence park;
 
     public enum STATES {
@@ -108,7 +108,11 @@ public class Far2Plus0FSM extends LinearOpMode {
 
                 driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
                         .lineToLinearHeading(new Pose2d(-36, 36*isBlue, Math.toRadians(180))) // go to center of the tape
-                        .lineTo(new Vector2d(48, 36*isBlue)) // cross the field (go under truss if this is far)
+                        .lineToConstantHeading(new Vector2d(12, 36*isBlue)) // cross the field (go under truss if this is far)
+                        .addDisplacementMarker(() -> {
+                            arm.frontBoard();
+                        })
+                        .lineToSplineHeading(new Pose2d(48, 36*isBlue, Math.toRadians(0)))
                         .strafeLeft(((itemSector-1)*5.25)-2) // strafes in front of appropriate AprilTag
                         .build();
 
@@ -232,10 +236,11 @@ public class Far2Plus0FSM extends LinearOpMode {
 
                     Pose2d lastPos = drive.getPoseEstimate();
                     distanceSensePose = (new Pose2d(72 - (distForward + 16.52), lastPos.getY(), lastPos.getHeading()));
-                    boardCorrection = drive.trajectoryBuilder(driveToBoard.end()) // TODO change this back
-                            .forward(output)
+                    boardCorrection = drive.trajectorySequenceBuilder(driveToBoard.end()) // TODO change this back
+                            .turn(Math.toRadians(180))
+                            .forward(-output)
                             .build();
-                    drive.followTrajectoryAsync(boardCorrection);
+                    drive.followTrajectorySequenceAsync(boardCorrection);
                     // moves forward the distance and continues
                     previousState = STATES.DISTANCE_SENSE;
                 } else {
@@ -245,7 +250,6 @@ public class Far2Plus0FSM extends LinearOpMode {
             case SCORE_YELLOW:
                 if (previousState != currentState) {
                     arm.wristOut();
-                    arm.board();
                     if (arm.atAngle()) { previousState = STATES.SCORE_YELLOW; }
                 } else {
                     currentState = STATES.DROP_YELLOW;

@@ -23,7 +23,7 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
 
 
-@Autonomous(group = "comp")
+@Autonomous(group = "comp", preselectTeleOp = "ASDF")
 @Config
 public class Near2Plus0FSM extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
@@ -49,10 +49,8 @@ public class Near2Plus0FSM extends LinearOpMode {
     Pose2d distanceSensePose;
     Trajectory driveToLine;
     TrajectorySequence driveToBoard;
-    Trajectory boardCorrection;
+    TrajectorySequence boardCorrection;
     TrajectorySequence park;
-//    TrajectorySequence afterDistSense;
-//    TrajectorySequence wholeAutoMode;
     public enum STATES {
         INIT,
         ALIGN_LINE,
@@ -113,7 +111,7 @@ public class Near2Plus0FSM extends LinearOpMode {
 
                 driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
                         .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(180))) // go to center of the tape
-                        .lineTo(new Vector2d(48, 36*isBlue)) // cross the field (go under truss if this is far)
+                        .lineToLinearHeading(new Pose2d(48, 36*isBlue, Math.toRadians(180))) // cross the field (go under truss if this is far)
                         .strafeLeft(((itemSector-1)*5.25)-2) // strafes in front of appropriate AprilTag
                         .build();
 
@@ -140,7 +138,7 @@ public class Near2Plus0FSM extends LinearOpMode {
         }
     }
     private VisionPortal initVisionPortal() {
-        vPortalBuilder = new VisionPortal.Builder();
+        vPortalBuilder = new VisionPortal.Builder(); // sets up vision processing with object detector
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
         vPortalBuilder.addProcessor(detector);
 
@@ -148,7 +146,7 @@ public class Near2Plus0FSM extends LinearOpMode {
     }
     private void opModeLoop() {
         switch(currentState) {
-            case INIT:
+            case INIT: // initial state to allow align line to run when wanted
                 break;
             case ALIGN_LINE:
                 if (previousState != currentState) {
@@ -185,11 +183,11 @@ public class Near2Plus0FSM extends LinearOpMode {
                     telemetry.addData("timer",timer.seconds());
                     if (timer.seconds() > 0.5) {
                         arm.releaseLeft();
-                    }
+                    } // waits half a second to release the purple pixel
                     if (timer.seconds() > 1.25) {
-                        arm.out();
+                        arm.frontBoard(); // waits another 0.75s to start moving arm
                         if (arm.atAngle()) {
-                            previousState = STATES.DROP;
+                            previousState = STATES.DROP; //switches state only when arm reaches the desired angle
                         }
                     }
                 } else {
@@ -199,7 +197,7 @@ public class Near2Plus0FSM extends LinearOpMode {
             case DELAY:
                 if (previousState != currentState) {
                     ElapsedTime delayTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-                    if (delayTimer.time() > delayTime) {
+                    if (delayTimer.time() > delayTime) { // set delayTime to wait for other robots to park
                         previousState = STATES.DELAY;
                     }
                 } else if (!drive.isBusy()) {
@@ -209,7 +207,7 @@ public class Near2Plus0FSM extends LinearOpMode {
             case ALIGN_BOARD:
                 if (previousState != currentState) {
 
-                    drive.followTrajectorySequenceAsync(driveToBoard);
+                    drive.followTrajectorySequenceAsync(driveToBoard); // drive to middle of U shape, drive to board, strafe
                     previousState = STATES.ALIGN_BOARD;
                 } else if (!drive.isBusy()) {
                     currentState = STATES.SCORE_YELLOW;
@@ -224,7 +222,7 @@ public class Near2Plus0FSM extends LinearOpMode {
 
                     /*
                     checks if it's a valid value, returns the difference
-
+                    does a trajectory to move forward/backward the difference
                      */
                     if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity && sensorDistance.getDistance(DistanceUnit.INCH) != 0) {
                         distForward = sensorDistance.getDistance(DistanceUnit.INCH);
@@ -237,10 +235,11 @@ public class Near2Plus0FSM extends LinearOpMode {
 
                     Pose2d lastPos = drive.getPoseEstimate();
                     distanceSensePose = (new Pose2d(72 - (distForward + 16.52), lastPos.getY(), lastPos.getHeading()));
-                    boardCorrection = drive.trajectoryBuilder(driveToBoard.end()) // TODO change this back
-                            .forward(output)
+                    boardCorrection = drive.trajectorySequenceBuilder(driveToBoard.end()) // TODO change this back
+                            .turn(Math.toRadians(180))
+                            .forward(-output)
                             .build();
-                    drive.followTrajectoryAsync(boardCorrection);
+                    drive.followTrajectorySequenceAsync(boardCorrection);
                     // moves forward the distance and continues
                     previousState = STATES.DISTANCE_SENSE;
                 } else {
@@ -249,9 +248,9 @@ public class Near2Plus0FSM extends LinearOpMode {
                 break;
             case SCORE_YELLOW:
                 if (previousState != currentState) {
-                    arm.wristOut();
+                    arm.wristOut(); // moves the wrist (servo) and sets arm to scoring pose
                     arm.board();
-                    if (arm.atAngle()) { previousState = STATES.SCORE_YELLOW; }
+                    if (arm.atAngle()) { previousState = STATES.SCORE_YELLOW; } // same wait to change state
                 } else {
                     currentState = STATES.DROP_YELLOW;
                 }

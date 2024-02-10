@@ -21,37 +21,37 @@ import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
 /**
  *
  * --------------------------------------------------------------------------
- *
+ *<p>
  * DRIVER CONTROLS
- *
- * Left Stick Up/Down/Left/Right                    Forward/Backward/Strafe
- * Right Stick Left/Right                           Turning
- * Back                                             Spin to face board
- * Y                                                Reset IMU - Turn to face Alliance Station before doing this
- *
- * Right Trigger & Left Trigger Together            Launch Drone
- *
- * Press Start Once                                 Move Hook servo 180 degrees
- * D-Pad Up                                         Spin winch motor
- *
+ * <p>
+ * Left Stick Up/Down/Left/Right      \\              Forward/Backward/Strafe<p>
+ * Right Stick Left/Right      \\                     Turning<p>
+ * Back    \\                                         Spin to face board<p>
+ * Y                          \\                      Reset IMU - Turn to face Alliance Station before doing this<p>
+ *<p>
+ * Right Trigger & Left Trigger Together     \\       Launch Drone<p>
+ *<p>
+ * Press Start Once                          \\       Move Hook servo 180 degrees<p>
+ * D-Pad Up                                    \\     Spin winch motor<p>
+ *<p>
  * --------------------------------------------------------------------------
- *
+ *<p>
  * OPERATOR CONTROLS
- *
- * Left Bumper                                      Grab
- * Right Bumper                                     Release
- *
- * X                                                Pivot to Ground
- * Y                                                Pivot to go Under Trusses
- * B                                                Pivot to Board Angle
- * A                                                Pivot to Back Position
- *
- * D-Pad Left                                       Fold Wrist
- * D-Pad Right                                      Extend Wrist
- *
- * Press Right Trigger Once                         Move Slide Up
- * Press Left Trigger Once                          Move Slide Down
- *
+ *<p>
+ * Left Bumper                                 \\     Grab<p>
+ * Right Bumper                              \\       Release<p>
+ *<p>
+ * X                                       \\         Pivot to Ground<p>
+ * Y                                     \\           Pivot to go Under Trusses<p>
+ * B                                   \\             Pivot to Board Angle<p>
+ * A                                       \\         Pivot to Back Position<p>
+ *<p>
+ * D-Pad Left                                \\       Fold Wrist<p>
+ * D-Pad Right                                 \\     Extend Wrist<p>
+ *<p>
+ * Press Right Trigger Once                      \\   Move Slide Up<p>
+ * Press Left Trigger Once                         \\ Move Slide Down<p>
+ *<p>
  * --------------------------------------------------------------------------
  */
 @TeleOp(group = "drive")
