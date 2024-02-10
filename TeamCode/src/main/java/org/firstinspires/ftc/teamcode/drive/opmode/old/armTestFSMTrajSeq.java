@@ -1,10 +1,9 @@
-package org.firstinspires.ftc.teamcode.drive.opmode.autoModes;
+package org.firstinspires.ftc.teamcode.drive.opmode.old;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -20,7 +19,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 
 @Autonomous(group = "comp")
 //@Disabled
-public class armTestFSM extends LinearOpMode {
+public class armTestFSMTrajSeq extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
     testEOCVpipeline detector = new testEOCVpipeline();
@@ -38,7 +37,7 @@ public class armTestFSM extends LinearOpMode {
     InputOutput arm;
     int status= 0;
     int itemSector;
-    Pose2d startPose= new Pose2d(-36, -60, Math.toRadians(90));
+    Pose2d startPose = new Pose2d(-36, -60, Math.toRadians(90));
     int isBlue = -1;
     int parkSide = -1;
     double output = 0.1;
@@ -55,7 +54,7 @@ public class armTestFSM extends LinearOpMode {
 //        vPortal = initVisionPortal();
         arm.setup();
         setupIMU();
-//        setupDistanceSensor();
+        setupDistanceSensor();
 //        vPortal.setProcessorEnabled(detector, true);
 
         clawL = hardwareMap.get(Servo.class, "clawL");
@@ -90,6 +89,9 @@ public class armTestFSM extends LinearOpMode {
                 wholeAutoMode = drive.trajectorySequenceBuilder(startPose)
                         .forward(-4)
                         .strafeLeft(4)
+                        .addDisplacementMarker(() -> {
+                            arm.ground();
+                        })
                         .build();
 //                telemetry.addData("Parking side", parkSide);
 //                telemetry.addData("Location", detector.locationInt());
@@ -99,7 +101,8 @@ public class armTestFSM extends LinearOpMode {
             }
         }
         waitForStart();
-        currentState = STATES.DRIVE;
+        currentState = armTestFSMTrajSeq.STATES.DRIVE;
+
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 switch (currentState) {
@@ -112,14 +115,6 @@ public class armTestFSM extends LinearOpMode {
                             drive.followTrajectorySequenceAsync(wholeAutoMode);
                             previousState = STATES.DRIVE;
                         } else if (!drive.isBusy()) {
-                            currentState = STATES.DROP;
-                        }
-                        break;
-                    case DROP:
-                        if (previousState != currentState) {
-                            arm.ground();
-                            previousState = STATES.DROP;
-                        } else if (arm.getTargetPivotPos() == 500 && arm.atAngle()) {
                             currentState = STATES.STOP;
                         }
                         break;
@@ -139,7 +134,6 @@ public class armTestFSM extends LinearOpMode {
 
         return vPortalBuilder.build();
     }
-
     private void setupIMU() {
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT; // TODO: Update once it's done being built
