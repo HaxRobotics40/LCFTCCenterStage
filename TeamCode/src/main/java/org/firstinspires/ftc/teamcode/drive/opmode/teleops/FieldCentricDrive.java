@@ -13,13 +13,50 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
-
+/**
+ *
+ * --------------------------------------------------------------------------
+ *
+ * DRIVER CONTROLS
+ *
+ * Left Stick Up/Down/Left/Right                    Forward/Backward/Strafe
+ * Right Stick Left/Right                           Turning
+ * Back                                             Spin to face board
+ * Y                                                Reset IMU - Turn to face Alliance Station before doing this
+ *
+ * Right Trigger & Left Trigger Together            Launch Drone
+ *
+ * Press Start Once                                 Move Hook servo 180 degrees
+ * D-Pad Up                                         Spin winch motor
+ *
+ * --------------------------------------------------------------------------
+ *
+ * OPERATOR CONTROLS
+ *
+ * Left Bumper                                      Grab
+ * Right Bumper                                     Release
+ *
+ * X                                                Pivot to Ground
+ * Y                                                Pivot to go Under Trusses
+ * B                                                Pivot to Board Angle
+ * A                                                Pivot to Back Position
+ *
+ * D-Pad Left                                       Fold Wrist
+ * D-Pad Right                                      Extend Wrist
+ *
+ * Press Right Trigger Once                         Move Slide Up
+ * Press Left Trigger Once                          Move Slide Down
+ *
+ * --------------------------------------------------------------------------
+ */
 @TeleOp
 @Config
 public class FieldCentricDrive extends LinearOpMode {
     boolean isDepressedUp = false;
     FtcDashboard dashboard;
     boolean isDepressedDown = false;
+    boolean isDepressedStart = false;
+    boolean wasStartPressed;
     boolean wasUpPressed;
     boolean wasDownPressed;
     boolean runningPID;
@@ -31,8 +68,10 @@ public class FieldCentricDrive extends LinearOpMode {
     double integralSum=0;
     double lastError = 0;
     double derivative;
+    double botHeading;
+    int hookStatus;
     double rx;
-
+    double targetAngle = 90;
     //Sets value of Kp, Ki and Kd for PID controller
     public void setTunings(double kp, double ki, double kd) {
         Kp = kp;
@@ -40,23 +79,33 @@ public class FieldCentricDrive extends LinearOpMode {
         Kd = kd;
     }
     public void buttonPressedUp() {
-        if (gamepad2.dpad_up && !isDepressedUp) {
+        if (gamepad2.right_trigger > 0.5 && !isDepressedUp) {
             isDepressedUp = true;
             wasUpPressed = false;
         }
-        if (!gamepad2.dpad_up && isDepressedUp) {
+        if (gamepad2.right_trigger < 0.5 && isDepressedUp) {
             isDepressedUp = false;
             wasUpPressed = true;
         }
     }
     public void buttonPressedDown() {
-        if (gamepad2.dpad_down && !isDepressedDown) {
+        if (gamepad2.left_trigger > 0.5 && !isDepressedDown) {
             isDepressedDown = true;
             wasDownPressed = false;
         }
-        if (!gamepad2.dpad_down && isDepressedDown) {
+        if (gamepad2.left_trigger < 0.5 && isDepressedDown) {
             isDepressedDown = false;
             wasDownPressed = true;
+        }
+    }
+    public void buttonPressedStart() {
+        if (gamepad1.start && !isDepressedStart) {
+            isDepressedStart = true;
+            wasStartPressed = false;
+        }
+        if (!gamepad1.start && isDepressedStart) {
+            isDepressedStart = false;
+            wasStartPressed = true;
         }
     }
     @Override
@@ -96,8 +145,14 @@ public class FieldCentricDrive extends LinearOpMode {
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        arm.grab();
         arm.setup();
+        while (opModeInInit()) {
+            if (gamepad1.b) {
+                targetAngle = 90;
+            } else if (gamepad1.x) {
+                targetAngle = -90;
+            }
+        }
         waitForStart();
 
         if (isStopRequested()) return;
@@ -109,22 +164,20 @@ public class FieldCentricDrive extends LinearOpMode {
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference..
-            if (gamepad1.options) {
-                imu.resetYaw();
-            }
 
-            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+
+            botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             if(gamepad1.back) {
                 runningPID = true;
             }
             //PID controller for heading
             if (runningPID) {
-                if (Math.abs(botHeading - Math.toRadians(-90)) < tolerance){
+                if (Math.abs(botHeading - Math.toRadians(targetAngle)) < tolerance){
                     runningPID =  false;
                 }
                 else {
-                    error = Math.toRadians(-90)-botHeading;
+                    error = Math.toRadians(targetAngle)-botHeading;
                     integralSum = integralSum + (error * timer.seconds());
                     derivative = (error - lastError)/timer.seconds();
 
@@ -160,45 +213,67 @@ public class FieldCentricDrive extends LinearOpMode {
 
             buttonPressedDown();
             buttonPressedUp();
-            if (wasUpPressed) {
-               arm.goTo(arm.getLevel() + 1);
-               wasUpPressed = false;
-            } else if (wasDownPressed) {
-               arm.goTo(arm.getLevel() - 1);
-               wasDownPressed = false;
+            buttonPressedStart();
+
+            if (gamepad2.dpad_left) {
+                arm.wristIn();
+            } else if (gamepad2.dpad_right) {
+                arm.wristOut();
             }
+
+            if (gamepad1.y) {
+                imu.resetYaw();
+            }
+
+            if (wasUpPressed) {
+                if (arm.getLevel() < 3) {
+                    arm.goTo(arm.getLevel() + 1);
+                    wasUpPressed = false;
+                }
+            } else if (wasDownPressed) {
+                if (arm.getLevel() > 0) {
+                    arm.goTo(arm.getLevel() - 1);
+                    wasDownPressed = false;
+                }
+            }
+
+
+
             if (gamepad2.dpad_right) {
                 arm.goTo(0);
             }
             if (gamepad2.x) {
                 arm.ground();
             } else if (gamepad2.y) {
-                arm.rest();
+                arm.out();
             } else if (gamepad2.b) {
+                arm.frontBoard();
+            } else if (gamepad2.a) {
                 arm.board();
             }
 
-           if (gamepad2.left_bumper) {
+            if (gamepad2.left_bumper) {
+                arm.grab();
+            }
+            if (gamepad2.right_bumper) {
                 arm.release();
-            } else if (gamepad2.right_bumper) {
-              arm.grab();
-           }
+            }
 
-           if (gamepad2.back) {
-               droneRelease.setPosition(1);
-           }
-
-            if (timer.time() > 90) {
+            if (wasStartPressed & hookStatus == 1) {
                 hook.setPosition(0);
+            } else if (wasStartPressed & hookStatus == 0) {
+                hook.setPosition(1);
             }
 
-            if (timer.time() > 90 && gamepad2.right_trigger > .5) {
+            if (gamepad1.dpad_up) {
                 winch.setPower(1);
-            } else if (timer.time() > 90 && gamepad2.left_trigger > .5) {
-                winch.setPower(-1);
-            } else {
+            } else
                 winch.setPower(0);
-            }
+        }
+
+        if (gamepad1.left_trigger > 0.1 && gamepad1.right_trigger > 0.1) {
+            droneRelease.setPosition(0);
+        }
             arm.update();
             telemetry.addData("botheading", botHeading);
             telemetry.addData("rx", rx);
@@ -206,5 +281,4 @@ public class FieldCentricDrive extends LinearOpMode {
 
 
     }
-}
 }

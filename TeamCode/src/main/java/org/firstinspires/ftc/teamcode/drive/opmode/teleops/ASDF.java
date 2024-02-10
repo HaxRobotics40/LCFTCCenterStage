@@ -147,9 +147,9 @@ public class ASDF extends LinearOpMode {
             buttonPressedStart();
 
             if (gamepad2.dpad_left) {
-                wrist.setPosition(0);
+                arm.wristIn();
             } else if (gamepad2.dpad_right) {
-                wrist.setPosition(.95);
+                arm.wristOut();
             }
 
 
@@ -203,16 +203,7 @@ public class ASDF extends LinearOpMode {
                 }
             }
             arm.getNewPIDF(kP, kI, kD, kCos);
-//
-//
-//            if (gamepad2.left_bumper) {
-//                arm.release();
-//            } else if (gamepad2.right_bumper) {
-//                arm.grab();
-//            }
-//
-//
-//
+
             drive.update();
             arm.update();
 
