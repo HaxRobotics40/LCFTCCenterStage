@@ -21,11 +21,8 @@ public class MeepMeepTesting {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(new Pose2d(-36, isBlue*43, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
-                                .lineToLinearHeading(new Pose2d(-36, 36*isBlue, Math.toRadians(180))) // go to center of the tape
-                                .lineToConstantHeading(new Vector2d(12, 36*isBlue)) // cross the field (go under truss if this is far)
-                                .lineToSplineHeading(new Pose2d(48, 36*isBlue, Math.toRadians(0)))
-                                .strafeLeft(((itemSector-1)*5.25)-2) // strafes in front of appropriate AprilTag
+                        drive.trajectorySequenceBuilder(new Pose2d(12, -66, Math.toRadians(270)))
+                                .lineToLinearHeading(new Pose2d(14, isBlue * 43, Math.toRadians((-isBlue * 90) - 7.5)))
                                 .build()
                 );
         meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_JUICE_DARK)

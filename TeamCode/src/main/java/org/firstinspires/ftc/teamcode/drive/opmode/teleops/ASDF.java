@@ -101,13 +101,13 @@ public class ASDF extends LinearOpMode {
         telemetry = dashboard.getTelemetry();
         droneRelease.setPosition(1);
 
-        while (opModeInInit()) {
-            if (gamepad1.b) {
-                targetAngle = 90;
-            } else if (gamepad1.x) {
-                targetAngle = -90;
-            }
-        }
+//        while (opModeInInit()) {
+//            if (gamepad1.b) {
+//                targetAngle = 90;
+//            } else if (gamepad1.x) {
+//                targetAngle = -90;
+//            }
+//        }
         waitForStart();
 
         while (!isStopRequested()) {
@@ -180,7 +180,7 @@ public class ASDF extends LinearOpMode {
 
             if (gamepad1.dpad_up) {
                 winch.setPower(1);
-            } else
+            } else {
                 winch.setPower(0);
             }
 
@@ -225,7 +225,7 @@ public class ASDF extends LinearOpMode {
             telemetry.update();
 
         }
-
+    }
     public void buttonPressedUp() {
         if (gamepad2.right_trigger > 0.5 && !isDepressedUp) {
             isDepressedUp = true;

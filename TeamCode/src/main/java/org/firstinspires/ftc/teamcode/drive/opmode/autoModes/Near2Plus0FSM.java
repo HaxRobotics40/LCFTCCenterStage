@@ -27,6 +27,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 @Config
 public class Near2Plus0FSM extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
+    boolean startedDriving = false;
     VisionPortal vPortal;
     ElapsedTime timer;
     testEOCVpipeline detector = new testEOCVpipeline();
@@ -105,9 +106,15 @@ public class Near2Plus0FSM extends LinearOpMode {
                 if (detector.locationInt() != -1) {
                     itemSector = detector.locationInt();
                 }
-                driveToLine = drive.trajectoryBuilder(startPose)
-                        .lineToLinearHeading(new Pose2d(12, isBlue*43, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
-                        .build();
+                if (itemSector != 2) {
+                    driveToLine = drive.trajectoryBuilder(startPose)
+                            .lineToLinearHeading(new Pose2d(17, isBlue * 50, Math.toRadians((-isBlue * 90) + ((itemSector - 1) * -39.4))))
+                            .build();
+                } else {
+                    driveToLine = drive.trajectoryBuilder(startPose)
+                            .lineToLinearHeading(new Pose2d(14, isBlue * 43, Math.toRadians((-isBlue * 90) - 10)))
+                            .build();
+                }
 
                 driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
                         .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(180))) // go to center of the tape
@@ -166,6 +173,7 @@ public class Near2Plus0FSM extends LinearOpMode {
 
                     // this if statement makes it run arm.ground() in the while loop until its within enough ticks
                     if (arm.atAngle()) {
+                        arm.releaseLeft();
                         previousState = STATES.SCORE_PURPLE;
                     }
                 } else { // this else statement isn't an elif because rr isn't running
@@ -181,9 +189,6 @@ public class Near2Plus0FSM extends LinearOpMode {
                         isTimerStarted = true; // stops this block from running again
                     }
                     telemetry.addData("timer",timer.seconds());
-                    if (timer.seconds() > 0.5) {
-                        arm.releaseLeft();
-                    } // waits half a second to release the purple pixel
                     if (timer.seconds() > 1.25) {
                         arm.frontBoard(); // waits another 0.75s to start moving arm
                         if (arm.atAngle()) {
@@ -210,12 +215,12 @@ public class Near2Plus0FSM extends LinearOpMode {
                     drive.followTrajectorySequenceAsync(driveToBoard); // drive to middle of U shape, drive to board, strafe
                     previousState = STATES.ALIGN_BOARD;
                 } else if (!drive.isBusy()) {
-                    currentState = STATES.SCORE_YELLOW;
+                    currentState = STATES.DISTANCE_SENSE;
                 }
                 break;
             case DISTANCE_SENSE:
                 if (previousState != currentState) {
-                    double wantedDistance = 3; // how far away you want the robot to go
+                    double wantedDistance = 2; // how far away you want the robot to go
                     double thresholdDistanceInches = 0.1;
 
                     distForward = sensorDistance.getDistance(DistanceUnit.INCH);
@@ -240,35 +245,28 @@ public class Near2Plus0FSM extends LinearOpMode {
                             .forward(-output)
                             .build();
                     drive.followTrajectorySequenceAsync(boardCorrection);
+                    startedDriving = true;
                     // moves forward the distance and continues
                     previousState = STATES.DISTANCE_SENSE;
-                } else {
+                } else if (startedDriving & !drive.isBusy()){
                     currentState = STATES.SCORE_YELLOW;
                 }
                 break;
             case SCORE_YELLOW:
                 if (previousState != currentState) {
                     arm.wristOut(); // moves the wrist (servo) and sets arm to scoring pose
-                    arm.board();
-                    if (arm.atAngle()) { previousState = STATES.SCORE_YELLOW; } // same wait to change state
-                } else {
-                    currentState = STATES.DROP_YELLOW;
-                }
-                break;
-            case DROP_YELLOW:
-                if (previousState != currentState) {
                     if (!isTimer2Started) {
                         timer.reset(); // starts timer
                         isTimer2Started = true; // stops this block from running again
                     }
-                    if (timer.time() > 0.5) {
+                    if (timer.time() > 0.75) {
                         arm.release();
                     }
                     if (timer.time() > 1.25) {
                         arm.rest();
                     }
                     if (arm.atAngle() & timer.time() > 1.25) {
-                        previousState = STATES.DROP_YELLOW;
+                        previousState = STATES.SCORE_YELLOW;
                     }
                 } else {
                     currentState = STATES.PARK;
@@ -277,8 +275,9 @@ public class Near2Plus0FSM extends LinearOpMode {
             case PARK:
                 if (previousState != currentState) {
                     park = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
-                            .turn(Math.toRadians(isBlue*90))
-                            .lineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)))
+                            .turn(Math.toRadians(isBlue*-90))
+                            .splineToConstantHeading(new Vector2d(64, isBlue*(36+(parkSide*24))), Math.toRadians(0))
+                            .turn(Math.toRadians(180))
                             .build();
                     drive.followTrajectorySequenceAsync(park);
                     previousState = STATES.PARK;

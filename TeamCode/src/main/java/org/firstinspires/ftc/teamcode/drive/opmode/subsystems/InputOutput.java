@@ -191,10 +191,10 @@ public class InputOutput {
         clawR.setPosition(0.84);
     }
 
-    public void grabLeft() { clawL.setPosition(0); }
-    public void grabRight() { clawR.setPosition(0.36); }
-    public void releaseLeft() {clawL.setPosition(.48);}
-    public void releaseRight() {clawR.setPosition(1);}
+    public void grabLeft() { clawL.setPosition(0.48); }
+    public void grabRight() { clawR.setPosition(1); }
+    public void releaseLeft() {clawL.setPosition(.7);}
+    public void releaseRight() {clawR.setPosition(.84);}
     public void wristIn() { wrist.setPosition(0); }
     public void wristOut() { wrist.setPosition(1); }
 
