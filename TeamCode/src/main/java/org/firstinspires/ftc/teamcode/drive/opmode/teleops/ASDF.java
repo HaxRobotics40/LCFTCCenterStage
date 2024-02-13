@@ -97,6 +97,8 @@ public class ASDF extends LinearOpMode {
         wrist.setPosition(0);
 
         arm.setup();
+        arm.clearLevels();
+        arm.addLevel(0).addLevel(880).addLevel(1618);
         dashboard = FtcDashboard.getInstance();
         telemetry = dashboard.getTelemetry();
         droneRelease.setPosition(1);

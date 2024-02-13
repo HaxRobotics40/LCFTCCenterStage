@@ -11,9 +11,10 @@ import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
     static int isBlue = -1;
+    static int itemSector = 2;
 
     public static void main(String[] args) {
-        int itemSector = 3;
+        int itemSector = 2;
         Pose2d pose2 = new Pose2d(12,-43, Math.toRadians(90+((0-1)*-39.4)));
         MeepMeep meepMeep = new MeepMeep(700);
 
@@ -21,8 +22,9 @@ public class MeepMeepTesting {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(new Pose2d(12, -66, Math.toRadians(270)))
-                                .lineToLinearHeading(new Pose2d(14, isBlue * 43, Math.toRadians((-isBlue * 90) - 7.5)))
+                        drive.trajectorySequenceBuilder(new Pose2d(17, -52, Math.toRadians((-isBlue * 90) + ((itemSector - 1) * -19.4))))
+                                .splineToLinearHeading(new Pose2d(48, 60 * isBlue, Math.toRadians(180)), Math.toRadians(0)) // go to center of the tape
+                                .strafeTo(new Vector2d(48, 41* isBlue)) // strafes in front of appropriate AprilTag
                                 .build()
                 );
         meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_JUICE_DARK)

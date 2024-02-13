@@ -106,21 +106,31 @@ public class Near2Plus0FSM extends LinearOpMode {
                 if (detector.locationInt() != -1) {
                     itemSector = detector.locationInt();
                 }
-                if (itemSector != 2) {
+                if (itemSector == 0) {
                     driveToLine = drive.trajectoryBuilder(startPose)
-                            .lineToLinearHeading(new Pose2d(17, isBlue * 50, Math.toRadians((-isBlue * 90) + ((itemSector - 1) * -39.4))))
+                            .lineToLinearHeading(new Pose2d(16, isBlue * 50, Math.toRadians((-isBlue * 90) + ((itemSector - 1) * -39.4))))
                             .build();
-                } else {
+                } else if (itemSector == 1) {
                     driveToLine = drive.trajectoryBuilder(startPose)
                             .lineToLinearHeading(new Pose2d(14, isBlue * 43, Math.toRadians((-isBlue * 90) - 10)))
                             .build();
+                } else {
+                    driveToLine = drive.trajectoryBuilder(startPose)
+                            .lineToLinearHeading(new Pose2d(17, isBlue * 52, Math.toRadians((-isBlue * 90) + ((itemSector - 1) * -19.4))))
+                            .build();
                 }
-
-                driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
-                        .lineToLinearHeading(new Pose2d(12, 36*isBlue, Math.toRadians(180))) // go to center of the tape
-                        .lineToLinearHeading(new Pose2d(48, 36*isBlue, Math.toRadians(180))) // cross the field (go under truss if this is far)
-                        .strafeLeft(((itemSector-1)*5.25)-2) // strafes in front of appropriate AprilTag
-                        .build();
+                if (itemSector != 2) {
+                    driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
+                            .lineToLinearHeading(new Pose2d(12, 36 * isBlue, Math.toRadians(180))) // go to center of the tape
+                            .lineToLinearHeading(new Pose2d(48, 36 * isBlue, Math.toRadians(180))) // cross the field (go under truss if this is far)
+                            .strafeLeft(((itemSector - 1) * 6.25) - 2) // strafes in front of appropriate AprilTag
+                            .build();
+                } else {
+                    driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
+                            .splineToLinearHeading(new Pose2d(48, 60 * isBlue, Math.toRadians(180)), Math.toRadians(0)) // go to center of the tape
+                            .strafeTo(new Vector2d(48, 41 * isBlue)) // strafes in front of appropriate AprilTag
+                            .build();
+                }
 
                 // set up the pre-runnable auto paths
                 // driveToLine moves forward and angles the robot to drop on the purple pixel
@@ -220,7 +230,7 @@ public class Near2Plus0FSM extends LinearOpMode {
                 break;
             case DISTANCE_SENSE:
                 if (previousState != currentState) {
-                    double wantedDistance = 2; // how far away you want the robot to go
+                    double wantedDistance = 1.5; // how far away you want the robot to go
                     double thresholdDistanceInches = 0.1;
 
                     distForward = sensorDistance.getDistance(DistanceUnit.INCH);

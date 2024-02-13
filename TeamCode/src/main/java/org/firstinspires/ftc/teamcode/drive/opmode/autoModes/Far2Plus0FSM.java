@@ -27,6 +27,7 @@ public class Far2Plus0FSM extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
     ElapsedTime timer;
+    boolean startedDriving;
     testEOCVpipeline detector = new testEOCVpipeline();
     //    TODO: Use dead wheels
     SampleMecanumDrive drive;
@@ -102,9 +103,15 @@ public class Far2Plus0FSM extends LinearOpMode {
                 if (detector.locationInt() != -1) {
                     itemSector = detector.locationInt();
                 }
-                driveToLine = drive.trajectoryBuilder(startPose)
-                        .lineToLinearHeading(new Pose2d(-36, isBlue*43, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
-                        .build();
+                if (itemSector !=1) {
+                    driveToLine = drive.trajectoryBuilder(startPose)
+                            .lineToLinearHeading(new Pose2d(-31, isBlue*50, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
+                            .build();
+                } else {
+                    driveToLine = drive.trajectoryBuilder(startPose)
+                            .lineToLinearHeading(new Pose2d(-34, isBlue * 43, Math.toRadians((-isBlue * 90) - 10)))
+                            .build();
+                }
 
                 driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
                         .lineToLinearHeading(new Pose2d(-36, 36*isBlue, Math.toRadians(180))) // go to center of the tape
@@ -211,12 +218,12 @@ public class Far2Plus0FSM extends LinearOpMode {
                     drive.followTrajectorySequenceAsync(driveToBoard);
                     previousState = STATES.ALIGN_BOARD;
                 } else if (!drive.isBusy()) {
-                    currentState = STATES.SCORE_YELLOW;
+                    currentState = STATES.DISTANCE_SENSE;
                 }
                 break;
             case DISTANCE_SENSE:
                 if (previousState != currentState) {
-                    double wantedDistance = 3; // how far away you want the robot to go
+                    double wantedDistance = 1.5; // how far away you want the robot to go
                     double thresholdDistanceInches = 0.1;
 
                     distForward = sensorDistance.getDistance(DistanceUnit.INCH);
@@ -241,6 +248,7 @@ public class Far2Plus0FSM extends LinearOpMode {
                             .forward(-output)
                             .build();
                     drive.followTrajectorySequenceAsync(boardCorrection);
+                    startedDriving = true;
                     // moves forward the distance and continues
                     previousState = STATES.DISTANCE_SENSE;
                 } else {
