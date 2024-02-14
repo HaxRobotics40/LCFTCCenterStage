@@ -116,19 +116,19 @@ public class Near2Plus0FSM extends LinearOpMode {
                             .build();
                 } else {
                     driveToLine = drive.trajectoryBuilder(startPose)
-                            .lineToLinearHeading(new Pose2d(17, isBlue * 52, Math.toRadians((-isBlue * 90) + ((itemSector - 1) * -19.4))))
+                            .lineToLinearHeading(new Pose2d(17, isBlue * 54, Math.toRadians((-isBlue * 90) + ((itemSector - 1) * -19.4))))
                             .build();
                 }
-                if (itemSector != 2) {
+                if (itemSector == 1) {
                     driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
                             .lineToLinearHeading(new Pose2d(12, 36 * isBlue, Math.toRadians(180))) // go to center of the tape
-                            .lineToLinearHeading(new Pose2d(48, 36 * isBlue, Math.toRadians(180))) // cross the field (go under truss if this is far)
+                            .lineToLinearHeading(new Pose2d(48, 36 * isBlue, Math.toRadians(180)), Math.toRadians(180)) // cross the field (go under truss if this is far)
                             .strafeLeft(((itemSector - 1) * 6.25) - 2) // strafes in front of appropriate AprilTag
                             .build();
                 } else {
                     driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
                             .splineToLinearHeading(new Pose2d(48, 60 * isBlue, Math.toRadians(180)), Math.toRadians(0)) // go to center of the tape
-                            .strafeTo(new Vector2d(48, 41 * isBlue)) // strafes in front of appropriate AprilTag
+                            .strafeTo(new Vector2d(48, 45 * isBlue)) // strafes in front of appropriate AprilTag
                             .build();
                 }
 

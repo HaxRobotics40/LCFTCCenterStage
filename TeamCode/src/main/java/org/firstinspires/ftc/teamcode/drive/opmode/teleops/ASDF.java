@@ -194,7 +194,7 @@ public class ASDF extends LinearOpMode {
             // preset positions: requires tuning/position determing and making sure directions are right
 
             if (wasUpPressed) {
-                if (arm.getLevel() < 3) {
+                if (arm.getLevel() < 2) {
                     arm.goTo(arm.getLevel() + 1);
                     wasUpPressed = false;
                 }

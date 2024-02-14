@@ -226,7 +226,7 @@ public class FieldCentricDrive extends LinearOpMode {
             }
 
             if (wasUpPressed) {
-                if (arm.getLevel() < 3) {
+                if (arm.getLevel() < 2) {
                     arm.goTo(arm.getLevel() + 1);
                     wasUpPressed = false;
                 }

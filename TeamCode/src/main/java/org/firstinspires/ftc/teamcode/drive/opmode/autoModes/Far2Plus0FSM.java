@@ -105,23 +105,35 @@ public class Far2Plus0FSM extends LinearOpMode {
                 }
                 if (itemSector !=1) {
                     driveToLine = drive.trajectoryBuilder(startPose)
-                            .lineToLinearHeading(new Pose2d(-31, isBlue*50, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
+                            .lineToSplineHeading(new Pose2d(-31, isBlue*50, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
                             .build();
                 } else {
                     driveToLine = drive.trajectoryBuilder(startPose)
-                            .lineToLinearHeading(new Pose2d(-34, isBlue * 43, Math.toRadians((-isBlue * 90) - 10)))
+                            .lineToSplineHeading(new Pose2d(-34, isBlue * 45, Math.toRadians((-isBlue * 90) - 10)))
+                            .build();
+                }
+                if (itemSector == 1) {
+                    driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
+                            .lineToLinearHeading(new Pose2d(-36, 36*isBlue, Math.toRadians(180))) // go to center of the tape
+                            .lineToConstantHeading(new Vector2d(12, 36*isBlue)) // cross the field (go under truss if this is far)
+                            .addDisplacementMarker(() -> {
+                                arm.frontBoard();
+                            })
+                            .lineToSplineHeading(new Pose2d(48, 38*isBlue, Math.toRadians(180)))
+                            .build();
+
+                } else {
+                    driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
+                            .lineToLinearHeading(new Pose2d(-36, 60*isBlue, Math.toRadians(180)))
+                            .lineTo(new Vector2d(12, 60 * isBlue))
+                            .addDisplacementMarker(() -> {
+                                arm.frontBoard();
+                            })
+                            .splineToConstantHeading(new Vector2d(48, 36*isBlue), Math.toRadians(180))
+                            .strafeLeft(((itemSector-1)*6.25)-2)
                             .build();
                 }
 
-                driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
-                        .lineToLinearHeading(new Pose2d(-36, 36*isBlue, Math.toRadians(180))) // go to center of the tape
-                        .lineToConstantHeading(new Vector2d(12, 36*isBlue)) // cross the field (go under truss if this is far)
-                        .addDisplacementMarker(() -> {
-                            arm.frontBoard();
-                        })
-                        .lineToSplineHeading(new Pose2d(48, 36*isBlue, Math.toRadians(0)))
-                        .strafeLeft(((itemSector-1)*5.25)-2) // strafes in front of appropriate AprilTag
-                        .build();
 
                 // set up the pre-runnable auto paths
                 // driveToLine moves forward and angles the robot to drop on the purple pixel
@@ -257,26 +269,19 @@ public class Far2Plus0FSM extends LinearOpMode {
                 break;
             case SCORE_YELLOW:
                 if (previousState != currentState) {
-                    arm.wristOut();
-                    if (arm.atAngle()) { previousState = STATES.SCORE_YELLOW; }
-                } else {
-                    currentState = STATES.DROP_YELLOW;
-                }
-                break;
-            case DROP_YELLOW:
-                if (previousState != currentState) {
+                    arm.wristOut(); // moves the wrist (servo) and sets arm to scoring pose
                     if (!isTimer2Started) {
                         timer.reset(); // starts timer
                         isTimer2Started = true; // stops this block from running again
                     }
-                    if (timer.time() > 0.5) {
+                    if (timer.time() > 0.75) {
                         arm.release();
                     }
                     if (timer.time() > 1.25) {
                         arm.rest();
                     }
                     if (arm.atAngle() & timer.time() > 1.25) {
-                        previousState = STATES.DROP_YELLOW;
+                        previousState = STATES.SCORE_YELLOW;
                     }
                 } else {
                     currentState = STATES.PARK;
