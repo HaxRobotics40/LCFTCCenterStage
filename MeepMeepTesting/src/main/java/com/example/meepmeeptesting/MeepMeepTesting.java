@@ -27,6 +27,9 @@ public class MeepMeepTesting {
                                 .splineToLinearHeading(new Pose2d(-36, 62*isBlue, Math.toRadians(180)), Math.toRadians(0))
                                 .lineTo(new Vector2d(12, 62 * isBlue))
                                 .splineToConstantHeading(new Vector2d(48, (34+((itemSector-1)*7))*isBlue), Math.toRadians(0))
+                                .turn(Math.toRadians(isBlue*-90))
+                                 .splineToConstantHeading(new Vector2d(64, isBlue*(36+(-1*24))), Math.toRadians(0))
+                                .turn(Math.toRadians(-90))
                                 .build()
                 );
         meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_JUICE_DARK)

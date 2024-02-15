@@ -283,7 +283,7 @@ public class Far2Plus0FSM extends LinearOpMode {
                     park = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
                             .turn(Math.toRadians(isBlue*-90))
                             .splineToConstantHeading(new Vector2d(64, isBlue*(36+(parkSide*30))), Math.toRadians(0))
-                            .turn(-180)
+                            .turn(-90)
                             .build();
                     drive.followTrajectorySequenceAsync(park);
                     previousState = STATES.PARK;
