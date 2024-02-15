@@ -102,6 +102,7 @@ public class ASDF extends LinearOpMode {
         dashboard = FtcDashboard.getInstance();
         telemetry = dashboard.getTelemetry();
         droneRelease.setPosition(1);
+        hook.setPosition(1);
 
 //        while (opModeInInit()) {
 //            if (gamepad1.b) {
@@ -174,10 +175,8 @@ public class ASDF extends LinearOpMode {
             }
 
 
-            if (wasStartPressed & hookStatus == 1) {
+            if (wasStartPressed) {
                 hook.setPosition(0);
-            } else if (wasStartPressed & hookStatus == 0) {
-                hook.setPosition(1);
             }
 
             if (gamepad1.dpad_up) {

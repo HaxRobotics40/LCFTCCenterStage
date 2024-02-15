@@ -26,8 +26,9 @@ import org.firstinspires.ftc.vision.VisionPortal;
 public class Far2Plus0FSM extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
     VisionPortal vPortal;
+    ElapsedTime timer2;
     ElapsedTime timer;
-    boolean startedDriving;
+    boolean startedDriving = false;
     testEOCVpipeline detector = new testEOCVpipeline();
     //    TODO: Use dead wheels
     SampleMecanumDrive drive;
@@ -105,7 +106,7 @@ public class Far2Plus0FSM extends LinearOpMode {
                 }
                 if (itemSector !=1) {
                     driveToLine = drive.trajectoryBuilder(startPose)
-                            .lineToSplineHeading(new Pose2d(-31, isBlue*50, Math.toRadians((-isBlue*90)+((itemSector-1)*-39.4))))
+                            .lineToLinearHeading(new Pose2d(-36, isBlue*50, Math.toRadians((-isBlue*90)+((itemSector-1)*-29.4))))
                             .build();
                 } else {
                     driveToLine = drive.trajectoryBuilder(startPose)
@@ -119,18 +120,17 @@ public class Far2Plus0FSM extends LinearOpMode {
                             .addDisplacementMarker(() -> {
                                 arm.frontBoard();
                             })
-                            .lineToSplineHeading(new Pose2d(48, 38*isBlue, Math.toRadians(180)))
+                            .splineToSplineHeading(new Pose2d(48, 38*isBlue, Math.toRadians(180)), Math.toRadians(0))
                             .build();
 
                 } else {
                     driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
-                            .lineToLinearHeading(new Pose2d(-36, 60*isBlue, Math.toRadians(180)))
-                            .lineTo(new Vector2d(12, 60 * isBlue))
+                            .splineToLinearHeading(new Pose2d(-36, 62*isBlue, Math.toRadians(180)), Math.toRadians(0))
+                            .lineTo(new Vector2d(12, 62 * isBlue))
                             .addDisplacementMarker(() -> {
                                 arm.frontBoard();
                             })
-                            .splineToConstantHeading(new Vector2d(48, 36*isBlue), Math.toRadians(180))
-                            .strafeLeft(((itemSector-1)*6.25)-2)
+                            .splineToConstantHeading(new Vector2d(48, (34+((itemSector-1)*7))*isBlue), Math.toRadians(0))
                             .build();
                 }
 
@@ -186,6 +186,7 @@ public class Far2Plus0FSM extends LinearOpMode {
 
                     // this if statement makes it run arm.ground() in the while loop until its within enough ticks
                     if (arm.atAngle()) {
+                        arm.releaseLeft();
                         previousState = STATES.SCORE_PURPLE;
                     }
                 } else { // this else statement isn't an elif because rr isn't running
@@ -201,10 +202,7 @@ public class Far2Plus0FSM extends LinearOpMode {
                         isTimerStarted = true; // stops this block from running again
                     }
                     telemetry.addData("timer",timer.seconds());
-                    if (timer.seconds() > 0.5) {
-                        arm.releaseLeft();
-                    }
-                    if (timer.seconds() > 1.25) {
+                    if (timer.seconds() > .25) {
                         arm.out();
                         if (arm.atAngle()) {
                             previousState = STATES.DROP;
@@ -235,7 +233,7 @@ public class Far2Plus0FSM extends LinearOpMode {
                 break;
             case DISTANCE_SENSE:
                 if (previousState != currentState) {
-                    double wantedDistance = 1.5; // how far away you want the robot to go
+                    double wantedDistance = 1.25; // how far away you want the robot to go
                     double thresholdDistanceInches = 0.1;
 
                     distForward = sensorDistance.getDistance(DistanceUnit.INCH);
@@ -254,6 +252,7 @@ public class Far2Plus0FSM extends LinearOpMode {
                     }
 
                     Pose2d lastPos = drive.getPoseEstimate();
+                    arm.wristOut();
                     distanceSensePose = (new Pose2d(72 - (distForward + 16.52), lastPos.getY(), lastPos.getHeading()));
                     boardCorrection = drive.trajectorySequenceBuilder(driveToBoard.end()) // TODO change this back
                             .turn(Math.toRadians(180))
@@ -263,24 +262,26 @@ public class Far2Plus0FSM extends LinearOpMode {
                     startedDriving = true;
                     // moves forward the distance and continues
                     previousState = STATES.DISTANCE_SENSE;
-                } else {
+                } else if (startedDriving && !drive.isBusy()){
                     currentState = STATES.SCORE_YELLOW;
                 }
                 break;
             case SCORE_YELLOW:
                 if (previousState != currentState) {
-                    arm.wristOut(); // moves the wrist (servo) and sets arm to scoring pose
+                     // moves the wrist (servo) and sets arm to scoring pose
                     if (!isTimer2Started) {
-                        timer.reset(); // starts timer
+                        timer2 = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+                        timer2.reset(); // starts timer
                         isTimer2Started = true; // stops this block from running again
                     }
-                    if (timer.time() > 0.75) {
+                    telemetry.addData("Timer", timer2.seconds());
+                    if (timer2.time() > 0.25) {
                         arm.release();
                     }
-                    if (timer.time() > 1.25) {
+                    if (timer2.time() > 1) {
                         arm.rest();
                     }
-                    if (arm.atAngle() & timer.time() > 1.25) {
+                    if (arm.atAngle() & timer2.time() > 1) {
                         previousState = STATES.SCORE_YELLOW;
                     }
                 } else {
@@ -289,9 +290,10 @@ public class Far2Plus0FSM extends LinearOpMode {
                 break;
             case PARK:
                 if (previousState != currentState) {
+                    arm.wristIn();
                     park = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
-                            .turn(Math.toRadians(isBlue*90))
-                            .lineToLinearHeading(new Pose2d(64, isBlue*(36+(parkSide*20)), Math.toRadians(isBlue*90)))
+                            .turn(Math.toRadians(isBlue*-90))
+                            .splineToSplineHeading(new Pose2d(64, isBlue*(36+(parkSide*30)), Math.toRadians(isBlue*90)), Math.toRadians(0))
                             .build();
                     drive.followTrajectorySequenceAsync(park);
                     previousState = STATES.PARK;
@@ -300,7 +302,6 @@ public class Far2Plus0FSM extends LinearOpMode {
                 }
                 break;
             case STOP:
-                arm.wristIn();
                 break;
         }
 

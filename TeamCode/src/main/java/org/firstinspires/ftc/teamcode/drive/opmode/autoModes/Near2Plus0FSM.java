@@ -122,13 +122,13 @@ public class Near2Plus0FSM extends LinearOpMode {
                 if (itemSector == 1) {
                     driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
                             .lineToLinearHeading(new Pose2d(12, 36 * isBlue, Math.toRadians(180))) // go to center of the tape
-                            .lineToLinearHeading(new Pose2d(48, 36 * isBlue, Math.toRadians(180)), Math.toRadians(180)) // cross the field (go under truss if this is far)
+                            .lineToLinearHeading(new Pose2d(48, 36 * isBlue, Math.toRadians(180))) // cross the field (go under truss if this is far)
                             .strafeLeft(((itemSector - 1) * 6.25) - 2) // strafes in front of appropriate AprilTag
                             .build();
                 } else {
                     driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
                             .splineToLinearHeading(new Pose2d(48, 60 * isBlue, Math.toRadians(180)), Math.toRadians(0)) // go to center of the tape
-                            .strafeTo(new Vector2d(48, 45 * isBlue)) // strafes in front of appropriate AprilTag
+                            .strafeTo(new Vector2d(48, (36+(itemSector-1)*9)* isBlue)) // strafes in front of appropriate AprilTag
                             .build();
                 }
 
@@ -201,9 +201,7 @@ public class Near2Plus0FSM extends LinearOpMode {
                     telemetry.addData("timer",timer.seconds());
                     if (timer.seconds() > 1.25) {
                         arm.frontBoard(); // waits another 0.75s to start moving arm
-                        if (arm.atAngle()) {
                             previousState = STATES.DROP; //switches state only when arm reaches the desired angle
-                        }
                     }
                 } else {
                     currentState = STATES.DELAY;
@@ -230,7 +228,7 @@ public class Near2Plus0FSM extends LinearOpMode {
                 break;
             case DISTANCE_SENSE:
                 if (previousState != currentState) {
-                    double wantedDistance = 1.5; // how far away you want the robot to go
+                    double wantedDistance = 1; // how far away you want the robot to go
                     double thresholdDistanceInches = 0.1;
 
                     distForward = sensorDistance.getDistance(DistanceUnit.INCH);
