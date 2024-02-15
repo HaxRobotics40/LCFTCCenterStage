@@ -113,26 +113,15 @@ public class Far2Plus0FSM extends LinearOpMode {
                             .lineToSplineHeading(new Pose2d(-34, isBlue * 45, Math.toRadians((-isBlue * 90) - 10)))
                             .build();
                 }
-                if (itemSector == 1) {
-                    driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
-                            .lineToLinearHeading(new Pose2d(-36, 36*isBlue, Math.toRadians(180))) // go to center of the tape
-                            .lineToConstantHeading(new Vector2d(12, 36*isBlue)) // cross the field (go under truss if this is far)
-                            .addDisplacementMarker(() -> {
-                                arm.frontBoard();
-                            })
-                            .splineToSplineHeading(new Pose2d(48, 38*isBlue, Math.toRadians(180)), Math.toRadians(0))
-                            .build();
+                driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
+                        .splineToLinearHeading(new Pose2d(-36, 62*isBlue, Math.toRadians(180)), Math.toRadians(0))
+                        .lineTo(new Vector2d(12, 62 * isBlue))
+                        .addDisplacementMarker(() -> {
+                            arm.frontBoard();
+                        })
+                        .splineToConstantHeading(new Vector2d(48, (34+((itemSector-1)*7))*isBlue), Math.toRadians(0))
+                        .build();
 
-                } else {
-                    driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
-                            .splineToLinearHeading(new Pose2d(-36, 62*isBlue, Math.toRadians(180)), Math.toRadians(0))
-                            .lineTo(new Vector2d(12, 62 * isBlue))
-                            .addDisplacementMarker(() -> {
-                                arm.frontBoard();
-                            })
-                            .splineToConstantHeading(new Vector2d(48, (34+((itemSector-1)*7))*isBlue), Math.toRadians(0))
-                            .build();
-                }
 
 
                 // set up the pre-runnable auto paths
@@ -293,7 +282,8 @@ public class Far2Plus0FSM extends LinearOpMode {
                     arm.wristIn();
                     park = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
                             .turn(Math.toRadians(isBlue*-90))
-                            .splineToSplineHeading(new Pose2d(64, isBlue*(36+(parkSide*30)), Math.toRadians(isBlue*90)), Math.toRadians(0))
+                            .splineToConstantHeading(new Vector2d(64, isBlue*(36+(parkSide*30))), Math.toRadians(0))
+                            .turn(-180)
                             .build();
                     drive.followTrajectorySequenceAsync(park);
                     previousState = STATES.PARK;

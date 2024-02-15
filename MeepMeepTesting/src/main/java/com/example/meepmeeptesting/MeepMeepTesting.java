@@ -11,7 +11,7 @@ import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
     static int isBlue = -1;
-    static int itemSector = 2;
+    static int itemSector = 1;
 
     public static void main(String[] args) {
         int itemSector = 2;
@@ -22,10 +22,11 @@ public class MeepMeepTesting {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(new Pose2d(-34, isBlue * 45, Math.toRadians((-isBlue * 90) - 10)))
-                                .lineToLinearHeading(new Pose2d(-36, 36*isBlue, Math.toRadians(180))) // go to center of the tape
-                                .lineToConstantHeading(new Vector2d(12, 36*isBlue)) // cross the field (go under truss if this is far)
-                                .splineToSplineHeading(new Pose2d(48, 38*isBlue, Math.toRadians(180)), Math.toRadians(0))
+                        drive.trajectorySequenceBuilder(new Pose2d(-36,-66, Math.toRadians(270)))
+                                .lineToSplineHeading(new Pose2d(-34, isBlue * 45, Math.toRadians((-isBlue * 90) - 10)))
+                                .splineToLinearHeading(new Pose2d(-36, 62*isBlue, Math.toRadians(180)), Math.toRadians(0))
+                                .lineTo(new Vector2d(12, 62 * isBlue))
+                                .splineToConstantHeading(new Vector2d(48, (34+((itemSector-1)*7))*isBlue), Math.toRadians(0))
                                 .build()
                 );
         meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_JUICE_DARK)
