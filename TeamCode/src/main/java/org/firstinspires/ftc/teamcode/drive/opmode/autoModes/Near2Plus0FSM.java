@@ -284,7 +284,7 @@ public class Near2Plus0FSM extends LinearOpMode {
                 if (previousState != currentState) {
                     park = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
                             .turn(Math.toRadians(isBlue*-90))
-                            .splineToConstantHeading(new Vector2d(64, isBlue*(36+(parkSide*24))), Math.toRadians(0))
+                            .splineToConstantHeading(new Vector2d(64, isBlue*(36+(parkSide*26))), Math.toRadians(0))
                             .turn(Math.toRadians(-90))
                             .build();
                     drive.followTrajectorySequenceAsync(park);
