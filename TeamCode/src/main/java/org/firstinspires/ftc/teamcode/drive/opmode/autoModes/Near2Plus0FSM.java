@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -75,13 +76,14 @@ public class Near2Plus0FSM extends LinearOpMode {
 
         if (opModeInInit()) {
             arm = new InputOutput(hardwareMap, true, .5, .5);
+            Servo hook = hardwareMap.get(Servo.class, "hook");
             vPortal = initVisionPortal();
             arm.setup();
             setupIMU();
             setupDistanceSensor();
             vPortal.setProcessorEnabled(detector, true);
             status = 0;
-
+            hook.setPosition(0.875);
             drive = new SampleMecanumDrive(hardwareMap);
             // sets up devices once & vportal
             while (opModeInInit()) {
@@ -121,7 +123,6 @@ public class Near2Plus0FSM extends LinearOpMode {
                 }
                 if (itemSector == 1) {
                     driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
-                            .lineToLinearHeading(new Pose2d(12, 36 * isBlue, Math.toRadians(180))) // go to center of the tape
                             .lineToLinearHeading(new Pose2d(48, 36 * isBlue, Math.toRadians(180))) // cross the field (go under truss if this is far)
                             .strafeLeft(((itemSector - 1) * 6.25) - 2) // strafes in front of appropriate AprilTag
                             .build();
@@ -199,9 +200,11 @@ public class Near2Plus0FSM extends LinearOpMode {
                         isTimerStarted = true; // stops this block from running again
                     }
                     telemetry.addData("timer",timer.seconds());
-                    if (timer.seconds() > 1.25) {
+                    if (timer.seconds() > 0.5) {
                         arm.frontBoard(); // waits another 0.75s to start moving arm
+                        if (arm.atAngle()) {
                             previousState = STATES.DROP; //switches state only when arm reaches the desired angle
+                        }
                     }
                 } else {
                     currentState = STATES.DELAY;
@@ -228,7 +231,7 @@ public class Near2Plus0FSM extends LinearOpMode {
                 break;
             case DISTANCE_SENSE:
                 if (previousState != currentState) {
-                    double wantedDistance = 1; // how far away you want the robot to go
+                    double wantedDistance = 1.25; // how far away you want the robot to go
                     double thresholdDistanceInches = 0.1;
 
                     distForward = sensorDistance.getDistance(DistanceUnit.INCH);
@@ -284,12 +287,12 @@ public class Near2Plus0FSM extends LinearOpMode {
                 if (previousState != currentState) {
                     park = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
                             .turn(Math.toRadians(isBlue*-90))
-                            .splineToConstantHeading(new Vector2d(64, isBlue*(36+(parkSide*26))), Math.toRadians(0))
+                            .splineToConstantHeading(new Vector2d(64, isBlue*(36+(parkSide*24))), Math.toRadians(0))
                             .turn(Math.toRadians(-90))
                             .build();
                     drive.followTrajectorySequenceAsync(park);
                     previousState = STATES.PARK;
-                } else  if (!drive.isBusy()) {
+                } else if (!drive.isBusy()) {
                     currentState = STATES.STOP;
                 }
                 break;

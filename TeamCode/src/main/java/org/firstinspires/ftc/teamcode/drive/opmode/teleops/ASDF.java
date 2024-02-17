@@ -33,6 +33,7 @@ import org.firstinspires.ftc.teamcode.drive.opmode.subsystems.InputOutput;
  *<p>
  * Press Start Once                          \\       Move Hook servo 180 degrees<p>
  * D-Pad Up                                    \\     Spin winch motor<p>
+ * D-Pad Down                                   \\    Spin winch motor other way<p>
  *<p>
  * --------------------------------------------------------------------------
  *<p>
@@ -85,7 +86,7 @@ public class ASDF extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        InputOutput arm = new InputOutput(hardwareMap, true, .25, .1);
+        InputOutput arm = new InputOutput(hardwareMap, true, .5, .1);
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
         Servo droneRelease = hardwareMap.get(Servo.class, "droneRelease");
         DcMotor winch = hardwareMap.get(DcMotor.class, "winch");
@@ -102,7 +103,7 @@ public class ASDF extends LinearOpMode {
         dashboard = FtcDashboard.getInstance();
         telemetry = dashboard.getTelemetry();
         droneRelease.setPosition(1);
-        hook.setPosition(1);
+        hook.setPosition(0.875);
 
 //        while (opModeInInit()) {
 //            if (gamepad1.b) {
@@ -178,9 +179,17 @@ public class ASDF extends LinearOpMode {
             if (wasStartPressed) {
                 hook.setPosition(0);
             }
+            if (gamepad1.b) {
+                wrist.setPosition(0.45);
+                arm.addLevel(1000);
+                arm.goTo(3);
+                arm.setAngle(4);
+            }
 
             if (gamepad1.dpad_up) {
                 winch.setPower(1);
+            } else if (gamepad1.dpad_down) {
+                winch.setPower(-1);
             } else {
                 winch.setPower(0);
             }

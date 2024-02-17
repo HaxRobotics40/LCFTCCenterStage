@@ -269,15 +269,15 @@ public class FieldCentricDrive extends LinearOpMode {
                 winch.setPower(1);
             } else
                 winch.setPower(0);
-        }
-
-        if (gamepad1.left_trigger > 0.1 && gamepad1.right_trigger > 0.1) {
-            droneRelease.setPosition(0);
-        }
+            if (gamepad1.left_trigger > 0.1 && gamepad1.right_trigger > 0.1) {
+                droneRelease.setPosition(0);
+            }
             arm.update();
             telemetry.addData("botheading", botHeading);
             telemetry.addData("rx", rx);
             telemetry.update();
+        }
+
 
 
     }

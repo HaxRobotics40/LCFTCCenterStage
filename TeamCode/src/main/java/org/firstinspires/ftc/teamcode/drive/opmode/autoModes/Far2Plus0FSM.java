@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -73,10 +74,12 @@ public class Far2Plus0FSM extends LinearOpMode {
 
         if (opModeInInit()) {
             arm = new InputOutput(hardwareMap, true, .5, .5);
+            Servo hook = hardwareMap.get(Servo.class, "hook");
             vPortal = initVisionPortal();
             arm.setup();
             setupIMU();
             setupDistanceSensor();
+            hook.setPosition(.875);
             vPortal.setProcessorEnabled(detector, true);
             status = 0;
 
@@ -104,23 +107,44 @@ public class Far2Plus0FSM extends LinearOpMode {
                 if (detector.locationInt() != -1) {
                     itemSector = detector.locationInt();
                 }
-                if (itemSector !=1) {
+                if (itemSector == 2) {
+                    driveToLine = drive.trajectoryBuilder(startPose)
+                            .lineToLinearHeading(new Pose2d(-36, isBlue*50, Math.toRadians((-isBlue*90)+((itemSector-1)*-33.4))))
+                            .build();
+                } else if (itemSector == 1) {
+                    driveToLine = drive.trajectoryBuilder(startPose)
+                            .lineToSplineHeading(new Pose2d(-36, isBlue * 45, Math.toRadians((-isBlue * 90) - 10)))
+                            .build();
+                } else if (itemSector == 0) {
                     driveToLine = drive.trajectoryBuilder(startPose)
                             .lineToLinearHeading(new Pose2d(-36, isBlue*50, Math.toRadians((-isBlue*90)+((itemSector-1)*-29.4))))
                             .build();
+                }
+                if (itemSector == 0) {
+                    driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
+                            .splineToLinearHeading(new Pose2d(-36, 60*isBlue, Math.toRadians(180)), Math.toRadians(0))
+                            .addDisplacementMarker(() -> {
+                                arm.wristIn();
+                            })
+                            .lineTo(new Vector2d(12, 60 * isBlue))
+                            .addDisplacementMarker(() -> {
+                                arm.frontBoard();
+                            })
+                            .splineToConstantHeading(new Vector2d(48, 20*isBlue), Math.toRadians(0))
+                            .build();
                 } else {
-                    driveToLine = drive.trajectoryBuilder(startPose)
-                            .lineToSplineHeading(new Pose2d(-34, isBlue * 45, Math.toRadians((-isBlue * 90) - 10)))
+                    driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
+                            .splineToLinearHeading(new Pose2d(-36, 60*isBlue, Math.toRadians(180)), Math.toRadians(0))
+                            .addDisplacementMarker(() -> {
+                                arm.wristIn();
+                            })
+                            .lineTo(new Vector2d(12, 60 * isBlue))
+                            .addDisplacementMarker(() -> {
+                                arm.frontBoard();
+                            })
+                            .splineToConstantHeading(new Vector2d(48, (34+((itemSector-1)*6))*isBlue), Math.toRadians(0))
                             .build();
                 }
-                driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
-                        .splineToLinearHeading(new Pose2d(-36, 62*isBlue, Math.toRadians(180)), Math.toRadians(0))
-                        .lineTo(new Vector2d(12, 62 * isBlue))
-                        .addDisplacementMarker(() -> {
-                            arm.frontBoard();
-                        })
-                        .splineToConstantHeading(new Vector2d(48, (34+((itemSector-1)*7))*isBlue), Math.toRadians(0))
-                        .build();
 
 
 
@@ -281,9 +305,8 @@ public class Far2Plus0FSM extends LinearOpMode {
                 if (previousState != currentState) {
                     arm.wristIn();
                     park = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
-                            .turn(Math.toRadians(isBlue*-90))
-                            .splineToConstantHeading(new Vector2d(64, isBlue*(36+(parkSide*26))), Math.toRadians(0))
-                            .turn(-90)
+                            .strafeRight(parkSide*24)
+                            .turn(Math.toRadians(-90))
                             .build();
                     drive.followTrajectorySequenceAsync(park);
                     previousState = STATES.PARK;
