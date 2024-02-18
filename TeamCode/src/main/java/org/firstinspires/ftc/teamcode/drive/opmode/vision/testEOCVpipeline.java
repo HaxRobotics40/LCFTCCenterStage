@@ -17,8 +17,14 @@ public class testEOCVpipeline implements VisionProcessor {
     Mat secondary = new Mat();
     int location = -1;
     private String color;
+    int isRed;
+    public testEOCVpipeline(int isRed) {
+        this.isRed = isRed;
+    }
 
-
+    public testEOCVpipeline() {
+        this(0);
+    }
     public void init(int width, int height, CameraCalibration cameraCalibration) {
 
     }
@@ -58,31 +64,58 @@ public class testEOCVpipeline implements VisionProcessor {
 
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5,5));
 
-        Core.inRange(secondary, lower_RB[0], upper_RB[0], maskR);
-        Core.inRange(secondary, lower_RB[1], upper_RB[1], maskB);
-        Core.inRange(secondary, lower_RB[2], upper_RB[2], maskR2);
+        if (isRed == 1) {
+            Core.inRange(secondary, lower_RB[0], upper_RB[0], maskR);
+            Core.inRange(secondary, lower_RB[2], upper_RB[2], maskR2);
 
-        // Perform opening (erosion followed by dilation) to remove noise on mask
-        Imgproc.morphologyEx(maskR, maskR, Imgproc.MORPH_OPEN, kernel);
-        Imgproc.morphologyEx(maskB, maskB, Imgproc.MORPH_OPEN, kernel);
-        Imgproc.morphologyEx(maskR2, maskR2, Imgproc.MORPH_OPEN, kernel);
+            Imgproc.morphologyEx(maskR, maskR, Imgproc.MORPH_OPEN, kernel);
+            Imgproc.morphologyEx(maskR2, maskR2, Imgproc.MORPH_OPEN, kernel);
 
-        // Perform closing (dilation followed by erosion) to fill small holes if required
-        Imgproc.morphologyEx(maskR, maskR, Imgproc.MORPH_CLOSE, kernel);
-        Imgproc.morphologyEx(maskB, maskB, Imgproc.MORPH_CLOSE, kernel);
-        Imgproc.morphologyEx(maskR2, maskR2, Imgproc.MORPH_CLOSE, kernel);
+            Imgproc.morphologyEx(maskR, maskR, Imgproc.MORPH_CLOSE, kernel);
+            Imgproc.morphologyEx(maskR2, maskR2, Imgproc.MORPH_CLOSE, kernel);
+
+            Core.bitwise_and(maskR, maskR, mask, maskR = maskR);
+            Core.bitwise_and(maskR2, maskR2, mask, maskR2 = maskR2);
+        } else if (isRed == -1) {
+            Core.inRange(secondary, lower_RB[1], upper_RB[1], maskB);
+
+            Imgproc.morphologyEx(maskB, maskB, Imgproc.MORPH_OPEN, kernel);
+            Imgproc.morphologyEx(maskB, maskB, Imgproc.MORPH_CLOSE, kernel);
+
+            Core.bitwise_and(maskB, maskB, mask, maskB = maskB);
+        } else  {
+            Core.inRange(secondary, lower_RB[0], upper_RB[0], maskR);
+            Core.inRange(secondary, lower_RB[1], upper_RB[1], maskB);
+            Core.inRange(secondary, lower_RB[2], upper_RB[2], maskR2);
+
+            // Perform opening (erosion followed by dilation) to remove noise on mask
+            Imgproc.morphologyEx(maskR, maskR, Imgproc.MORPH_OPEN, kernel);
+            Imgproc.morphologyEx(maskB, maskB, Imgproc.MORPH_OPEN, kernel);
+            Imgproc.morphologyEx(maskR2, maskR2, Imgproc.MORPH_OPEN, kernel);
+
+            // Perform closing (dilation followed by erosion) to fill small holes if required
+            Imgproc.morphologyEx(maskR, maskR, Imgproc.MORPH_CLOSE, kernel);
+            Imgproc.morphologyEx(maskB, maskB, Imgproc.MORPH_CLOSE, kernel);
+            Imgproc.morphologyEx(maskR2, maskR2, Imgproc.MORPH_CLOSE, kernel);
+
+            Core.bitwise_and(maskR, maskR, mask, maskR = maskR);
+            Core.bitwise_and(maskB, maskB, mask, maskB = maskB);
+            Core.bitwise_and(maskR2, maskR2, mask, maskR2 = maskR2);
+        }
+
+
+
 
 //        Core.bitwise_and(input, input, colorOnly, maskR = maskR);
 //        Core.bitwise_and(input, input, colorOnly, maskB = maskB);
 //        Core.bitwise_and(input, input, colorOnly, maskR2 = maskR2);
-        if (Core.countNonZero(maskR) + Core.countNonZero(maskR2) > Core.countNonZero(maskB)) {
+        if (isRed == 1) {
             color = "RED";
-        } else {
+        } else if (isRed == -1 ){
             color = "BLUE";
+        } else {
+            color = "CHECKING EITHER";
         }
-        Core.bitwise_and(maskR, maskR, mask, maskR = maskR);
-        Core.bitwise_and(maskB, maskB, mask, maskB = maskB);
-        Core.bitwise_and(maskR2, maskR2, mask, maskR2 = maskR2);
         maskR.release();
         maskB.release();
         maskR2.release();
@@ -92,7 +125,7 @@ public class testEOCVpipeline implements VisionProcessor {
         int sectorWidth = width / 3; // Divide it by 3 to get each sector's width
 
         int height = mask.rows(); // total horizontal rows of pixels, halve it to ignore the background better
-        int targetRegion = (int) height/3;
+        int targetRegion = 2*height/5;
 
         int cutoffWidthLeft = mask.cols()/6;
         mask.submat(targetRegion, height, cutoffWidthLeft, mask.cols()-cutoffWidthLeft);

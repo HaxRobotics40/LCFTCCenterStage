@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.drive.opmode.autoModes;
 
-import androidx.annotation.NonNull;
-
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
@@ -26,13 +24,14 @@ import org.firstinspires.ftc.vision.VisionPortal;
 
 @Autonomous(group = "comp", preselectTeleOp = "ASDF")
 @Config
-public class Near2Plus0FSM extends LinearOpMode {
+public class Far2Plus0RED extends LinearOpMode {
     VisionPortal.Builder vPortalBuilder;
-    boolean startedDriving = false;
-    boolean overridden = false;
     VisionPortal vPortal;
+    ElapsedTime timer2;
     ElapsedTime timer;
-    testEOCVpipeline detector = new testEOCVpipeline();
+    Pose2d startPose = new Pose2d(-36,-66, Math.toRadians(270));
+    boolean startedDriving = false;
+    testEOCVpipeline detector = new testEOCVpipeline(1);
     //    TODO: Use dead wheels
     SampleMecanumDrive drive;
     //TODO: Update Constants to be 100% accurate (ex. wheel radius)
@@ -41,9 +40,10 @@ public class Near2Plus0FSM extends LinearOpMode {
     InputOutput arm;
     int status= 0;
     int itemSector;
-    Pose2d startPose = new Pose2d(0,0,0);
+
     double distForward = 0;
     boolean isTimer2Started = false;
+    boolean overridden = false;
     int isBlue = -1;
     int parkSide = -1;
     double output = 0.1;
@@ -54,18 +54,17 @@ public class Near2Plus0FSM extends LinearOpMode {
     TrajectorySequence driveToBoard;
     TrajectorySequence boardCorrection;
     TrajectorySequence park;
+
     public enum STATES {
         INIT,
         ALIGN_LINE,
         SCORE_PURPLE,
         DROP,
-        REST,
         ALIGN_BOARD,
         DELAY,
         DISTANCE_SENSE,
         SCORE_YELLOW,
         DROP_YELLOW,
-        RESET,
         PARK,
         STOP;
     }
@@ -82,9 +81,10 @@ public class Near2Plus0FSM extends LinearOpMode {
             arm.setup();
             setupIMU();
             setupDistanceSensor();
+            hook.setPosition(.875);
             vPortal.setProcessorEnabled(detector, true);
             status = 0;
-            hook.setPosition(0.875);
+
             drive = new SampleMecanumDrive(hardwareMap);
             // sets up devices once & vportal
             while (opModeInInit()) {
@@ -94,26 +94,8 @@ public class Near2Plus0FSM extends LinearOpMode {
                     parkSide = -1;
                 }
 
-                if (detector.getColor() == "RED" & !overridden) {
-                    isBlue = -1;
-                    startPose = new Pose2d(12,-66, Math.toRadians(270));
-                    drive.setPoseEstimate(startPose);
-                } else if (detector.getColor() == "BLUE" & !overridden) {
-                    isBlue = 1;
-                    startPose = new Pose2d(12,66, Math.toRadians(90));
-                    drive.setPoseEstimate(startPose);
-                }
+                drive.setPoseEstimate(startPose);
 
-                if (gamepad1.b) {
-                    overridden = true;
-                    isBlue = 1;
-                    startPose = new Pose2d(12,66, Math.toRadians(90));
-                    drive.setPoseEstimate(startPose);
-                } else if (gamepad1.x) {
-                    isBlue = -1;
-                    startPose = new Pose2d(12,-66, Math.toRadians(270));
-                    drive.setPoseEstimate(startPose);
-                }
                 // controls - use the gamepad while init is running to change things like parkside
                 // wait until the "LOCATION" "COLOR" things say things until starting - all the camera processing happens here
 
@@ -122,30 +104,46 @@ public class Near2Plus0FSM extends LinearOpMode {
                 } else {
                     itemSector = 2;
                 }
-                if (itemSector == 0) {
+                if (itemSector == 2) {
                     driveToLine = drive.trajectoryBuilder(startPose)
-                            .lineToLinearHeading(new Pose2d(16, isBlue * 50, Math.toRadians((-isBlue * 90) + ((itemSector - 1) * -39.4))))
+                            .lineToLinearHeading(new Pose2d(-36, isBlue*50, Math.toRadians((-isBlue*90)+((itemSector-1)*-33.4))))
                             .build();
                 } else if (itemSector == 1) {
                     driveToLine = drive.trajectoryBuilder(startPose)
-                            .lineToLinearHeading(new Pose2d(14, isBlue * 43, Math.toRadians((-isBlue * 90) - 10)))
+                            .lineToSplineHeading(new Pose2d(-36, isBlue * 45, Math.toRadians((-isBlue * 90) - 10)))
                             .build();
-                } else {
+                } else if (itemSector == 0) {
                     driveToLine = drive.trajectoryBuilder(startPose)
-                            .lineToLinearHeading(new Pose2d(17, isBlue * 54, Math.toRadians((-isBlue * 90) + ((itemSector - 1) * -19.4))))
+                            .lineToLinearHeading(new Pose2d(-36, isBlue*50, Math.toRadians((-isBlue*90)+((itemSector-1)*-29.4))))
                             .build();
                 }
-                if (itemSector == 1) {
+                if (itemSector == 0) {
                     driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
-                            .lineToLinearHeading(new Pose2d(48, 36 * isBlue, Math.toRadians(180))) // cross the field (go under truss if this is far)
-                            .strafeLeft(((itemSector - 1) * 6.25) - 2) // strafes in front of appropriate AprilTag
+                            .splineToLinearHeading(new Pose2d(-36, 60*isBlue, Math.toRadians(180)), Math.toRadians(0))
+                            .addDisplacementMarker(() -> {
+                                arm.wristIn();
+                            })
+                            .lineTo(new Vector2d(12, 60 * isBlue))
+                            .addDisplacementMarker(() -> {
+                                arm.frontBoard();
+                            })
+                            .splineToConstantHeading(new Vector2d(48, 20*isBlue), Math.toRadians(0))
                             .build();
                 } else {
                     driveToBoard = drive.trajectorySequenceBuilder(driveToLine.end())
-                            .splineToLinearHeading(new Pose2d(48, 60 * isBlue, Math.toRadians(180)), Math.toRadians(0)) // go to center of the tape
-                            .strafeTo(new Vector2d(48, (36+(itemSector-1)*9)* isBlue)) // strafes in front of appropriate AprilTag
+                            .splineToLinearHeading(new Pose2d(-36, 60*isBlue, Math.toRadians(180)), Math.toRadians(0))
+                            .addDisplacementMarker(() -> {
+                                arm.wristIn();
+                            })
+                            .lineTo(new Vector2d(12, 60 * isBlue))
+                            .addDisplacementMarker(() -> {
+                                arm.frontBoard();
+                            })
+                            .splineToConstantHeading(new Vector2d(48, (34+((itemSector-1)*6))*isBlue), Math.toRadians(0))
                             .build();
                 }
+
+
 
                 // set up the pre-runnable auto paths
                 // driveToLine moves forward and angles the robot to drop on the purple pixel
@@ -170,7 +168,7 @@ public class Near2Plus0FSM extends LinearOpMode {
         }
     }
     private VisionPortal initVisionPortal() {
-        vPortalBuilder = new VisionPortal.Builder(); // sets up vision processing with object detector
+        vPortalBuilder = new VisionPortal.Builder();
         vPortalBuilder.setCamera(hardwareMap.get(WebcamName.class, "webcam"));
         vPortalBuilder.addProcessor(detector);
 
@@ -178,7 +176,7 @@ public class Near2Plus0FSM extends LinearOpMode {
     }
     private void opModeLoop() {
         switch(currentState) {
-            case INIT: // initial state to allow align line to run when wanted
+            case INIT:
                 break;
             case ALIGN_LINE:
                 if (previousState != currentState) {
@@ -214,10 +212,10 @@ public class Near2Plus0FSM extends LinearOpMode {
                         isTimerStarted = true; // stops this block from running again
                     }
                     telemetry.addData("timer",timer.seconds());
-                    if (timer.seconds() > 0.5) {
-                        arm.frontBoard(); // waits another 0.75s to start moving arm
+                    if (timer.seconds() > .25) {
+                        arm.out();
                         if (arm.atAngle()) {
-                            previousState = STATES.DROP; //switches state only when arm reaches the desired angle
+                            previousState = STATES.DROP;
                         }
                     }
                 } else {
@@ -227,7 +225,7 @@ public class Near2Plus0FSM extends LinearOpMode {
             case DELAY:
                 if (previousState != currentState) {
                     ElapsedTime delayTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-                    if (delayTimer.time() > delayTime) { // set delayTime to wait for other robots to park
+                    if (delayTimer.time() > delayTime) {
                         previousState = STATES.DELAY;
                     }
                 } else if (!drive.isBusy()) {
@@ -237,7 +235,7 @@ public class Near2Plus0FSM extends LinearOpMode {
             case ALIGN_BOARD:
                 if (previousState != currentState) {
 
-                    drive.followTrajectorySequenceAsync(driveToBoard); // drive to middle of U shape, drive to board, strafe
+                    drive.followTrajectorySequenceAsync(driveToBoard);
                     previousState = STATES.ALIGN_BOARD;
                 } else if (!drive.isBusy()) {
                     currentState = STATES.DISTANCE_SENSE;
@@ -252,7 +250,7 @@ public class Near2Plus0FSM extends LinearOpMode {
 
                     /*
                     checks if it's a valid value, returns the difference
-                    does a trajectory to move forward/backward the difference
+
                      */
                     if (sensorDistance.getDistance(DistanceUnit.INCH) != DistanceUnit.infinity && sensorDistance.getDistance(DistanceUnit.INCH) != 0) {
                         distForward = sensorDistance.getDistance(DistanceUnit.INCH);
@@ -264,6 +262,7 @@ public class Near2Plus0FSM extends LinearOpMode {
                     }
 
                     Pose2d lastPos = drive.getPoseEstimate();
+                    arm.wristOut();
                     distanceSensePose = (new Pose2d(72 - (distForward + 16.52), lastPos.getY(), lastPos.getHeading()));
                     boardCorrection = drive.trajectorySequenceBuilder(driveToBoard.end()) // TODO change this back
                             .turn(Math.toRadians(180))
@@ -273,24 +272,26 @@ public class Near2Plus0FSM extends LinearOpMode {
                     startedDriving = true;
                     // moves forward the distance and continues
                     previousState = STATES.DISTANCE_SENSE;
-                } else if (startedDriving & !drive.isBusy()){
+                } else if (startedDriving && !drive.isBusy()){
                     currentState = STATES.SCORE_YELLOW;
                 }
                 break;
             case SCORE_YELLOW:
                 if (previousState != currentState) {
-                    arm.wristOut(); // moves the wrist (servo) and sets arm to scoring pose
+                    // moves the wrist (servo) and sets arm to scoring pose
                     if (!isTimer2Started) {
-                        timer.reset(); // starts timer
+                        timer2 = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+                        timer2.reset(); // starts timer
                         isTimer2Started = true; // stops this block from running again
                     }
-                    if (timer.time() > 0.75) {
+                    telemetry.addData("Timer", timer2.seconds());
+                    if (timer2.time() > 0.25) {
                         arm.release();
                     }
-                    if (timer.time() > 1.25) {
+                    if (timer2.time() > 1) {
                         arm.rest();
                     }
-                    if (arm.atAngle() & timer.time() > 1.25) {
+                    if (arm.atAngle() & timer2.time() > 1) {
                         previousState = STATES.SCORE_YELLOW;
                     }
                 } else {
@@ -299,19 +300,18 @@ public class Near2Plus0FSM extends LinearOpMode {
                 break;
             case PARK:
                 if (previousState != currentState) {
+                    arm.wristIn();
                     park = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
-                            .turn(Math.toRadians(isBlue*-90))
-                            .splineToConstantHeading(new Vector2d(64, isBlue*(36+(parkSide*24))), Math.toRadians(0))
+                            .strafeRight(parkSide*24)
                             .turn(Math.toRadians(-90))
                             .build();
                     drive.followTrajectorySequenceAsync(park);
                     previousState = STATES.PARK;
-                } else if (!drive.isBusy()) {
+                } else  if (!drive.isBusy()) {
                     currentState = STATES.STOP;
                 }
                 break;
             case STOP:
-                arm.wristIn();
                 break;
         }
 
